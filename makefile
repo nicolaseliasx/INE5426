@@ -20,7 +20,7 @@ debug: build
 
 # Comando de build genérico
 build:
-	@RUSTFLAGS="$(RUSTFLAGS)" $(CARGO) build --$(BUILD_MODE)
+	@$(CARGO) build --$(BUILD_MODE)
 	@cp target/$(BUILD_MODE)/$(TARGET) ./$(TARGET)
 
 # Executar o compilador com o primeiro teste
