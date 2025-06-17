@@ -10,6 +10,7 @@ pub enum MachineStatus {
 }
 
 pub struct FiniteStateMachine {
+    token_type: String,
     transitions: HashMap<String, Box<dyn Fn(char, bool) -> String>>,
     initial_state: String,
     final_states: HashSet<String>,
@@ -21,12 +22,14 @@ pub struct FiniteStateMachine {
 
 impl FiniteStateMachine {
     pub fn new(
+        token_type: String,
         transitions: HashMap<String, Box<dyn Fn(char, bool) -> String>>,
         initial_state: String,
         final_states: HashSet<String>,
         cursor_back_states: HashSet<String>,
     ) -> Self {
         FiniteStateMachine {
+            token_type,
             transitions,
             initial_state: initial_state.clone(),
             final_states,
@@ -35,6 +38,10 @@ impl FiniteStateMachine {
             lexeme: String::new(),
             status: MachineStatus::Idle,
         }
+    }
+
+    pub fn token_type(&self) -> &str {
+        &self.token_type
     }
 
     pub fn status(&self) -> MachineStatus {
@@ -58,7 +65,7 @@ impl FiniteStateMachine {
 
         let transition_fn = match self.transitions.get(&self.current_state) {
             Some(func) => func,
-            None => {
+            _none => {
                 self.status = MachineStatus::Error;
                 return self.status;
             }

@@ -1,18 +1,31 @@
 // main.rs
+mod errors;
+mod expression_tree;
+mod finite_state_machine;
+mod lexical_analyzer;
+mod parse_table;
+mod parser_stack_item;
+mod parser_table;
+mod parser;
+mod scope_manager;
+mod symbols_table;
+mod token;
+mod token_identifiers;
+mod syntax_tree;
+
 use std::env;
 use std::fs::File;
-use std::io::{self, Read, Write};
+use std::io::{self, Read};
 use std::path::Path;
 use std::rc::Rc;
 use std::cell::RefCell;
-use crate::errors::CompilationError;
+use crate::errors::{CompilationError, ErrorLocation};
 use crate::lexical_analyzer::LexicalAnalyzer;
 use crate::parser::SyntaxAnalyzer;
 use crate::scope_manager::ScopeManager;
 use crate::token::Token;
-use crate::ast_node::AstNode;
-use crate::parse_table::PARSE_TABLE;
-use crate::token_identifiers::*;
+use crate::syntax_tree::SyntaxNode;
+
 
 fn print_fire() {
     println!(
@@ -46,21 +59,25 @@ fn print_fire() {
 }
 
 // Função para imprimir a árvore AST
-fn print_ast_tree(node: &Rc<RefCell<AstNode>>, depth: usize) {
+fn print_ast_tree(node: &Rc<RefCell<SyntaxNode>>, depth: usize) {
     let node_ref = node.borrow();
     let indent = "  ".repeat(depth);
     
-    println!("{}{}: {}", indent, node_ref.node_type, node_ref.token.as_ref().map(|t| &t.lexeme).unwrap_or(""));
+    // Acesse o token real com o campo lexeme
+    let token_info = node_ref.token.as_ref().map(|t| t.lexeme.as_str()).unwrap_or("");
     
-    for child in &node_ref.children {
+    println!("{}{}: {}", indent, node_ref.node_type, token_info);
+    
+    for child in &node_ref.child_nodes {
         print_ast_tree(child, depth + 1);
     }
 }
 
 // Função para imprimir o código intermediário
-fn print_code(node: &Rc<RefCell<AstNode>>) {
+fn print_code(node: &Rc<RefCell<SyntaxNode>>) {
     let node_ref = node.borrow();
-    for code in &node_ref.generated_code {
+    let generated_code = node_ref.generated_code.borrow();
+    for code in generated_code.iter() {
         println!("{}", code);
     }
 }
@@ -78,14 +95,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let filename = &args[1];
     let path = Path::new(filename);
-    
     let mut file = File::open(path).map_err(|e| {
-        CompilationError::lexical(format!("Não foi possível abrir o arquivo '{}': {}", filename, e))
+        CompilationError::lexical(format!("Não foi possível abrir o arquivo '{}': {}", filename, e), ErrorLocation::with_file(0, 0, filename))
     })?;
-    
+
     let mut source = String::new();
     file.read_to_string(&mut source).map_err(|e| {
-        CompilationError::lexical(format!("Erro ao ler o arquivo '{}': {}", filename, e))
+        CompilationError::lexical(format!("Erro ao ler o arquivo '{}': {}", filename, e), ErrorLocation::with_file(0, 0, filename))
     })?;
 
     let keywords = vec![
@@ -113,10 +129,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     parser.process_token(&eof_token)?;
     
     if !parser.is_complete() {
-        return Err(Box::new(CompilationError::syntax(
-            "Fim de arquivo inesperado".to_string()
-        )));
-    }
+    return Err(Box::new(CompilationError::syntax_simple(
+        "Fim de arquivo inesperado",
+        0,  // linha
+        0,  // coluna
+        Vec::new() // lista vazia de tokens esperados
+    )));
+}
     
     let ast_root = parser.ast_root();
     

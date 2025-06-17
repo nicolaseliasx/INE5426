@@ -1,9 +1,8 @@
+// syntax_tree.rs
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::atomic::{AtomicI32, Ordering};
-
-// Placeholder para o tipo Token
-pub struct Token;
+use crate::token::Token;
 
 #[derive(Debug, Default)]
 pub struct ExpressionAttributes {
