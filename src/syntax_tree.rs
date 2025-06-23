@@ -1,6 +1,6 @@
 // syntax_tree.rs
-use std::cell::RefCell;
 use std::rc::Rc;
+use std::cell::RefCell;
 use std::sync::atomic::{AtomicI32, Ordering};
 use crate::token::Token;
 
@@ -32,8 +32,8 @@ pub struct ExpressionNode {
     pub op: char,
     pub data_type: String,
     pub value: String,
-    pub left: Option<Rc<RefCell<ExpressionNode>>>,
-    pub right: Option<Rc<RefCell<ExpressionNode>>>,
+    pub left: Option<Rc<RefCell<ExpressionNode>>>,  // Alterado para Rc<RefCell>
+    pub right: Option<Rc<RefCell<ExpressionNode>>>, // Alterado para Rc<RefCell>
 }
 
 impl ExpressionNode {
@@ -48,6 +48,7 @@ impl ExpressionNode {
     }
 
     pub fn unary(op: char, value: String, child: Rc<RefCell<ExpressionNode>>) -> Self {
+        // Acesso com borrow() em vez de lock()
         let data_type = child.borrow().data_type.clone();
         ExpressionNode {
             op,
@@ -64,6 +65,7 @@ impl ExpressionNode {
         left: Rc<RefCell<ExpressionNode>>,
         right: Rc<RefCell<ExpressionNode>>,
     ) -> Result<Self, String> {
+        // Acesso com borrow() em vez de lock()
         let left_type = left.borrow().data_type.clone();
         let right_type = right.borrow().data_type.clone();
 
@@ -89,7 +91,7 @@ pub struct SyntaxNode {
     pub node_type: String,
     pub token: Option<Rc<Token>>,
     pub child_nodes: Vec<Rc<RefCell<SyntaxNode>>>,
-    pub generated_code: Rc<RefCell<Vec<String>>>,
+    pub generated_code: Vec<String>,
     pub next_label: String,
     pub loop_exit_label: String,
     pub decl_data: DeclarationData,
@@ -103,7 +105,7 @@ impl SyntaxNode {
             node_type,
             token: None,
             child_nodes: Vec::new(),
-            generated_code: Rc::new(RefCell::new(Vec::new())),
+            generated_code: Vec::new(),
             next_label: String::new(),
             loop_exit_label: String::new(),
             decl_data: DeclarationData::default(),
@@ -117,7 +119,7 @@ impl SyntaxNode {
             node_type,
             token: None,
             child_nodes,
-            generated_code: Rc::new(RefCell::new(Vec::new())),
+            generated_code: Vec::new(),
             next_label: String::new(),
             loop_exit_label: String::new(),
             decl_data: DeclarationData::default(),

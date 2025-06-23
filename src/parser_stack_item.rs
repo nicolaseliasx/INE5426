@@ -1,9 +1,9 @@
 // parser_stack_item.rs
-use std::rc::Rc;
-use std::cell::RefCell;
 use crate::syntax_tree::SyntaxNode;
 use crate::scope_manager::ScopeManager;
 use crate::errors::CompilationError;
+use std::rc::Rc;
+use std::cell::RefCell;
 
 pub type SemanticActionFn = fn(
     Option<Rc<RefCell<SyntaxNode>>>, 

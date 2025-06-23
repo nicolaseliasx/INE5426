@@ -3,15 +3,15 @@ mod errors;
 mod expression_tree;
 mod finite_state_machine;
 mod lexical_analyzer;
-mod parse_table;
-mod parser_stack_item;
 mod parser_table;
+mod parser_stack_item;
 mod parser;
 mod scope_manager;
 mod symbols_table;
 mod token;
 mod token_identifiers;
 mod syntax_tree;
+mod semantic_actions; 
 
 use std::env;
 use std::fs::File;
@@ -59,8 +59,8 @@ fn print_fire() {
 }
 
 // Função para imprimir a árvore AST
-fn print_ast_tree(node: &Rc<RefCell<SyntaxNode>>, depth: usize) {
-    let node_ref = node.borrow();
+fn print_ast_tree(node: &Arc<Mutex<SyntaxNode>>, depth: usize) {
+    let node_ref = node.lock().unwrap();  // Usando lock() em vez de borrow()
     let indent = "  ".repeat(depth);
     
     // Acesse o token real com o campo lexeme
@@ -74,9 +74,9 @@ fn print_ast_tree(node: &Rc<RefCell<SyntaxNode>>, depth: usize) {
 }
 
 // Função para imprimir o código intermediário
-fn print_code(node: &Rc<RefCell<SyntaxNode>>) {
-    let node_ref = node.borrow();
-    let generated_code = node_ref.generated_code.borrow();
+fn print_code(node: &Arc<Mutex<SyntaxNode>>) {
+    let node_ref = node.lock().unwrap();
+    let generated_code = node_ref.generated_code.lock().unwrap();  // Usando lock() em vez de borrow()
     for code in generated_code.iter() {
         println!("{}", code);
     }
@@ -114,7 +114,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut lex_analyzer = LexicalAnalyzer::new(path, keywords)
         .map_err(|e| format!("Falha na inicialização do analisador léxico: {}", e))?;
     
-    let mut parser = SyntaxAnalyzer::new(Rc::clone(&scope_manager));
+    let mut parser = SyntaxAnalyzer::new(Arc::clone(&scope_manager));
     
     while let Some(token) = lex_analyzer.next_token()? {
         parser.process_token(&token)?;
@@ -148,7 +148,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     println!("Tabelas de Símbolos Geradas:\n");
     let mut stdout = io::stdout();
-    scope_manager.borrow().print_tables(&mut stdout)?;
+    scope_manager.lock().unwrap().print_tables(&mut stdout)?;
     
     println!("\n{}\n", "*".repeat(60));
     

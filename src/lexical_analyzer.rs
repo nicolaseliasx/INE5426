@@ -3,12 +3,9 @@ use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::{BufReader, Read, Seek, SeekFrom};
 use std::path::Path;
-use std::sync::atomic::{AtomicUsize};
 use crate::errors::{CompilationError};
 use crate::finite_state_machine::{FiniteStateMachine, MachineStatus};
 use crate::token::Token;
-
-static TOKEN_ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 pub struct LexicalAnalyzer {
     reader: BufReader<File>,

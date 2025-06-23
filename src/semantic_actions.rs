@@ -1,13 +1,10 @@
 use std::rc::Rc;
 use std::cell::RefCell;
-use std::collections::VecDeque;
 use crate::errors::CompilationError;
-use crate::expression_tree_resolver::{ExpressionTreeResolver, generate_temp_var};
-use crate::ast_node::{ASTNode, ExpressionNode, Node, DeclarationData, ExpressionAttributes, CodegenState};
 use crate::scope_manager::ScopeManager;
-use crate::token::Token;
+use crate::syntax_tree::SyntaxNode;
 
-type AstNodeRef = Rc<RefCell<ASTNode>>;
+type AstNodeRef = Rc<RefCell<SyntaxNode>>;
 type ScopeManagerRef = Rc<RefCell<ScopeManager>>;
 
 // Módulo CODE: Geração de código intermediário
@@ -15,25 +12,30 @@ pub mod code {
     use super::*;
 
     pub fn relop_action(
-        ast_father_node: AstNodeRef,
-        scope_manager: ScopeManagerRef
+    ast_father_node: AstNodeRef,
+    scope_manager: ScopeManagerRef
     ) -> Result<(), CompilationError> {
         let mut ast_father = ast_father_node.borrow_mut();
-        let children = ast_father.children.clone();
+        let children = ast_father.child_nodes.clone(); // Corrigido para child_nodes
         let numexpression = children[1].clone();
         let relop = children[0].clone();
 
         let numexpression_ref = numexpression.borrow();
         let relop_ref = relop.borrow();
         
-        ast_father.generated_code.extend(numexpression_ref.generated_code.iter().cloned());
-        ast_father.generated_code.push(format!(
+        let mut father_code = ast_father.generated_code.lock().unwrap();
+        let child_code = numexpression_ref.generated_code.lock().unwrap();
+        
+        father_code.extend(child_code.iter().cloned());
+        
+        father_code.push(format!(
             "{} = {} {} {}",
             ast_father.codegen_state.return_value,
             ast_father.codegen_state.return_value,
             relop_ref.token.as_ref().unwrap().lexeme,
             numexpression_ref.codegen_state.return_value
         ));
+        
         Ok(())
     }
 
@@ -710,17 +712,19 @@ pub mod declare_verify {
         let token = ident.borrow().token.as_ref().unwrap();
         
         if !scope_manager.borrow().is_declared(token) {
-            return Err(CompilationError::semantic(format!(
-                "{} used before declaration at {}:{}",
-                token.lexeme, token.line, token.column
-            )));
+            return Err(CompilationError::semantic(
+                SemanticErrorType::UndeclaredSymbol,
+                format!("{} used before declaration", token.lexeme),
+                ErrorLocation::from_token(token),
+            ));
         }
         
         if !scope_manager.borrow().is_type(token, "function") {
-            return Err(CompilationError::semantic(format!(
-                "{} at {}:{} is not a function",
-                token.lexeme, token.line, token.column
-            )));
+            return Err(CompilationError::semantic(
+                SemanticErrorType::TypeMismatch,
+                format!("{} is not a function", token.lexeme),
+                ErrorLocation::from_token(token),
+            ));
         }
         
         Ok(())
@@ -736,10 +740,11 @@ pub mod declare_verify {
         let token = ident.borrow().token.as_ref().unwrap();
         
         if !scope_manager.borrow().is_declared(token) {
-            return Err(CompilationError::semantic(format!(
-                "{} used before declaration at {}:{}",
-                token.lexeme, token.line, token.column
-            )));
+            return Err(CompilationError::semantic(
+                SemanticErrorType::UndeclaredSymbol,
+                format!("{} used before declaration", token.lexeme),
+                ErrorLocation::from_token(token),
+            ));
         }
         
         Ok(())
@@ -760,10 +765,11 @@ pub mod break_ {
         let token = break_t.borrow().token.as_ref().unwrap();
         
         if !scope_manager.borrow().is_in_scope("for") {
-            return Err(CompilationError::semantic(format!(
-                "break used outside for statement at {}:{}",
-                token.line, token.column
-            )));
+            return Err(CompilationError::semantic(
+                SemanticErrorType::ScopeViolation,
+                "break used outside for statement".to_string(),
+                ErrorLocation::from_token(token),
+            ));
         }
         
         Ok(())
@@ -774,7 +780,11 @@ pub mod break_ {
 pub mod auxiliar {
     use super::*;
 
-    pub fn get_type(type_str: &str, array_counter: i32) -> Result<String, CompilationError> {
+    pub fn get_type(
+        type_str: &str, 
+        array_counter: i32,
+        location: ErrorLocation  // Adicionado parâmetro de localização
+    ) -> Result<String, CompilationError> {
         let first_char = type_str.chars().next().unwrap_or(' ');
         let base_type = match first_char {
             'i' => "int",
@@ -794,14 +804,18 @@ pub mod auxiliar {
                 }
                 if counter != array_counter {
                     return Err(CompilationError::semantic(
-                        "Array dimension mismatch in operations".to_string()
+                        SemanticErrorType::TypeMismatch,
+                        "Array dimension mismatch in operations".to_string(),
+                        location,
                     ));
                 }
                 final_type
             }
             _ => {
                 return Err(CompilationError::semantic(
-                    format!("Invalid type: {}", type_str)
+                    SemanticErrorType::InvalidOperation,
+                    format!("Invalid type: {}", type_str),
+                    location,
                 ));
             }
         };
@@ -833,10 +847,16 @@ pub mod expa {
         let numexpression = children[1].clone();
         
         let operation_ref = operation.borrow();
+        let operation_token = operation_ref.token.as_ref().unwrap();
         let numexpression_ref = numexpression.borrow();
         
-        let op_char = operation_ref.token.as_ref().unwrap().lexeme.chars().next()
-            .ok_or_else(|| CompilationError::semantic("Invalid operator".to_string()))?;
+        let op_char = operation_token.lexeme.chars().next().ok_or_else(|| {
+            CompilationError::semantic(
+                SemanticErrorType::InvalidOperation,
+                "Invalid operator".to_string(),
+                ErrorLocation::from_token(operation_token)
+            )
+        })?;
         
         ast_father.expr_attrs.operation = op_char;
         ast_father.expr_attrs.expr_node = numexpression_ref.expr_attrs.expr_node.clone();
@@ -887,13 +907,19 @@ pub mod expa {
         let factor = children[1].clone();
         
         let symbol_ref = symbol.borrow();
+        let symbol_token = symbol_ref.token.as_ref().unwrap();
         let factor_ref = factor.borrow();
         
         let temp_var = generate_temp_var();
         ast_father.codegen_state.return_value = temp_var.clone();
         
-        let op_char = symbol_ref.token.as_ref().unwrap().lexeme.chars().next()
-            .ok_or_else(|| CompilationError::semantic("Invalid operator".to_string()))?;
+        let op_char = symbol_token.lexeme.chars().next().ok_or_else(|| {
+            CompilationError::semantic(
+                SemanticErrorType::InvalidOperation,
+                "Invalid operator".to_string(),
+                ErrorLocation::from_token(symbol_token),
+            )
+        })?;
         
         let factor_value = if factor_ref.expr_attrs.array_counter > 0 {
             factor_ref.expr_attrs.expr_node.as_ref().unwrap().borrow().value.clone()
@@ -927,26 +953,30 @@ pub mod expa {
         let numexpression_aux = children[1].clone();
         
         let term_ref = term_node.borrow();
+        let term_token = term_ref.token.as_ref().unwrap();
         let numexpression_aux_ref = numexpression_aux.borrow();
         
         if let Some(aux_node) = &numexpression_aux_ref.expr_attrs.expr_node {
-            // Obter tipos base
+            // Obter tipos base com localização
             let term_type = auxiliar::get_type(
                 &term_ref.expr_attrs.expr_node.as_ref().unwrap().borrow().data_type,
-                term_ref.expr_attrs.array_counter
+                term_ref.expr_attrs.array_counter,
+                ErrorLocation::from_token(term_token),
             )?;
             
             let aux_type = auxiliar::get_type(
                 &aux_node.borrow().data_type,
-                numexpression_aux_ref.expr_attrs.array_counter
+                numexpression_aux_ref.expr_attrs.array_counter,
+                ErrorLocation::from_token(term_token), // Usar token relevante
             )?;
             
             // Verificar compatibilidade de tipos
             if term_type != aux_type {
-                return Err(CompilationError::semantic(format!(
-                    "Type mismatch: {} and {}",
-                    term_type, aux_type
-                )));
+                return Err(CompilationError::semantic(
+                    SemanticErrorType::TypeMismatch,
+                    format!("Type mismatch: {} and {}", term_type, aux_type),
+                    ErrorLocation::from_token(term_token),
+                ));
             }
             
             // Obter valores para operação
@@ -976,12 +1006,15 @@ pub mod expa {
                 aux_value
             ));
             
-            ast_father.expr_attrs.expr_node = Some(Rc::new(RefCell::new(ExpressionNode::binary(
+            // Corrigido: removido parêntese extra e tratamento correto de erro
+            let binary_node = ExpressionNode::binary(
                 numexpression_aux_ref.expr_attrs.operation,
-                temp_var,
+                temp_var.clone(),
                 term_ref.expr_attrs.expr_node.as_ref().unwrap().clone(),
                 aux_node.clone()
-            )?));
+            )?;
+            
+            ast_father.expr_attrs.expr_node = Some(Rc::new(RefCell::new(binary_node)));
         } else {
             // Propagação simples se não houver operação
             ast_father.expr_attrs.expr_node = term_ref.expr_attrs.expr_node.clone();
@@ -1003,10 +1036,16 @@ pub mod expa {
         let term = children[1].clone();
         
         let op_ref = op.borrow();
+        let op_token = op_ref.token.as_ref().unwrap();
         let term_ref = term.borrow();
         
-        let op_char = op_ref.token.as_ref().unwrap().lexeme.chars().next()
-            .ok_or_else(|| CompilationError::semantic("Invalid operator".to_string()))?;
+        let op_char = op_token.lexeme.chars().next().ok_or_else(|| {
+            CompilationError::semantic(
+                SemanticErrorType::InvalidOperation,
+                "Invalid operator".to_string(),
+                ErrorLocation::from_token(op_token),
+            )
+        })?;
         
         ast_father.expr_attrs.operation = op_char;
         ast_father.expr_attrs.expr_node = term_ref.expr_attrs.expr_node.clone();
@@ -1026,26 +1065,30 @@ pub mod expa {
         let unaryexpraux = children[1].clone();
         
         let unaryexpr_ref = unaryexpr.borrow();
+        let unaryexpr_token = unaryexpr_ref.token.as_ref().unwrap();
         let unaryexpraux_ref = unaryexpraux.borrow();
         
         if let Some(aux_node) = &unaryexpraux_ref.expr_attrs.expr_node {
-            // Obter tipos base
+            // Obter tipos base com localização
             let expr_type = auxiliar::get_type(
                 &unaryexpr_ref.expr_attrs.expr_node.as_ref().unwrap().borrow().data_type,
-                unaryexpr_ref.expr_attrs.array_counter
+                unaryexpr_ref.expr_attrs.array_counter,
+                ErrorLocation::from_token(unaryexpr_token),
             )?;
             
             let aux_type = auxiliar::get_type(
                 &aux_node.borrow().data_type,
-                unaryexpraux_ref.expr_attrs.array_counter
+                unaryexpraux_ref.expr_attrs.array_counter,
+                ErrorLocation::from_token(unaryexpr_token),
             )?;
             
             // Verificar compatibilidade de tipos
             if expr_type != aux_type {
-                return Err(CompilationError::semantic(format!(
-                    "Type mismatch: {} and {}",
-                    expr_type, aux_type
-                )));
+                return Err(CompilationError::semantic(
+                    SemanticErrorType::TypeMismatch,
+                    format!("Type mismatch: {} and {}", expr_type, aux_type),
+                    ErrorLocation::from_token(unaryexpr_token),
+                ));
             }
             
             // Obter valores para operação
@@ -1075,12 +1118,14 @@ pub mod expa {
                 aux_value
             ));
             
-            ast_father.expr_attrs.expr_node = Some(Rc::new(RefCell::new(ExpressionNode::binary(
+            let binary_node = ExpressionNode::binary(
                 unaryexpraux_ref.expr_attrs.operation,
-                temp_var,
+                temp_var.clone(),
                 unaryexpr_ref.expr_attrs.expr_node.as_ref().unwrap().clone(),
                 aux_node.clone()
-            )?)));
+            )?;
+            
+            ast_father.expr_attrs.expr_node = Some(Rc::new(RefCell::new(binary_node)));
         } else {
             // Caso sem operação adicional
             let temp_var = generate_temp_var();

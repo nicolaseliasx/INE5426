@@ -1,19 +1,4 @@
-// tokens.rs
-use std::convert::TryFrom;
 use crate::finite_state_machine::{FiniteStateMachine, MachineStatus};
-
-// Funções auxiliares
-pub fn is_alpha(ch: char) -> bool {
-    ch.is_ascii_alphabetic()
-}
-
-pub fn is_numeric(ch: char) -> bool {
-    ch.is_ascii_digit()
-}
-
-pub fn is_whitespace(c: char) -> bool {
-    c.is_ascii_whitespace()
-}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token {
@@ -34,6 +19,24 @@ impl Token {
     }
 }
 
+// Funções auxiliares para caracteres
+pub fn is_alpha(ch: char) -> bool {
+    ch.is_ascii_alphabetic()
+}
+
+pub fn is_numeric(ch: char) -> bool {
+    ch.is_ascii_digit()
+}
+
+pub fn is_alphanumeric(ch: char) -> bool {
+    ch.is_ascii_alphanumeric()
+}
+
+pub fn is_whitespace(c: char) -> bool {
+    c.is_ascii_whitespace()
+}
+
+#[derive(Debug)]
 pub struct TokenIdentifier {
     pub token_type: String,
     pub fsm: FiniteStateMachine,
@@ -60,8 +63,12 @@ impl TokenIdentifier {
         self.start_column = None;
     }
 
-    pub fn lexeme(&self) -> String {
-        self.fsm.lexeme().to_string()
+    pub fn lexeme(&self) -> &str {
+        self.fsm.lexeme()
+    }
+
+    pub fn status(&self) -> MachineStatus {
+        self.fsm.status()
     }
 
     pub fn has_already_succeeded(&self) -> bool {
@@ -81,47 +88,35 @@ impl TokenIdentifier {
         column: usize,
     ) -> MachineStatus {
         let prev_status = self.fsm.status();
+        
+        // Só processa se não estiver em estado final ou erro
         if prev_status == MachineStatus::Error || prev_status == MachineStatus::Success {
             return prev_status;
         }
         
-        let current_status = self.fsm.transition(c, is_eof);
-        
-        if prev_status == MachineStatus::Idle
-            && (current_status == MachineStatus::Running || current_status == MachineStatus::Success)
+        // Registra posição inicial no primeiro caractere válido
+        if prev_status == MachineStatus::Idle && 
+           (self.fsm.transition(c, is_eof) == MachineStatus::Running || 
+            self.fsm.status() == MachineStatus::Success) 
         {
             self.cursor_start = Some(cursor_position);
             self.start_line = Some(line);
             self.start_column = Some(column);
         }
         
-        current_status
+        self.fsm.status()
     }
 
     pub fn create_token(&self) -> Option<Token> {
         if self.fsm.status() == MachineStatus::Success {
             Some(Token {
-                lexeme: self.lexeme(),
+                lexeme: self.lexeme().to_string(),
                 token_type: self.token_type.clone(),
                 line: self.start_line?,
                 column: self.start_column?,
             })
         } else {
             None
-        }
-    }
-}
-
-impl TryFrom<u8> for MachineStatus {
-    type Error = &'static str;
-
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
-        match value {
-            0 => Ok(MachineStatus::Idle),
-            1 => Ok(MachineStatus::Running),
-            2 => Ok(MachineStatus::Success),
-            3 => Ok(MachineStatus::Error),
-            _ => Err("Invalid value for MachineStatus"),
         }
     }
 }

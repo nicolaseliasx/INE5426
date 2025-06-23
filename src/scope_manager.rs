@@ -1,207 +1,212 @@
-// scope_manager.rs
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::cell::RefCell;
-use std::io::Write;
 use crate::token::Token;
-use crate::errors::CompilationError;
+use crate::errors::{CompilationError, SemanticErrorType};
+use crate::symbols_table::{SymbolEntry, SymbolType};
 
-#[derive(Debug, Clone)]
-pub struct SymbolEntry {
-    pub name: String,
-    pub token: Rc<Token>,
-    pub symbol_type: Option<String>,
-}
-
-#[derive(Debug, Default)]
-pub struct SymbolsTable {
+#[derive(Debug)]
+pub struct ScopeItem {
+    name: String,
     symbols: HashMap<String, SymbolEntry>,
+    ancestor_scope: Option<Rc<RefCell<ScopeItem>>>,
+    children_scopes: Vec<Rc<RefCell<ScopeItem>>>,
 }
 
-impl SymbolsTable {
-    pub fn new() -> Self {
-        SymbolsTable {
+impl ScopeItem {
+    pub fn new(name: &str, ancestor: Option<Rc<RefCell<ScopeItem>>>) -> Self {
+        ScopeItem {
+            name: name.to_string(),
             symbols: HashMap::new(),
+            ancestor_scope: ancestor,
+            children_scopes: Vec::new(),
         }
     }
 
-    pub fn add_symbol(&mut self, token: Rc<Token>) {
-        let entry = SymbolEntry {
-            name: token.lexeme.clone(),
-            token: Rc::clone(&token),
-            symbol_type: None,
-        };
-        self.symbols.insert(token.lexeme.clone(), entry);
+    pub fn is_in_table(&self, name: &str) -> bool {
+        self.symbols.contains_key(name)
     }
 
-    pub fn contains_symbol(&self, lexeme: &str) -> bool {
-        self.symbols.contains_key(lexeme)
+    pub fn add_symbol(&mut self, token: &Token) {
+        self.symbols.insert(
+            token.lexeme.clone(),
+            SymbolEntry::new(token.token_type.clone(), token.line, token.column)
+        );
     }
 
-    pub fn set_type(&mut self, token: &Token, symbol_type: &str) {
-        if let Some(entry) = self.symbols.get_mut(&token.lexeme) {
-            entry.symbol_type = Some(symbol_type.to_string());
+    pub fn add_type(&mut self, name: &str, symbol_type: SymbolType) -> bool {
+        if let Some(entry) = self.symbols.get_mut(name) {
+            entry.symbol_type = symbol_type;
+            true
+        } else {
+            false
         }
     }
 
-    pub fn is_type(&self, token: &Token, symbol_type: &str) -> bool {
-        self.symbols.get(&token.lexeme)
-            .map(|entry| entry.symbol_type.as_deref() == Some(symbol_type))
+    pub fn is_type(&self, name: &str, symbol_type: SymbolType) -> bool {
+        self.symbols.get(name)
+            .map(|e| e.symbol_type == symbol_type)
             .unwrap_or(false)
     }
 
-    pub fn get_type(&self, token: &Token) -> Option<String> {
-        self.symbols.get(&token.lexeme)
-            .and_then(|entry| entry.symbol_type.clone())
+    pub fn get_type(&self, name: &str) -> Option<SymbolType> {
+        self.symbols.get(name).map(|e| e.symbol_type.clone())
     }
 
-    pub fn print(&self, out: &mut impl Write) -> std::io::Result<()> {
+    pub fn print(&self, out: &mut impl std::io::Write) -> std::io::Result<()> {
+        writeln!(out, "Symbol Table type: {}", self.name)?;
         for (name, entry) in &self.symbols {
-            let symbol_type = entry.symbol_type.as_deref().unwrap_or("unknown");
-            writeln!(out, "{}: {}", name, symbol_type)?;
+            writeln!(out, "  {}: {:?}", name, entry)?;
         }
         Ok(())
     }
 }
 
 #[derive(Debug)]
-pub struct ScopeItem {
-    pub name: String,
-    pub symbols_table: SymbolsTable,
-    pub ancestor_scope: Option<Rc<RefCell<ScopeItem>>>,
-    pub children_scopes: Vec<Rc<RefCell<ScopeItem>>>,
-}
-
-#[derive(Debug, Default)]
 pub struct ScopeManager {
-    scope_root: Option<Rc<RefCell<ScopeItem>>>,
-    current_scope: Option<Rc<RefCell<ScopeItem>>>,
+    current_scope: Rc<RefCell<ScopeItem>>,
+    scope_root: Rc<RefCell<ScopeItem>>,
 }
 
 impl ScopeManager {
     pub fn new() -> Self {
-        ScopeManager::default()
+        let root_scope = Rc::new(RefCell::new(ScopeItem::new("global", None)));
+        ScopeManager {
+            current_scope: Rc::clone(&root_scope),
+            scope_root: root_scope,
+        }
     }
 
     pub fn open_scope(&mut self, scope_name: &str) {
-        let new_scope = Rc::new(RefCell::new(ScopeItem {
-            name: scope_name.to_string(),
-            symbols_table: SymbolsTable::new(),
-            ancestor_scope: self.current_scope.clone(),
-            children_scopes: Vec::new(),
-        }));
-
-        if self.scope_root.is_none() {
-            self.scope_root = Some(new_scope.clone());
-        }
-
-        if let Some(current) = &self.current_scope {
-            current.borrow_mut().children_scopes.push(new_scope.clone());
-        }
-
-        self.current_scope = Some(new_scope);
+        let new_scope = Rc::new(RefCell::new(ScopeItem::new(
+            scope_name,
+            Some(Rc::clone(&self.current_scope))
+        )));
+        
+        self.current_scope.borrow_mut().children_scopes.push(Rc::clone(&new_scope));
+        self.current_scope = new_scope;
     }
 
     pub fn close_scope(&mut self) {
-        if let Some(current) = &self.current_scope {
-            let ancestor = current.borrow().ancestor_scope.clone();
-            self.current_scope = ancestor;
+        if let Some(ancestor) = &self.current_scope.borrow().ancestor_scope {
+            self.current_scope = Rc::clone(ancestor);
         }
     }
 
-    pub fn add_symbol(&mut self, token: Rc<Token>) -> Result<(), CompilationError> {
-        let current_scope = self.current_scope.as_ref()
-            .ok_or_else(|| CompilationError::semantic("No current scope".to_string()))?;
+    pub fn add_symbol(&mut self, token: &Token) -> Result<(), CompilationError> {
+        let name = &token.lexeme;
+        let mut current_scope = self.current_scope.borrow_mut();
         
-        let mut current = current_scope.borrow_mut();
-        if current.symbols_table.contains_symbol(&token.lexeme) {
-            return Err(CompilationError::semantic(
-                format!("{} redeclared at {}:{}", token.lexeme, token.line, token.column)
+        if current_scope.is_in_table(name) {
+            return Err(CompilationError::semantic_simple(
+                SemanticErrorType::Redeclaration,
+                format!("{} redeclared", name),
+                token.line,
+                token.column,
             ));
         }
-        current.symbols_table.add_symbol(Rc::clone(&token));
+        
+        current_scope.add_symbol(token);
         Ok(())
     }
 
-    pub fn set_type(&mut self, token: &Token, symbol_type: &str) -> Result<(), CompilationError> {
-        let mut scope = self.current_scope.clone();
+    pub fn add_type(&mut self, token: &Token, symbol_type: SymbolType) -> Result<(), CompilationError> {
+        let name = &token.lexeme;
+        let mut scope = Some(Rc::clone(&self.current_scope));
+        
         while let Some(current) = scope {
-            let current_ref = current.borrow();
-            if current_ref.symbols_table.contains_symbol(&token.lexeme) {
-                drop(current_ref);
-                current.borrow_mut().symbols_table.set_type(token, symbol_type);
+            let mut current_borrow = current.borrow_mut();
+            if current_borrow.is_in_table(name) {
+                current_borrow.add_type(name, symbol_type);
                 return Ok(());
             }
-            scope = current_ref.ancestor_scope.clone();
+            
+            scope = current_borrow.ancestor_scope.as_ref().map(|a| Rc::clone(a));
         }
-        Err(CompilationError::semantic(
-            format!("Cannot assign type to {} at {}:{}", token.lexeme, token.line, token.column)
+        
+        Err(CompilationError::semantic_simple(
+            SemanticErrorType::UndeclaredSymbol,
+            format!("Cannot assign type to undeclared symbol '{}'", name),
+            token.line,
+            token.column,
         ))
     }
 
     pub fn is_declared(&self, token: &Token) -> bool {
-        let mut scope = self.current_scope.clone();
+        let name = &token.lexeme;
+        let mut scope = Some(Rc::clone(&self.current_scope));
+        
         while let Some(current) = scope {
-            let current_ref = current.borrow();
-            if current_ref.symbols_table.contains_symbol(&token.lexeme) {
+            let current_borrow = current.borrow();
+            if current_borrow.is_in_table(name) {
                 return true;
             }
-            scope = current_ref.ancestor_scope.clone();
+            
+            scope = current_borrow.ancestor_scope.as_ref().map(|a| Rc::clone(a));
         }
+        
         false
     }
 
-    pub fn is_type(&self, token: &Token, symbol_type: &str) -> bool {
-        let mut scope = self.current_scope.clone();
+    pub fn is_type(&self, token: &Token, symbol_type: SymbolType) -> bool {
+        let name = &token.lexeme;
+        let mut scope = Some(Rc::clone(&self.current_scope));
+        
         while let Some(current) = scope {
-            let current_ref = current.borrow();
-            if current_ref.symbols_table.contains_symbol(&token.lexeme) {
-                return current_ref.symbols_table.is_type(token, symbol_type);
+            let current_borrow = current.borrow();
+            if current_borrow.is_in_table(name) {
+                return current_borrow.is_type(name, symbol_type);
             }
-            scope = current_ref.ancestor_scope.clone();
+            
+            scope = current_borrow.ancestor_scope.as_ref().map(|a| Rc::clone(a));
         }
+        
         false
-    }
-
-    pub fn get_type(&self, token: &Token) -> Option<String> {
-        let mut scope = self.current_scope.clone();
-        while let Some(current) = scope {
-            let current_ref = current.borrow();
-            if current_ref.symbols_table.contains_symbol(&token.lexeme) {
-                return current_ref.symbols_table.get_type(token);
-            }
-            scope = current_ref.ancestor_scope.clone();
-        }
-        None
     }
 
     pub fn is_in_scope(&self, scope_type: &str) -> bool {
-        let mut scope = self.current_scope.clone();
+        let mut scope = Some(Rc::clone(&self.current_scope));
+        
         while let Some(current) = scope {
-            let current_ref = current.borrow();
-            if current_ref.name == scope_type {
+            let current_borrow = current.borrow();
+            if current_borrow.name == scope_type {
                 return true;
             }
-            scope = current_ref.ancestor_scope.clone();
+            
+            scope = current_borrow.ancestor_scope.as_ref().map(|a| Rc::clone(a));
         }
+        
         false
     }
 
-    pub fn print_tables(&self, out: &mut impl Write) -> std::io::Result<()> {
-        let mut stack = vec![];
-        if let Some(root) = &self.scope_root {
-            stack.push(root.clone());
+    pub fn get_type(&self, token: &Token) -> Option<SymbolType> {
+        let name = &token.lexeme;
+        let mut scope = Some(Rc::clone(&self.current_scope));
+        
+        while let Some(current) = scope {
+            let current_borrow = current.borrow();
+            if let Some(symbol_type) = current_borrow.get_type(name) {
+                return Some(symbol_type);
+            }
+            
+            scope = current_borrow.ancestor_scope.as_ref().map(|a| Rc::clone(a));
         }
+        
+        None
+    }
 
+    pub fn print_tables(&self, out: &mut impl std::io::Write) -> std::io::Result<()> {
+        let mut stack = vec![Rc::clone(&self.scope_root)];
+        
         while let Some(scope) = stack.pop() {
             let scope_ref = scope.borrow();
-            writeln!(out, "\nSymbol Table: {}", scope_ref.name)?;
-            scope_ref.symbols_table.print(out)?;
+            scope_ref.print(out)?;
             
-            for child in &scope_ref.children_scopes {
-                stack.push(child.clone());
+            for child in scope_ref.children_scopes.iter().rev() {
+                stack.push(Rc::clone(child));
             }
         }
+        
         Ok(())
     }
 }

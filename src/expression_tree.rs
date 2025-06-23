@@ -31,7 +31,7 @@ impl ExpressionTreeResolver {
 
     pub fn display_tree(root: &Rc<RefCell<ExpressionNode>>) {
         println!("{}", "=".repeat(56));
-        println!("{}", root.borrow().data_type);
+        println!("Expression Tree");
         Self::visualize_tree(root, "", false);
     }
 
