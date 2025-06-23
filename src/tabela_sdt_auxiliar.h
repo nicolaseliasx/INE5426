@@ -1,7 +1,8 @@
 #ifndef TABELA_SDT_AUXILIAR_H
 #define TABELA_STD_AUXILIAR_H
 
-#include "item_pilha_parser.h"
+#include "item_pilha_analise.h"
+#include "gerenciador_escopo.h"
 #include "acoes_semanticas.h"
 
 typedef enum {
@@ -12,7 +13,7 @@ typedef enum {
 typedef struct {
     TipoItemPilha tipo;
     union {
-        void (*acao)(NoAST*, GerenciadorEscopos*);
+        void (*acao)(NoAST*, GerenciadorEscopo*);
         char* simbolo;
     } valor;
 } ItemTabelaSDT;

@@ -2,7 +2,7 @@
 #define TABELA_ANALISE_H
 
 #include <string.h>
-#include "item_pilha_parser.h"
+#include "item_pilha_analise.h"
 
 // Estrutura para uma entrada na tabela SDT
 typedef struct {

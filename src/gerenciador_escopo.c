@@ -50,7 +50,7 @@ void fechar_escopo(GerenciadorEscopo* gerenciador) {
     }
 }
 
-void adicionar_simbolo(GerenciadorEscopo* gerenciador, Token* token) {
+void gerenciador_escopo_adicionar_simbolo(GerenciadorEscopo* gerenciador, Token* token) {
     if (!gerenciador->escopo_atual) return;
     
     if (simbolo_existe(gerenciador->escopo_atual->tabela_simbolos, token->lexema)) {
@@ -61,7 +61,7 @@ void adicionar_simbolo(GerenciadorEscopo* gerenciador, Token* token) {
         return;
     }
     
-    adicionar_simbolo_tabela(gerenciador->escopo_atual->tabela_simbolos, token);
+    tabela_simbolos_adicionar(gerenciador->escopo_atual->tabela_simbolos, token);
 }
 
 void definir_tipo_simbolo(GerenciadorEscopo* gerenciador, Token* token, const char* tipo) {

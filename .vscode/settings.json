@@ -1,0 +1,17 @@
+{
+  "files.associations": {
+    "*.embeddedhtml": "html",
+    "analisador_sintatico.h": "c",
+    "no_ast.h": "c",
+    "gerenciador_escopo.h": "c",
+    "tabela_analise.h": "c",
+    "item_pilha_analise.h": "c",
+    "resolvedor_expressao.h": "c",
+    "tabela_sdt_auxiliar.h": "c",
+    "stddef.h": "c",
+    "tabela_simbolos.h": "c",
+    "acoes_semanticas.h": "c",
+    "stdio.h": "c",
+    "token.h": "c"
+  }
+}

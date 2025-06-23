@@ -1,8 +1,7 @@
 #ifndef NO_AST_H
 #define NO_AST_H
 
-#include "tokens.h"
-#include "tipo_enum.h"
+#include "token.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,20 +15,12 @@ typedef struct NoExpressao {
     struct NoExpressao* filhoB;
 } NoExpressao;
 
-// Estrutura para lista de strings
+// Estrutura para lista de strings (para código intermediário, etc.)
 typedef struct ListaString {
     char** itens;
     int tamanho;
     int capacidade;
 } ListaString;
-
-// Estrutura para SDT matemática
-typedef struct SDTMatematica {
-    int contador_arrays;
-    ListaString* variaveis_array;
-    char operacao;
-    NoExpressao* no;
-} SDTMatematica;
 
 // Estrutura para SDT de declaração
 typedef struct SDTDec {
@@ -37,16 +28,24 @@ typedef struct SDTDec {
     char* tipo;
 } SDTDec;
 
-// Estrutura para código
+// Estrutura para SDT de resultado de código
 typedef struct Codigo {
-    char* variavel;
+    char* var;
     char* inicio;
-    char* retorno;
+    char* ret;
     char* valor_retorno;
-    int contador_parametros;
+    int contador_param;
 } Codigo;
 
-// Estrutura principal da AST
+// Estrutura para SDT de matemática
+typedef struct SDTMatematica {
+    int contador_vetor;
+    ListaString* vetor_array_var;
+    char operacao;
+    NoExpressao* no;
+} SDTMatematica;
+
+// --- ESTRUTURA PRINCIPAL DA AST (COM NOMES CORRIGIDOS) ---
 typedef struct NoAST {
     char* identificador;
     Token* token;
@@ -56,26 +55,29 @@ typedef struct NoAST {
     int quantidade_filhos;
     int capacidade_filhos;
     
-    // Código gerado
+    // Atributos para Geração de Código
     ListaString* codigo;
     char* proximo;
-    char* proximo_para_for;
+    char* para_proximo; // MUDANÇA: de 'proximo_para_for' para 'para_proximo'
 
-    // SDTs
-    SDTDec decSDT;
-    Codigo codigo_res_var;
-    SDTMatematica mathSDT;
+    // SDTs (Dados Sintetizados/Herdados) com nomes padronizados
+    SDTDec sdt_dec;         // MUDANÇA: de 'decSDT' para 'sdt_dec'
+    Codigo res_var_codigo;  // MUDANÇA: de 'codigo_res_var' para 'res_var_codigo'
+    SDTMatematica sdt_mat;    // MUDANÇA: de 'mathSDT' para 'sdt_mat'
     
-    // Contador de rótulos (simulado como ponteiro para contador global)
+    // Ponteiro para o contador de rótulos global
     int* contador_rotulos;
 } NoAST;
 
-// Funções para manipulação de nós
+
+// --- Protótipos das Funções ---
+
+// Funções para manipulação de nós da AST
 NoAST* criar_no_ast(const char* identificador, int* contador_rotulos);
 void adicionar_filho(NoAST* self, NoAST* filho);
 void definir_filhos(NoAST* self, NoAST** novos_filhos, int quantidade);
 void definir_token(NoAST* self, Token* token);
-char* novo_rotulo(NoAST* self);
+char* no_ast_gerar_novo_rotulo(NoAST* self);
 void liberar_no_ast(NoAST* no);
 
 // Funções para nós de expressão
@@ -84,11 +86,14 @@ NoExpressao* criar_no_expressao_binario(char operacao, const char* valor, NoExpr
 NoExpressao* criar_no_expressao_simples(char operacao, const char* tipo, const char* valor);
 NoExpressao* criar_no_expressao_basico(char operacao, const char* valor);
 void liberar_no_expressao(NoExpressao* no);
+void imprimir_erro_tipo(char operacao, NoExpressao* filhoA, NoExpressao* filhoB);
 
-// Funções auxiliares
+// Funções auxiliares para lista de strings
 ListaString* criar_lista_string();
 void adicionar_string(ListaString* lista, const char* str);
 void liberar_lista_string(ListaString* lista);
-void imprimir_erro_tipo(char operacao, NoExpressao* filhoA, NoExpressao* filhoB);
+void lista_codigo_adicionar_lista(ListaString* destino, ListaString* fonte);
+void lista_codigo_imprimir_tudo(ListaString* lista);
 
-#endif
+
+#endif // NO_AST_H

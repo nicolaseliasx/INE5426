@@ -1,9 +1,10 @@
 #ifndef ANALISADOR_LEXICO_H
 #define ANALISADOR_LEXICO_H
 
-#include "tokens.h"
+#include "token.h"
 #include "tabela_simbolos.h"
-#include "identificadores_token.h"
+#include "identificadores_tokens.h"
+#include "maquina_estados.h"
 #include "erros.h"
 #include <stdio.h>
 #include <stdlib.h>

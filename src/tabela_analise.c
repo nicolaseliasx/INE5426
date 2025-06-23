@@ -1,7 +1,9 @@
 #include "tabela_analise.h"
-#include "acoes_semanticas.h" // Antigo semantic_actions.h
+#include "acoes_semanticas.h"
+#include "tabela_sdt_auxiliar.h"
+
 #include <string.h>
-#include <stddef.h> // Para size_t
+#include <stddef.h>
 
 
 extern const EntradaTabelaSDT tabela_sdt_entries[];

@@ -1,7 +1,7 @@
 #ifndef GERENCIADOR_ESCOPO_H
 #define GERENCIADOR_ESCOPO_H
 
-#include "tabela_simbolos.h" // Antigo symbols_table.h
+#include "tabela_simbolos.h"
 #include <stdbool.h>
 
 // Estrutura de um item de escopo
@@ -30,7 +30,7 @@ void abrir_escopo(GerenciadorEscopo* gerenciador, const char* nome_escopo);
 void fechar_escopo(GerenciadorEscopo* gerenciador);
 
 // Adiciona um novo símbolo ao escopo atual
-void adicionar_simbolo(GerenciadorEscopo* gerenciador, Token* token);
+void gerenciador_escopo_adicionar_simbolo(GerenciadorEscopo* gerenciador, Token* token);
 
 // Define o tipo de um símbolo
 void definir_tipo_simbolo(GerenciadorEscopo* gerenciador, Token* token, const char* tipo);

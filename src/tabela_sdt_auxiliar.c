@@ -740,7 +740,7 @@ static void inicializar_producao_VARDECL_INT(ItemTabelaSDT* itens) {
     itens[4] = (ItemTabelaSDT){ACAO, {.acao = DEC_acao8}};
     itens[5] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "INDEX"}};
     itens[6] = (ItemTabelaSDT){ACAO, {.acao = DEC_acao11}};
-    itens[7] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_obter_codigo_filhos}}; // This was missing in your C++ reference. Assuming it should be here.
+    itens[7] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_obter_codigo_filhos}};
 }
 
 static void inicializar_producao_VARDECL_FLOAT(ItemTabelaSDT* itens) {

@@ -1,8 +1,8 @@
 #ifndef ITEM_PILHA_ANALISE_H
 #define ITEM_PILHA_ANALISE_H
 
-#include "no_ast.h"            // Antigo ast_node.h
-#include "gerenciador_escopo.h" // Antigo scope_manager.h
+#include "no_ast.h"
+#include "gerenciador_escopo.h"
 
 typedef enum {
     TIPO_SIMBOLO,

@@ -41,7 +41,7 @@ static void redimensionar(TabelaSimbolos* tabela) {
     tabela->capacidade = nova_capacidade;
 }
 
-void adicionar_simbolo(TabelaSimbolos* tabela, Token* token) {
+void tabela_simbolos_adicionar(TabelaSimbolos* tabela, Token* token) {
     int indice = buscar_indice(tabela, token->lexema);
     
     // Símbolo já existe, apenas adiciona a linha

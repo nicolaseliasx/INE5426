@@ -1,5 +1,4 @@
 #include "analisador_sintatico.h"
-#include "pilha.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -32,7 +31,7 @@ AnalisadorSintatico* criar_analisador_sintatico(
     analisador->gerenciador_escopo = gerenciador_escopo;
     analisador->tabela_analise = tabela_analise;
     analisador->num_entradas_tabela = num_entradas;
-    analisador->raiz_ast = criar_no_ast("PROGRAMA");
+    analisador->raiz_ast = criar_no_ast("PROGRAMA", &analisador->contador_rotulos);
     
     // Inicializa a pilha com capacidade inicial
     analisador->pilha = criar_pilha(100);
@@ -121,7 +120,7 @@ void analisar_token(AnalisadorSintatico* analisador, Token* token) {
                 
                 // Criar nó AST apenas para não-terminais
                 if (isupper(item->simbolo[0])) { // Heurística para identificar não-terminais
-                    NoAST* novo_no = criar_no_ast(item->simbolo);
+                    NoAST* novo_no = criar_no_ast(item->simbolo, &analisador->contador_rotulos);
                     definir_ancestralidade(novo_item, novo_no, topo->no_ast);
                     adicionar_filho(topo->no_ast, novo_no);
                 }
@@ -146,7 +145,7 @@ int analise_completa(AnalisadorSintatico* analisador) {
 void liberar_analisador_sintatico(AnalisadorSintatico* analisador) {
     if (analisador) {
         liberar_pilha(analisador->pilha);
-        liberar_no_ast(analisador->raiz_ast); // Implementar liberação recursiva da AST
+        liberar_no_ast(analisador->raiz_ast);
         free(analisador);
     }
 }

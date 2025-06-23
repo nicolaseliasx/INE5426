@@ -3,10 +3,8 @@
 #include "no_ast.h"
 #include "tabela_simbolos.h"
 #include "token.h"
-#include "resolvedor_expressao.h" // Para funções de resolução de expressões
-#include "lista_codigo.h"         // Para manipulação de listas de código
-#include "vetor_strings.h"        // Para vetores dinâmicos de strings
-#include "erros.h"                // Para erros semânticos
+#include "resolvedor_expressao.h"
+#include "erros.h" 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -327,7 +325,7 @@ void CODIGO_definir_rotulo(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 
 void CODIGO_obter_codigo_filhos(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     // Generic action to splice code from all children to the father
-    for (size_t i = 0; i < no_pai->num_filhos; i++) {
+    for (size_t i = 0; i < no_pai->quantidade_filhos; i++) {
         lista_codigo_adicionar_lista(no_pai->codigo, no_pai->filhos[i]->codigo);
     }
 }
@@ -348,7 +346,7 @@ void CODIGO_obter_codigo_filhos_2(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_herdar_proximo(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     // Generic action to inherit 'nxt' and 'for_nxt' attributes to children
-    for (size_t i = 0; i < no_pai->num_filhos; i++) {
+    for (size_t i = 0; i < no_pai->quantidade_filhos; i++) {
         if (no_pai->filhos[i]) { // Check for non-NULL child
             if (no_pai->proximo) {
                 no_pai->filhos[i]->proximo = strdup(no_pai->proximo);
@@ -409,7 +407,7 @@ void ESCOPO_acao3(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     // VARDECL  ->  string ident INDEX
     // add_symbol(ident)
     NoAST* ident = no_pai->filhos[1];
-    gerenciador_adicionar_simbolo(gerenciador, ident->token);
+    gerenciador_escopo_adicionar_simbolo(gerenciador, ident->token);
 }
 
 void ESCOPO_acao4(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -622,42 +620,53 @@ char* AUXILIAR_obter_tipo(const char* tipo_str, int contador_vetor) {
 }
 
 int* AUXILIAR_obter_tamanhos_vetor(const char* tipo_str, int* num_elementos) {
-    // This C implementation requires careful memory management.
-    // The returned int* must be freed by the caller.
-    VetorStrings* temp_values = vetor_strings_criar(); // Using a dynamic string vector as a temp store
-
-    const char* ptr = tipo_str;
-    while (*ptr != '\0') {
-        if (*ptr >= '0' && *ptr <= '9') {
-            // Extract the number
-            char num_buffer[16];
-            int i = 0;
-            while (*ptr >= '0' && *ptr <= '9' && i < 15) {
-                num_buffer[i++] = *ptr;
-                ptr++;
-            }
-            num_buffer[i] = '\0';
-            vetor_strings_adicionar(temp_values, strdup(num_buffer));
-            ptr--; // Decrement to compensate for the last ptr++ in inner loop
-        }
-        ptr++;
-    }
-
-    *num_elementos = vetor_strings_tamanho(temp_values);
-    int* values = (int*)malloc(sizeof(int) * (*num_elementos));
-    if (values == NULL) {
-        // Handle allocation error
-        reportar_erro_semantico("Erro de alocacao de memoria para tamanhos de vetor.");
-        vetor_strings_liberar(temp_values);
+    if (!tipo_str || !num_elementos) {
+        *num_elementos = 0;
         return NULL;
     }
 
-    for (size_t i = 0; i < *num_elementos; i++) {
-        values[i] = atoi(vetor_strings_obter(temp_values, i));
+    // Aloca um buffer temporário para os tamanhos.
+    // É improvável ter mais de, digamos, 32 dimensões em um array.
+    int temp_values[32]; 
+    int count = 0;
+    
+    const char* ptr = tipo_str;
+    while (*ptr != '\0' && count < 32) {
+        // Se encontrarmos um dígito, começamos a ler um número.
+        if (*ptr >= '0' && *ptr <= '9') {
+            // Usa strtol para converter a substring para um número longo.
+            // O segundo argumento (endptr) nos dirá onde o número termina.
+            char* endptr;
+            long val = strtol(ptr, &endptr, 10);
+            
+            // Armazena o valor encontrado.
+            temp_values[count++] = (int)val;
+            
+            // Avança o ponteiro principal para depois do número que acabamos de ler.
+            ptr = endptr; 
+        } else {
+            // Se não for um dígito, apenas avança.
+            ptr++;
+        }
     }
 
-    vetor_strings_liberar(temp_values); // Free the temp string vector and its contents
-    return values; // Caller must free this
+    *num_elementos = count;
+    if (count == 0) {
+        return NULL; // Nenhum tamanho de dimensão foi encontrado.
+    }
+
+    // Aloca a memória exata necessária para os valores encontrados.
+    int* values = (int*)malloc(sizeof(int) * count);
+    if (values == NULL) {
+        // Lidar com erro de alocação de memória.
+        reportar_erro_semantico("Erro de alocacao de memoria para tamanhos de vetor.");
+        return NULL;
+    }
+
+    // Copia os valores do buffer temporário para o array final.
+    memcpy(values, temp_values, sizeof(int) * count);
+
+    return values; // IMPORTANTE: O chamador desta função é responsável por usar free(values)!
 }
 
 
@@ -671,7 +680,7 @@ void EXPA_avaliar_identificador(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     NoAST* ident_node = no_pai->filhos[0];
     NoAST* allocaux_node = no_pai->filhos[1];
 
-    char* type_str = gerenciador_obter_tipo(gerenciador, ident_node->token);
+    char* type_str = obter_tipo_simbolo(gerenciador, ident_node->token);
     int num_elements;
     int* max_dims = AUXILIAR_obter_tamanhos_vetor(type_str, &num_elements);
 
@@ -680,41 +689,49 @@ void EXPA_avaliar_identificador(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     lista_codigo_adicionar_lista(lvalue_node->codigo, allocaux_node->codigo);
 
     if (lvalue_node->sdt_mat.contador_vetor > 0) {
-        // This part deals with array indexation and needs careful implementation
-        // in C to match the C++ `ExpressionTreeResolver::generateTempVar()` and `Node` creation.
-        VetorStrings* array_indexation_vars = allocaux_node->sdt_mat.vetor_array_var; // Assuming this is a VectorStrings*
+        // MUDANÇA: 'VetorStrings*' foi trocado por 'ListaString*', que é o tipo correto.
+        ListaString* array_indexation_vars = allocaux_node->sdt_mat.vetor_array_var;
 
-        char* somador_temp_var = resolvedor_expressao_gerar_var_temp();
+        // Supondo que resolvedor_expressao_gerar_var_temp() existe e aloca memória
+        char* somador_temp_var = gerar_variavel_temporaria(NULL); // Ajuste se necessário
         char buffer[256];
         snprintf(buffer, sizeof(buffer), "%s = 0", somador_temp_var);
-        lista_codigo_adicionar_string(lvalue_node->codigo, strdup(buffer));
+        adicionar_string(lvalue_node->codigo, buffer);
 
         int counter = 0;
-        for (size_t i = 0; i < vetor_strings_tamanho(array_indexation_vars); i++) {
-            char* k_var = vetor_strings_obter(array_indexation_vars, i);
-            char* current_temp_var = resolvedor_expressao_gerar_var_temp();
+        // MUDANÇA: Usar '->tamanho' e '->itens[i]' para acessar a lista
+        for (int i = 0; i < array_indexation_vars->tamanho; i++) {
+            char* k_var = array_indexation_vars->itens[i];
+            char* current_temp_var = gerar_variavel_temporaria(NULL);
 
             snprintf(buffer, sizeof(buffer), "%s = %s", current_temp_var, k_var);
-            lista_codigo_adicionar_string(lvalue_node->codigo, strdup(buffer));
+            adicionar_string(lvalue_node->codigo, buffer);
 
             for (int j = 0; j < counter; ++j) {
-                snprintf(buffer, sizeof(buffer), "%s = %s * %d", current_temp_var, current_temp_var, max_dims[j]);
-                lista_codigo_adicionar_string(lvalue_node->codigo, strdup(buffer));
+                // Certifica que max_dims não está fora dos limites
+                if (j < num_elements) {
+                    snprintf(buffer, sizeof(buffer), "%s = %s * %d", current_temp_var, current_temp_var, max_dims[j]);
+                    adicionar_string(lvalue_node->codigo, buffer);
+                }
             }
             snprintf(buffer, sizeof(buffer), "%s = %s + %s", somador_temp_var, somador_temp_var, current_temp_var);
-            lista_codigo_adicionar_string(lvalue_node->codigo, strdup(buffer));
-            free(current_temp_var); // Free temp var generated by resolver
+            adicionar_string(lvalue_node->codigo, buffer);
+            
+            free(current_temp_var); // Libera a variável temporária do loop interno
+            counter++;
         }
 
         snprintf(buffer, sizeof(buffer), "%s[%s]", ident_node->token->lexema, somador_temp_var);
-        lvalue_node->sdt_mat.no = no_arvore_expressao_criar_no('n', strdup(type_str), strdup(buffer));
-        free(somador_temp_var);
+        // Supondo que no_arvore_expressao_criar_no foi substituído por criar_no_expressao_simples/basico
+        lvalue_node->sdt_mat.no = criar_no_expressao_simples('n', type_str, buffer);
+        
+        free(somador_temp_var); // Libera a variável temporária do somador
     } else {
-        lvalue_node->sdt_mat.no = no_arvore_expressao_criar_no('n', strdup(type_str), strdup(ident_node->token->lexema));
+        lvalue_node->sdt_mat.no = criar_no_expressao_simples('n', type_str, ident_node->token->lexema);
     }
 
-    free(type_str); // Free the type string obtained from scope manager
-    free(max_dims); // Free the dynamically allocated array dimensions
+    free(type_str);
+    free(max_dims);
 }
 
 void EXPA_lexema_para_valor(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -724,14 +741,25 @@ void EXPA_lexema_para_valor(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     NoAST* constant_node = no_pai->filhos[0];
     char* type_str = NULL;
 
-    if (strcmp(constant_node->id, "NI") == 0) {
+    // CORREÇÃO: Trocar 'id' por 'identificador' para corresponder à definição da struct.
+    if (strcmp(constant_node->identificador, "NI") == 0) {
         type_str = strdup("int");
-    } else if (strcmp(constant_node->id, "NPF") == 0) {
+    } else if (strcmp(constant_node->identificador, "NPF") == 0) {
         type_str = strdup("float");
-    } else if (strcmp(constant_node->id, "STRC") == 0) {
+    } else if (strcmp(constant_node->identificador, "STRC") == 0) {
         type_str = strdup("string");
     }
-    factor_node->sdt_mat.no = no_arvore_expressao_criar_no('n', type_str, strdup(constant_node->token->lexema));
+    
+    // Libera a memória de type_str se ela foi alocada antes de uma nova atribuição
+    // (embora neste caso seja seguro, é uma boa prática).
+    if (factor_node->sdt_mat.no && factor_node->sdt_mat.no->tipo) {
+        free(type_str);
+    }
+
+    factor_node->sdt_mat.no = criar_no_expressao_simples('n', type_str, constant_node->token->lexema);
+    
+    // O tipo agora pertence ao nó da expressão, não precisamos mais da cópia local.
+    free(type_str);
 }
 
 void EXPA_definir_operacao(NoAST* no_pai, GerenciadorEscopo* gerenciador) {

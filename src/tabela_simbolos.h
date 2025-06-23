@@ -23,7 +23,7 @@ typedef struct {
 TabelaSimbolos* criar_tabela_simbolos();
 
 // Adiciona um novo símbolo à tabela
-void adicionar_simbolo(TabelaSimbolos* tabela, Token* token);
+void tabela_simbolos_adicionar(TabelaSimbolos* tabela, Token* token);
 
 // Define o tipo de um símbolo
 void definir_tipo_simbolo(TabelaSimbolos* tabela, Token* token, const char* tipo);

@@ -1,7 +1,7 @@
 #ifndef RESOLVEDOR_EXPRESSAO_H
 #define RESOLVEDOR_EXPRESSAO_H
 
-#include "no_expressao.h"
+#include "no_ast.h"
 #include <stdio.h>
 
 // Estrutura para resolver árvores de expressão
