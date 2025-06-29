@@ -8,7 +8,26 @@
 #include <string.h>
 #include <ctype.h>
 
+static const MapeamentoInicial dados_mapa_inicial[] = {
+    {"+", "PLUS"},
+    {"-", "MINUS"},
+    {"*", "MULTIPLICATION"},
+    {"/", "DIVISION"},
+    {"%", "MODULUS"},
+    {"=", "ASSIGN"},
+    {"(", "OPEN_PARENTHESIS"},
+    {")", "CLOSE_PARENTHESIS"},
+    {"{", "OPEN_BRACE"},
+    {"}", "CLOSE_BRACE"},
+    {"[", "OPEN_BRACKET"},
+    {"]", "CLOSE_BRACKET"},
+    {";", "SEMICOLON"},
+    {",", "COMMA"}
+};
+static const int num_mapeamentos_inicial = sizeof(dados_mapa_inicial) / sizeof(MapeamentoInicial);
+
 static char* obter_id_token_final(AnalisadorLexico* analisador, const char* id, const char* lexema) {
+    // 1. Checa por palavras-chave
     if (strcmp(id, "IDENT") == 0) {
         for (int i = 0; i < analisador->num_palavras_chave; i++) {
             if (strcmp(lexema, analisador->palavras_chave[i]) == 0) {
@@ -18,6 +37,15 @@ static char* obter_id_token_final(AnalisadorLexico* analisador, const char* id, 
             }
         }
     }
+
+    // 2. Checa por operadores e símbolos no mapa do analisador
+    for (int i = 0; i < analisador->num_mapeamentos; i++) {
+        if (strcmp(lexema, analisador->mapeamento_tokens[i].lexema) == 0) {
+            return strdup(analisador->mapeamento_tokens[i].id);
+        }
+    }
+
+    // 3. Se não for nenhum, retorna o ID genérico da máquina de estados
     return strdup(id);
 }
 
@@ -45,6 +73,13 @@ AnalisadorLexico* criar_analisador_lexico(FILE* arquivo, char** palavras_chave, 
     analisador->identificadores_token[4] = &relopTokenIdentifier;
     analisador->identificadores_token[5] = &oneCharTokenIdentifier;
     analisador->identificadores_token[6] = &stringConstCharTokenIdentifier;
+
+    analisador->num_mapeamentos = num_mapeamentos_inicial;
+    analisador->mapeamento_tokens = malloc(analisador->num_mapeamentos * sizeof(*analisador->mapeamento_tokens));
+    for (int i = 0; i < analisador->num_mapeamentos; i++) {
+        analisador->mapeamento_tokens[i].lexema = strdup(dados_mapa_inicial[i].lexema);
+        analisador->mapeamento_tokens[i].id = strdup(dados_mapa_inicial[i].id);
+    }
     
     return analisador;
 }
@@ -58,8 +93,11 @@ void destruir_analisador_lexico(AnalisadorLexico* analisador) {
     }
     free(analisador->palavras_chave);
 
-    // As máquinas e identificadores são globais, não os liberamos aqui.
-    // Apenas o array de ponteiros.
+    for (int i = 0; i < analisador->num_mapeamentos; i++) {
+        free(analisador->mapeamento_tokens[i].lexema);
+        free(analisador->mapeamento_tokens[i].id);
+    }
+    free(analisador->mapeamento_tokens);
     free(analisador->identificadores_token);
     free(analisador);
 }
@@ -95,20 +133,19 @@ Token* proximo_token(AnalisadorLexico* analisador) {
         reiniciar_maquina(analisador->identificadores_token[i]->maquina_estado);
     }
 
-    // 3. Encontrar o maior casamento (longest match)
     char* lexema_maior_token = NULL;
     IdentificadorToken* id_maior_token = NULL;
     long posicao_final = posicao_inicio;
+    size_t maior_tamanho = 0;
 
     while (1) {
         long pos_leitura_atual = ftell(analisador->arquivo);
         c = fgetc(analisador->arquivo);
         bool eof = (c == EOF);
-
         int maquinas_ativas = 0;
+
         for (int i = 0; i < analisador->num_identificadores; i++) {
             IdentificadorToken* id_token = analisador->identificadores_token[i];
-            
             if (obter_status_maquina(id_token->maquina_estado) == MAQ_ERRO) continue;
 
             transicionar_maquina(id_token->maquina_estado, c, eof);
@@ -116,10 +153,17 @@ Token* proximo_token(AnalisadorLexico* analisador) {
             if (obter_status_maquina(id_token->maquina_estado) != MAQ_ERRO) {
                 maquinas_ativas++;
                 if (obter_status_maquina(id_token->maquina_estado) == MAQ_SUCESSO) {
-                    free(lexema_maior_token);
-                    lexema_maior_token = strdup(obter_lexema_maquina(id_token->maquina_estado));
-                    id_maior_token = id_token;
-                    posicao_final = pos_leitura_atual;
+                    // LÓGICA DO LONGEST MATCH AQUI
+                    char* lexema_atual = obter_lexema_maquina(id_token->maquina_estado);
+                    size_t tamanho_atual = strlen(lexema_atual);
+                    
+                    if (tamanho_atual > maior_tamanho) {
+                        maior_tamanho = tamanho_atual;
+                        free(lexema_maior_token);
+                        lexema_maior_token = strdup(lexema_atual);
+                        id_maior_token = id_token;
+                        posicao_final = pos_leitura_atual;
+                    }
                 }
             }
         }

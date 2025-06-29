@@ -96,14 +96,25 @@ NoExpressao* criar_no_expressao_unario(char operacao, const char* valor, NoExpre
     return no;
 }
 
+// Em no_ast.c
 NoExpressao* criar_no_expressao_binario(char operacao, const char* valor, NoExpressao* filhoA, NoExpressao* filhoB) {
-    // A verificação de tipo é feita na ação semântica
     NoExpressao* no = (NoExpressao*)malloc(sizeof(NoExpressao));
+    if (!no) exit(EXIT_FAILURE);
+
+    if (filhoA && filhoB && strcmp(filhoA->tipo, filhoB->tipo) != 0) {
+        // Tipos são diferentes, reporta o erro e encerra.
+        imprimir_erro_tipo(operacao, filhoA, filhoB);
+        // Em C, usamos exit() para simular o comportamento de 'throw' que para a execução.
+        exit(EXIT_FAILURE);
+    }
+
     no->operacao = operacao;
     no->valor = strdup(valor);
     no->filhoA = filhoA;
     no->filhoB = filhoB;
-    if (filhoA) { // O tipo do nó binário geralmente depende da operação
+
+    // Se passou na verificação, o tipo pode ser copiado do filho da esquerda.
+    if (filhoA) {
         no->tipo = strdup(filhoA->tipo);
     } else {
         no->tipo = strdup("");
@@ -148,10 +159,29 @@ void adicionar_string(ListaString* lista, const char* str) {
 }
 
 void lista_codigo_adicionar_lista(ListaString* destino, ListaString* fonte) {
-    if (!fonte) return;
-    for (int i = 0; i < fonte->tamanho; ++i) {
-        adicionar_string(destino, fonte->itens[i]);
+    if (!fonte || fonte->tamanho == 0) return;
+
+    // Garante que o destino tem capacidade suficiente
+    int nova_capacidade = destino->capacidade;
+    while (destino->tamanho + fonte->tamanho > nova_capacidade) {
+        nova_capacidade = nova_capacidade == 0 ? 4 : nova_capacidade * 2;
     }
+    if (nova_capacidade > destino->capacidade) {
+        char** novos_itens = (char**)realloc(destino->itens, sizeof(char*) * nova_capacidade);
+        if(!novos_itens) { /* Tratar erro */ exit(1); }
+        destino->itens = novos_itens;
+        destino->capacidade = nova_capacidade;
+    }
+
+    // Copia os ponteiros de string da fonte para o destino
+    memcpy(destino->itens + destino->tamanho, fonte->itens, fonte->tamanho * sizeof(char*));
+    destino->tamanho += fonte->tamanho;
+
+    // Esvazia a lista de origem sem liberar as strings (pois foram movidas)
+    free(fonte->itens);
+    fonte->itens = NULL;
+    fonte->tamanho = 0;
+    fonte->capacidade = 0;
 }
 
 void lista_codigo_imprimir_tudo(ListaString* lista) {

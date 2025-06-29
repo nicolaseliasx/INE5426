@@ -7,7 +7,7 @@ ItemPilha* criar_item_simbolo(const char* simbolo) {
     ItemPilha* item = (ItemPilha*)malloc(sizeof(ItemPilha));
     item->tipo = SIMBOLO;
     item->simbolo = strdup(simbolo);
-    item->acao_semantica = NULL;
+    item->acao = NULL;
     item->no_ast = NULL;
     item->ancestral = NULL;
     return item;
@@ -17,7 +17,7 @@ ItemPilha* criar_item_acao(FuncaoAcaoSemantica acao) {
     ItemPilha* item = (ItemPilha*)malloc(sizeof(ItemPilha));
     item->tipo = ACAO;
     item->simbolo = NULL;
-    item->acao_semantica = acao;
+    item->acao = acao;
     item->no_ast = NULL;
     item->ancestral = NULL;
     return item;

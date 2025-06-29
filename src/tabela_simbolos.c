@@ -96,12 +96,10 @@ bool tabela_simbolo_e_tipo(TabelaSimbolos* tabela, Token* token, const char* tip
 char* tabela_obter_tipo_simbolo(TabelaSimbolos* tabela, Token* token) {
     int indice = buscar_indice(tabela, token->lexema);
     if (indice == -1) {
-        // Tratar erro conforme necessário
-        return strdup("");
+        return NULL;
     }
     return strdup(tabela->entradas[indice]->tipo);
 }
-
 void imprimir_tabela_simbolos(TabelaSimbolos* tabela, FILE* saida) {
     for (int i = 0; i < tabela->tamanho; i++) {
         fprintf(saida, "\tSímbolo: %s\n", tabela->chaves[i]);

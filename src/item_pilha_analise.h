@@ -1,34 +1,35 @@
+// Arquivo: item_pilha_analise.h (VERSÃO FINAL E DEFINITIVA)
 #ifndef ITEM_PILHA_ANALISE_H
 #define ITEM_PILHA_ANALISE_H
 
 #include "no_ast.h"
 #include "gerenciador_escopo.h"
 
+// Enum para o tipo de item
 typedef enum {
     SIMBOLO,
     ACAO
 } TipoItemPilha;
 
+// Ponteiro de função para a ação semântica
 typedef void (*FuncaoAcaoSemantica)(NoAST* no_pai, GerenciadorEscopo* gerenciador_escopo);
 
-typedef struct ItemPilha {
+// A ESTRUTURA DEFINITIVA COM UNION ANÔNIMA
+typedef struct {
     TipoItemPilha tipo;
-    char* simbolo;
-    FuncaoAcaoSemantica acao_semantica;
+    union { // Union anônima (sem nome)
+        char* simbolo;
+        FuncaoAcaoSemantica acao;
+    };
+
     NoAST* no_ast;
     NoAST* ancestral;
 } ItemPilha;
 
-// Cria um item de pilha do tipo símbolo
+// As declarações das funções permanecem as mesmas
 ItemPilha* criar_item_simbolo(const char* simbolo);
-
-// Cria um item de pilha do tipo ação semântica
 ItemPilha* criar_item_acao(FuncaoAcaoSemantica acao);
-
-// Define a relação de ancestralidade na AST
 void definir_ancestralidade(ItemPilha* item, NoAST* no, NoAST* ancestral);
-
-// Libera a memória de um item da pilha
 void liberar_item_pilha(ItemPilha* item);
 
-#endif
+#endif // ITEM_PILHA_ANALISE_H

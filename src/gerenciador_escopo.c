@@ -87,7 +87,6 @@ void gerenciador_definir_tipo_simbolo(GerenciadorEscopo* gerenciador, Token* tok
 
 bool gerenciador_simbolo_declarado(GerenciadorEscopo* gerenciador, Token* token) {
     ItemEscopo* escopo = gerenciador->escopo_atual;
-    
     while (escopo) {
         if (simbolo_existe(escopo->tabela_simbolos, token->lexema)) {
             return true;

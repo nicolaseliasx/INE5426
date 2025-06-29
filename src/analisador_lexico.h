@@ -20,6 +20,11 @@ typedef struct {
     int inicio;
 } PossivelToken;
 
+typedef struct {
+    const char* lexema;
+    const char* id;
+} MapeamentoInicial;
+
 // Estrutura principal do analisador léxico
 typedef struct {
     FILE* arquivo;

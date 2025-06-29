@@ -49,7 +49,8 @@ void reiniciar_maquina(MaquinaEstados* maq) {
 }
 
 EstadoMaquina transicionar_maquina(MaquinaEstados* maq, char c, int is_eof) {
-    if (maq->status == MAQ_ERRO) {
+    // CORREÇÃO 1: Para a máquina se já estiver em um estado final (SUCESSO ou ERRO)
+    if (maq->status == MAQ_ERRO || maq->status == MAQ_SUCESSO) {
         return maq->status;
     }
     
@@ -71,19 +72,21 @@ EstadoMaquina transicionar_maquina(MaquinaEstados* maq, char c, int is_eof) {
     maq->estado_atual = strdup(proximo_estado);
     maq->status = MAQ_EXECUTANDO;
     
+    if (strcmp(maq->estado_atual, "morto") == 0) {
+        maq->status = MAQ_ERRO;
+        return maq->status;
+    }
+
+    // Verifica se o novo estado é final
     for (int i = 0; i < maq->num_estados_finais; i++) {
         if (strcmp(maq->estado_atual, maq->estados_finais[i]) == 0) {
             maq->status = MAQ_SUCESSO;
-            break;
+            break; // Sai do loop assim que encontra um estado final
         }
     }
 
-    if (maq->status != MAQ_SUCESSO && strcmp(maq->estado_atual, "morto") == 0) {
-        maq->status = MAQ_ERRO;
-    }
-
-    // Só adiciona ao lexema se não estiver em estado de erro
-    if (maq->status != MAQ_ERRO && !deve_retroceder_cursor(maq)) {
+    // Adiciona ao lexema se não precisar retroceder
+    if (!deve_retroceder_cursor(maq)) {
         size_t len = strlen(maq->lexema);
         char* novo_lexema = (char*)realloc(maq->lexema, len + 2);
         novo_lexema[len] = c;
@@ -109,14 +112,17 @@ void liberar_maquina_estados(MaquinaEstados* maq) {
     if (!maq) return;
     
     free(maq->transicoes);
-    // Não liberamos os ponteiros const, apenas o array
-    free((void*)maq->estado_inicial);
+    
+    // CORREÇÃO: Não libere 'estado_inicial', 'estados_finais' ou 'estados_retrocesso',
+    // pois eles são ponteiros para dados externos.
+    // free((void*)maq->estado_inicial); // REMOVA ESTA LINHA
+
+    // Libere apenas o que foi alocado dinamicamente pela máquina
     free((void*)maq->estado_atual);
     free(maq->lexema);
     
     free(maq);
 }
-
 EstadoMaquina obter_status_maquina(MaquinaEstados* maq) {
     return maq->status;
 }

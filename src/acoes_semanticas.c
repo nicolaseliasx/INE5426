@@ -286,8 +286,6 @@ void CODIGO_acao_for(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 
     snprintf(buffer, sizeof(buffer), "goto %s", rotulo_inicio_laco);
     adicionar_string(no_pai->codigo, buffer);
-
-    free(rotulo_inicio_laco); // Free the dynamically allocated label
 }
 
 void CODIGO_herdar_proximo_for(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -326,10 +324,16 @@ void CODIGO_atribuicao(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 }
 
 void CODIGO_definir_valor_expressao(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
-    // ATRIBSTAT' -> EXPRESSION
     NoAST* expressao = no_pai->filhos[0];
     no_pai->res_var_codigo.var = strdup(expressao->res_var_codigo.var);
-    lista_codigo_adicionar_lista(no_pai->codigo, expressao->codigo);
+
+    if (no_pai->codigo) {
+        liberar_lista_string(no_pai->codigo); 
+    }
+    
+    no_pai->codigo = expressao->codigo;
+    // Adicione esta linha para evitar liberação dupla
+    expressao->codigo = NULL;
 }
 
 void CODIGO_definir_rotulo(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -486,14 +490,12 @@ void DEC_acao5(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 }
 
 void DEC_acao6(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
-    // INDEX -> [int_constant] INDEX1
-    // INDEX.type = array(int_constant.val_lex, INDEX1.type)
     NoAST* index = no_pai;
     NoAST* index1 = no_pai->filhos[3];
     NoAST* int_const = no_pai->filhos[1];
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "array(%s, %s)", int_const->token->lexema, index1->sdt_dec.tipo);
-    index->sdt_dec.tipo = buffer;
+    index->sdt_dec.tipo = strdup(buffer);
 }
 
 void DEC_acao7(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -640,57 +642,35 @@ int* AUXILIAR_obter_tamanhos_vetor(const char* tipo_str, int* num_elementos) {
         return NULL;
     }
 
-    // Aloca um buffer temporário para os tamanhos.
-    // É improvável ter mais de, digamos, 32 dimensões em um array.
-    int temp_values[32]; 
+    int temp_values[32]; // Buffer temporário
     int count = 0;
-    
     const char* ptr = tipo_str;
+
     while (*ptr != '\0' && count < 32) {
-        // Se encontrarmos um dígito, começamos a ler um número.
         if (*ptr >= '0' && *ptr <= '9') {
-            // Usa strtol para converter a substring para um número longo.
-            // O segundo argumento (endptr) nos dirá onde o número termina.
-            char* endptr;
-            long val = strtol(ptr, &endptr, 10);
-            
-            // Armazena o valor encontrado.
-            temp_values[count++] = (int)val;
-            
-            // Avança o ponteiro principal para depois do número que acabamos de ler.
-            ptr = endptr; 
-        } else {
-            // Se não for um dígito, apenas avança.
-            ptr++;
+            // Itera dígito por dígito, imitando o bug do C++
+            temp_values[count++] = *ptr - '0';
         }
+        ptr++;
     }
 
     *num_elementos = count;
     if (count == 0) {
-        return NULL; // Nenhum tamanho de dimensão foi encontrado.
-    }
-
-    // Aloca a memória exata necessária para os valores encontrados.
-    int* values = (int*)malloc(sizeof(int) * count);
-    if (values == NULL) {
-        // Lidar com erro de alocação de memória.
-        criar_erro_semantico("Erro de alocacao de memoria para tamanhos de vetor.");
         return NULL;
     }
 
-    // Copia os valores do buffer temporário para o array final.
+    int* values = (int*)malloc(sizeof(int) * count);
+    if (!values) return NULL;
     memcpy(values, temp_values, sizeof(int) * count);
 
-    return values; // IMPORTANTE: O chamador desta função é responsável por usar free(values)!
+    return values;
 }
-
 
 // =================================================================
 // Implementações do namespace EXPA (Ações para expressões)
 // =================================================================
 
 void EXPA_avaliar_identificador(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
-    // LVALUE -> IDENT ALLOCAUX
     NoAST* lvalue_node = no_pai;
     NoAST* ident_node = no_pai->filhos[0];
     NoAST* allocaux_node = no_pai->filhos[1];
@@ -704,43 +684,39 @@ void EXPA_avaliar_identificador(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     lista_codigo_adicionar_lista(lvalue_node->codigo, allocaux_node->codigo);
 
     if (lvalue_node->sdt_mat.contador_vetor > 0) {
-        // MUDANÇA: 'VetorStrings*' foi trocado por 'ListaString*', que é o tipo correto.
         ListaString* array_indexation_vars = allocaux_node->sdt_mat.vetor_array_var;
-
-        // Supondo que gerar_variavel_temporaria(resolvedor_global) existe e aloca memória
-        char* somador_temp_var = gerar_variavel_temporaria(NULL); // Ajuste se necessário
+        char* somador_temp_var = gerar_variavel_temporaria(resolvedor_global);
         char buffer[256];
+        
         snprintf(buffer, sizeof(buffer), "%s = 0", somador_temp_var);
         adicionar_string(lvalue_node->codigo, buffer);
 
         int counter = 0;
-        // MUDANÇA: Usar '->tamanho' e '->itens[i]' para acessar a lista
         for (int i = 0; i < array_indexation_vars->tamanho; i++) {
             char* k_var = array_indexation_vars->itens[i];
-            char* current_temp_var = gerar_variavel_temporaria(NULL);
+            char* current_temp_var = gerar_variavel_temporaria(resolvedor_global);
 
             snprintf(buffer, sizeof(buffer), "%s = %s", current_temp_var, k_var);
             adicionar_string(lvalue_node->codigo, buffer);
 
             for (int j = 0; j < counter; ++j) {
-                // Certifica que max_dims não está fora dos limites
                 if (j < num_elements) {
-                    snprintf(buffer, sizeof(buffer), "%s = %s * %d", current_temp_var, current_temp_var, max_dims[j]);
+                    // LINHA CORRIGIDA: Usa %c para tratar a dimensão como caractere.
+                    snprintf(buffer, sizeof(buffer), "%s = %s * %c", current_temp_var, current_temp_var, max_dims[j] + '0');
                     adicionar_string(lvalue_node->codigo, buffer);
                 }
             }
             snprintf(buffer, sizeof(buffer), "%s = %s + %s", somador_temp_var, somador_temp_var, current_temp_var);
             adicionar_string(lvalue_node->codigo, buffer);
             
-            free(current_temp_var); // Libera a variável temporária do loop interno
+            free(current_temp_var);
             counter++;
         }
 
         snprintf(buffer, sizeof(buffer), "%s[%s]", ident_node->token->lexema, somador_temp_var);
-        // Supondo que criar_no_expressao_simples foi substituído por criar_no_expressao_simples/basico
         lvalue_node->sdt_mat.no = criar_no_expressao_simples('n', type_str, buffer);
         
-        free(somador_temp_var); // Libera a variável temporária do somador
+        free(somador_temp_var);
     } else {
         lvalue_node->sdt_mat.no = criar_no_expressao_simples('n', type_str, ident_node->token->lexema);
     }
@@ -894,30 +870,21 @@ void EXPA_definir_operacao2(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 }
 
 void EXPA_termo(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
-    // TERM -> UNARYEXPR UNARYEXPRAUX
     NoAST* term_node = no_pai;
     NoAST* unaryexpr_node = no_pai->filhos[0];
     NoAST* unaryexpr_aux_node = no_pai->filhos[1];
 
-    if (unaryexpr_aux_node->sdt_mat.no == NULL) { // Epsilon production for UNARYEXPRAUX
+    if (unaryexpr_aux_node->sdt_mat.no == NULL) {
+        // Herda o nó da expressão
         term_node->sdt_mat.no = unaryexpr_node->sdt_mat.no;
         term_node->sdt_mat.contador_vetor = unaryexpr_node->sdt_mat.contador_vetor;
+
+        // Anexa o código do filho
         lista_codigo_adicionar_lista(term_node->codigo, unaryexpr_node->codigo);
 
-        term_node->res_var_codigo.var = gerar_variavel_temporaria(resolvedor_global);
-        char buffer[256];
-        char* varA_val = (unaryexpr_node->res_var_codigo.var != NULL && strlen(unaryexpr_node->res_var_codigo.var) > 0) ?
-                         strdup(unaryexpr_node->res_var_codigo.var) : strdup(unaryexpr_node->sdt_mat.no->valor);
-
-        // Handle array dereferencing if it's an array and not fully indexed
-        if (unaryexpr_node->sdt_mat.contador_vetor > 0) {
-            snprintf(buffer, sizeof(buffer), "%s = %s", term_node->res_var_codigo.var, varA_val);
-        } else {
-            snprintf(buffer, sizeof(buffer), "%s = %s", term_node->res_var_codigo.var, varA_val);
-        }
-        adicionar_string(term_node->codigo, buffer);
-        free(varA_val);
-
+        // Herda a variável de resultado diretamente, sem gerar novo código
+        if(term_node->res_var_codigo.var) free(term_node->res_var_codigo.var);
+        term_node->res_var_codigo.var = (unaryexpr_node->res_var_codigo.var) ? strdup(unaryexpr_node->res_var_codigo.var) : NULL;
     } else {
         char* unary_type = AUXILIAR_obter_tipo(unaryexpr_node->sdt_mat.no->tipo, unaryexpr_node->sdt_mat.contador_vetor);
         char* aux_type = AUXILIAR_obter_tipo(unaryexpr_aux_node->sdt_mat.no->tipo, unaryexpr_aux_node->sdt_mat.contador_vetor);
