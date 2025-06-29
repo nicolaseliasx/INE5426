@@ -16,9 +16,9 @@ static const char* estado_ident_0(char c, int eof) {
 }
 
 static const char* estado_ident_1(char c, int eof) {
-    if (eof) return "final";
+    if (eof) return "final_consumido";
     if (eh_letra(c) || eh_digito(c) || c == '_') return "1";
-    return "final";
+    return "final_retrocede"; 
 }
 
 // Identificador de números inteiros (NI)
@@ -167,8 +167,9 @@ static TransicaoEstado transicoes_ident[] = {
     {"1", estado_ident_1}
 };
 
-static const char* estados_finais_ident[] = {"final"};
+static const char* estados_finais_ident[] = {"final_consumido", "final_retrocede"};
 static const char* estados_mortos_ident[] = {"morto"};
+static const char* estados_retrocesso_ident[] = {"final_retrocede"};
 
 static MaquinaEstados maquina_ident = {
     transicoes_ident,
@@ -177,7 +178,9 @@ static MaquinaEstados maquina_ident = {
     estados_finais_ident,
     sizeof(estados_finais_ident) / sizeof(const char*),
     estados_mortos_ident,
-    sizeof(estados_mortos_ident) / sizeof(const char*)
+    sizeof(estados_mortos_ident) / sizeof(const char*),
+    estados_retrocesso_ident,
+    sizeof(estados_retrocesso_ident) / sizeof(const char*)
 };
 
 // FSM para números inteiros (NI)

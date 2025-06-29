@@ -21,21 +21,24 @@ typedef struct {
 } TransicaoEstado;
 
 
-typedef struct MaquinaEstados {
+typedef struct {
+    // --- Configuração da Máquina (definida na inicialização) ---
     TransicaoEstado* transicoes;
     int num_transicoes;
-    
     const char* estado_inicial;
-    const char** estados_finais; 
+    const char** estados_finais;
     int num_estados_finais;
+    const char** estados_mortos;
+    int num_estados_mortos;
     const char** estados_retrocesso;
     int num_estados_retrocesso;
-    
-    // Atributos de execução
+
+    // --- Estado Interno da Máquina (controlado em tempo de execução) ---
     const char* estado_atual;
     char* lexema;
+    int tamanho_lexema;
     EstadoMaquina status;
-
+    bool retroceder_cursor;
 } MaquinaEstados;
 
 

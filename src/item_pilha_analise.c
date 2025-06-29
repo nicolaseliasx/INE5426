@@ -7,7 +7,6 @@ ItemPilha* criar_item_simbolo(const char* simbolo) {
     ItemPilha* item = (ItemPilha*)malloc(sizeof(ItemPilha));
     item->tipo = SIMBOLO;
     item->simbolo = strdup(simbolo);
-    item->acao = NULL;
     item->no_ast = NULL;
     item->ancestral = NULL;
     return item;
@@ -16,7 +15,6 @@ ItemPilha* criar_item_simbolo(const char* simbolo) {
 ItemPilha* criar_item_acao(FuncaoAcaoSemantica acao) {
     ItemPilha* item = (ItemPilha*)malloc(sizeof(ItemPilha));
     item->tipo = ACAO;
-    item->simbolo = NULL;
     item->acao = acao;
     item->no_ast = NULL;
     item->ancestral = NULL;
@@ -30,7 +28,9 @@ void definir_ancestralidade(ItemPilha* item, NoAST* no, NoAST* ancestral) {
 
 void liberar_item_pilha(ItemPilha* item) {
     if (item) {
-        if (item->simbolo) free(item->simbolo);
+        if (item->tipo == SIMBOLO && item->simbolo) {
+            free(item->simbolo);
+        }
         free(item);
     }
 }

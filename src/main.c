@@ -145,7 +145,7 @@ int main(int argc, char *argv[]) {
     }
     analisar_token(syntax_analyzer, eof_token);
     printf("[DEBUG] Token EOF processado.\n");
-    liberar_token(eof_token); // Liberar o token EOF criado manualmente
+    liberar_token(eof_token);
 
 
     printf("[DEBUG] Verificando se a análise sintática foi concluída com sucesso...\n");
