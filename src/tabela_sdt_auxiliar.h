@@ -1,14 +1,7 @@
 #ifndef TABELA_SDT_AUXILIAR_H
-#define TABELA_STD_AUXILIAR_H
+#define TABELA_SDT_AUXILIAR_H
 
 #include "item_pilha_analise.h"
-#include "gerenciador_escopo.h"
-#include "acoes_semanticas.h"
-
-typedef enum {
-    ACAO,
-    SIMBOLO
-} TipoItemPilha;
 
 typedef struct {
     TipoItemPilha tipo;
@@ -22,16 +15,11 @@ typedef struct {
     char* chave;
     ItemTabelaSDT* itens;
     int quantidade;
-} EntradaTabelaSDT;
+} EntradaTabelaAuxSDT;
 
-typedef struct {
-    EntradaTabelaSDT* entradas;
-    int quantidade;
-} TabelaSDT;
+extern EntradaTabelaAuxSDT tabela_sdt_entries[];
+extern const size_t num_entradas_sdt;
 
-// Funções públicas
-TabelaSDT* criar_tabela_sdt();
-const ItemTabelaSDT* buscar_producao(const TabelaSDT* tabela, const char* nao_terminal, const char* token);
-void liberar_tabela_sdt(TabelaSDT* tabela);
+void inicializar_tabela_sdt_entries();
 
-#endif
+#endif // TABELA_SDT_AUXILIAR_H

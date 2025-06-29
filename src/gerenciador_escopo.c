@@ -1,6 +1,9 @@
+#define _DEFAULT_SOURCE
 #include "gerenciador_escopo.h"
-#include <stdlib.h>
+#include "tabela_simbolos.h"
+#include "erros.h"
 #include <string.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 #define CAPACIDADE_INICIAL_FILHOS 10
@@ -57,7 +60,7 @@ void gerenciador_escopo_adicionar_simbolo(GerenciadorEscopo* gerenciador, Token*
         char erro_msg[100];
         snprintf(erro_msg, sizeof(erro_msg), "%s redeclarado em %d:%d",
                  token->lexema, token->linha, token->coluna);
-        erro_semantico(erro_msg);
+        criar_erro_semantico(erro_msg);
         return;
     }
     
@@ -79,10 +82,10 @@ void gerenciador_definir_tipo_simbolo(GerenciadorEscopo* gerenciador, Token* tok
     snprintf(erro_msg, sizeof(erro_msg), 
              "Impossível atribuir tipo a %s em %d:%d",
              token->lexema, token->linha, token->coluna);
-    erro_semantico(erro_msg);
+    criar_erro_semantico(erro_msg);
 }
 
-bool simbolo_declarado(GerenciadorEscopo* gerenciador, Token* token) {
+bool gerenciador_simbolo_declarado(GerenciadorEscopo* gerenciador, Token* token) {
     ItemEscopo* escopo = gerenciador->escopo_atual;
     
     while (escopo) {
@@ -99,7 +102,7 @@ bool gerenciador_simbolo_e_tipo(GerenciadorEscopo* gerenciador, Token* token, co
     
     while (escopo) {
         if (simbolo_existe(escopo->tabela_simbolos, token->lexema)) {
-            return verificar_tipo_simbolo(escopo->tabela_simbolos, token, tipo);
+            return tabela_simbolo_e_tipo(escopo->tabela_simbolos, token, tipo);
         }
         escopo = escopo->escopo_ancestral;
     }
@@ -111,7 +114,7 @@ char* gerenciador_obter_tipo_simbolo(GerenciadorEscopo* gerenciador, Token* toke
     
     while (escopo) {
         if (simbolo_existe(escopo->tabela_simbolos, token->lexema)) {
-            return obter_tipo_simbolo_tabela(escopo->tabela_simbolos, token);
+            return tabela_obter_tipo_simbolo(escopo->tabela_simbolos, token);
         }
         escopo = escopo->escopo_ancestral;
     }

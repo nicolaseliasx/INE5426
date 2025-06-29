@@ -1,6 +1,5 @@
 #include "tipo_enum.h"
-#include <stdio.h>
-#include "erros.h" // Supondo que temos um header de erros
+#include "erros.h"
 
 const char* tipo_para_string(Tipo tipo) {
     switch(tipo) {
@@ -9,7 +8,7 @@ const char* tipo_para_string(Tipo tipo) {
         case TIPO_FLOAT:     return "FLOAT";
         case TIPO_STRING:    return "STRING";
         default:             
-            erro_semantico("Tipo proibido");
+            criar_erro_semantico("Tipo proibido");
             return "DESCONHECIDO";
     }
 }

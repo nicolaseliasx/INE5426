@@ -1,3 +1,4 @@
+#define _DEFAULT_SOURCE
 #include "token.h"
 #include <stdlib.h>
 #include <ctype.h>

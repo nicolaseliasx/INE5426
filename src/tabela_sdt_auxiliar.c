@@ -1,9 +1,13 @@
+#define _DEFAULT_SOURCE
 #include "tabela_sdt_auxiliar.h"
-#include <stdlib.h>
+#include "acoes_semanticas.h"
 #include <string.h>
+#include <stdlib.h>
 #include <stdio.h>
 
-// Forward declarations for all initialization functions
+EntradaTabelaAuxSDT tabela_sdt_entries[79];
+const size_t num_entradas_sdt = 79;
+
 static void inicializar_producao_PROGRAM_DEF(ItemTabelaSDT* itens);
 static void inicializar_producao_PROGRAM_IDENT(ItemTabelaSDT* itens);
 static void inicializar_producao_PROGRAM_DOLAR(ItemTabelaSDT* itens);
@@ -84,485 +88,504 @@ static void inicializar_producao_FACTOR_STRC(ItemTabelaSDT* itens);
 static void inicializar_producao_FACTOR_NULL(ItemTabelaSDT* itens);
 
 
-void inicializar_entradas(EntradaTabelaSDT* entradas) {
+void inicializar_tabela_sdt_entries() {
     // PROGRAM-DEF
-    entradas[0].chave = strdup("PROGRAM-DEF");
-    entradas[0].quantidade = 7;
-    entradas[0].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 7);
-    inicializar_producao_PROGRAM_DEF(entradas[0].itens);
+    tabela_sdt_entries[0].chave = strdup("PROGRAM-DEF");
+    tabela_sdt_entries[0].quantidade = 7;
+    tabela_sdt_entries[0].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 7);
+    inicializar_producao_PROGRAM_DEF(tabela_sdt_entries[0].itens);
     
     // PROGRAM-IDENT-OPEN_BRACE-INT-FLOAT-STRING-SEMICOLON-BREAK-PRINT-READ-RETURN-IF-FOR
-    entradas[1].chave = strdup("PROGRAM-IDENT-OPEN_BRACE-INT-FLOAT-STRING-SEMICOLON-BREAK-PRINT-READ-RETURN-IF-FOR");
-    entradas[1].quantidade = 6;
-    entradas[1].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 6);
-    inicializar_producao_PROGRAM_IDENT(entradas[1].itens);
+    tabela_sdt_entries[1].chave = strdup("PROGRAM-IDENT-OPEN_BRACE-INT-FLOAT-STRING-SEMICOLON-BREAK-PRINT-READ-RETURN-IF-FOR");
+    tabela_sdt_entries[1].quantidade = 6;
+    tabela_sdt_entries[1].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 6);
+    inicializar_producao_PROGRAM_IDENT(tabela_sdt_entries[1].itens);
 
     // PROGRAM-$
-    entradas[2].chave = strdup("PROGRAM-$");
-    entradas[2].quantidade = 2;
-    entradas[2].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
-    inicializar_producao_PROGRAM_DOLAR(entradas[2].itens);
+    tabela_sdt_entries[2].chave = strdup("PROGRAM-$");
+    tabela_sdt_entries[2].quantidade = 2;
+    tabela_sdt_entries[2].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
+    inicializar_producao_PROGRAM_DOLAR(tabela_sdt_entries[2].itens);
 
     // PROGRAM'-IDENT-OPEN_BRACE-INT-FLOAT-STRING-SEMICOLON-BREAK-PRINT-READ-RETURN-IF-FOR
-    entradas[3].chave = strdup("PROGRAM'-IDENT-OPEN_BRACE-INT-FLOAT-STRING-SEMICOLON-BREAK-PRINT-READ-RETURN-IF-FOR");
-    entradas[3].quantidade = 3;
-    entradas[3].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
-    inicializar_producao_PROGRAM_QUOTE_IDENT(entradas[3].itens);
+    tabela_sdt_entries[3].chave = strdup("PROGRAM'-IDENT-OPEN_BRACE-INT-FLOAT-STRING-SEMICOLON-BREAK-PRINT-READ-RETURN-IF-FOR");
+    tabela_sdt_entries[3].quantidade = 3;
+    tabela_sdt_entries[3].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
+    inicializar_producao_PROGRAM_QUOTE_IDENT(tabela_sdt_entries[3].itens);
 
     // PROGRAM'-$
-    entradas[4].chave = strdup("PROGRAM'-$");
-    entradas[4].quantidade = 1;
-    entradas[4].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
-    inicializar_producao_PROGRAM_QUOTE_DOLAR(entradas[4].itens);
+    tabela_sdt_entries[4].chave = strdup("PROGRAM'-$");
+    tabela_sdt_entries[4].quantidade = 1;
+    tabela_sdt_entries[4].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
+    inicializar_producao_PROGRAM_QUOTE_DOLAR(tabela_sdt_entries[4].itens);
 
     // FUNCLIST-DEF
-    entradas[5].chave = strdup("FUNCLIST-DEF");
-    entradas[5].quantidade = 4;
-    entradas[5].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
-    inicializar_producao_FUNCLIST_DEF(entradas[5].itens);
+    tabela_sdt_entries[5].chave = strdup("FUNCLIST-DEF");
+    tabela_sdt_entries[5].quantidade = 4;
+    tabela_sdt_entries[5].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
+    inicializar_producao_FUNCLIST_DEF(tabela_sdt_entries[5].itens);
 
     // FUNCLIST'-DEF
-    entradas[6].chave = strdup("FUNCLIST'-DEF");
-    entradas[6].quantidade = 3;
-    entradas[6].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
-    inicializar_producao_FUNCLIST_QUOTE_DEF(entradas[6].itens);
+    tabela_sdt_entries[6].chave = strdup("FUNCLIST'-DEF");
+    tabela_sdt_entries[6].quantidade = 3;
+    tabela_sdt_entries[6].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
+    inicializar_producao_FUNCLIST_QUOTE_DEF(tabela_sdt_entries[6].itens);
 
     // FUNCLIST'-IDENT-OPEN_BRACE-INT-FLOAT-STRING-SEMICOLON-BREAK-PRINT-READ-RETURN-IF-FOR-$
-    entradas[7].chave = strdup("FUNCLIST'-IDENT-OPEN_BRACE-INT-FLOAT-STRING-SEMICOLON-BREAK-PRINT-READ-RETURN-IF-FOR-$");
-    entradas[7].quantidade = 1;
-    entradas[7].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
-    inicializar_producao_FUNCLIST_QUOTE_IDENT(entradas[7].itens);
+    tabela_sdt_entries[7].chave = strdup("FUNCLIST'-IDENT-OPEN_BRACE-INT-FLOAT-STRING-SEMICOLON-BREAK-PRINT-READ-RETURN-IF-FOR-$");
+    tabela_sdt_entries[7].quantidade = 1;
+    tabela_sdt_entries[7].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
+    inicializar_producao_FUNCLIST_QUOTE_IDENT(tabela_sdt_entries[7].itens);
 
     // FUNCDEF-DEF
-    entradas[8].chave = strdup("FUNCDEF-DEF");
-    entradas[8].quantidade = 14;
-    entradas[8].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 14);
-    inicializar_producao_FUNCDEF_DEF(entradas[8].itens);
+    tabela_sdt_entries[8].chave = strdup("FUNCDEF-DEF");
+    tabela_sdt_entries[8].quantidade = 14;
+    tabela_sdt_entries[8].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 14);
+    inicializar_producao_FUNCDEF_DEF(tabela_sdt_entries[8].itens);
 
     // PARAMLIST-CLOSE_PARENTHESIS
-    entradas[9].chave = strdup("PARAMLIST-CLOSE_PARENTHESIS");
-    entradas[9].quantidade = 1;
-    entradas[9].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
-    inicializar_producao_PARAMLIST_CLOSE_PARENTHESIS(entradas[9].itens);
+    tabela_sdt_entries[9].chave = strdup("PARAMLIST-CLOSE_PARENTHESIS");
+    tabela_sdt_entries[9].quantidade = 1;
+    tabela_sdt_entries[9].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
+    inicializar_producao_PARAMLIST_CLOSE_PARENTHESIS(tabela_sdt_entries[9].itens);
 
     // PARAMLIST-INT
-    entradas[10].chave = strdup("PARAMLIST-INT");
-    entradas[10].quantidade = 5;
-    entradas[10].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 5);
-    inicializar_producao_PARAMLIST_INT(entradas[10].itens);
+    tabela_sdt_entries[10].chave = strdup("PARAMLIST-INT");
+    tabela_sdt_entries[10].quantidade = 5;
+    tabela_sdt_entries[10].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 5);
+    inicializar_producao_PARAMLIST_INT(tabela_sdt_entries[10].itens);
 
     // PARAMLIST-FLOAT
-    entradas[11].chave = strdup("PARAMLIST-FLOAT");
-    entradas[11].quantidade = 5;
-    entradas[11].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 5);
-    inicializar_producao_PARAMLIST_FLOAT(entradas[11].itens);
+    tabela_sdt_entries[11].chave = strdup("PARAMLIST-FLOAT");
+    tabela_sdt_entries[11].quantidade = 5;
+    tabela_sdt_entries[11].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 5);
+    inicializar_producao_PARAMLIST_FLOAT(tabela_sdt_entries[11].itens);
 
     // PARAMLIST-STRING
-    entradas[12].chave = strdup("PARAMLIST-STRING");
-    entradas[12].quantidade = 5;
-    entradas[12].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 5);
-    inicializar_producao_PARAMLIST_STRING(entradas[12].itens);
+    tabela_sdt_entries[12].chave = strdup("PARAMLIST-STRING");
+    tabela_sdt_entries[12].quantidade = 5;
+    tabela_sdt_entries[12].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 5);
+    inicializar_producao_PARAMLIST_STRING(tabela_sdt_entries[12].itens);
 
     // PARAMLIST'-CLOSE_PARENTHESIS
-    entradas[13].chave = strdup("PARAMLIST'-CLOSE_PARENTHESIS");
-    entradas[13].quantidade = 1;
-    entradas[13].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
-    inicializar_producao_PARAMLIST_QUOTE_CLOSE_PARENTHESIS(entradas[13].itens);
+    tabela_sdt_entries[13].chave = strdup("PARAMLIST'-CLOSE_PARENTHESIS");
+    tabela_sdt_entries[13].quantidade = 1;
+    tabela_sdt_entries[13].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
+    inicializar_producao_PARAMLIST_QUOTE_CLOSE_PARENTHESIS(tabela_sdt_entries[13].itens);
 
     // PARAMLIST'-COMMA
-    entradas[14].chave = strdup("PARAMLIST'-COMMA");
-    entradas[14].quantidade = 2;
-    entradas[14].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
-    inicializar_producao_PARAMLIST_QUOTE_COMMA(entradas[14].itens);
+    tabela_sdt_entries[14].chave = strdup("PARAMLIST'-COMMA");
+    tabela_sdt_entries[14].quantidade = 2;
+    tabela_sdt_entries[14].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
+    inicializar_producao_PARAMLIST_QUOTE_COMMA(tabela_sdt_entries[14].itens);
 
     // STATEMENT-IDENT
-    entradas[15].chave = strdup("STATEMENT-IDENT");
-    entradas[15].quantidade = 4;
-    entradas[15].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
-    inicializar_producao_STATEMENT_IDENT(entradas[15].itens);
+    tabela_sdt_entries[15].chave = strdup("STATEMENT-IDENT");
+    tabela_sdt_entries[15].quantidade = 4;
+    tabela_sdt_entries[15].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
+    inicializar_producao_STATEMENT_IDENT(tabela_sdt_entries[15].itens);
 
     // STATEMENT-OPEN_BRACE
-    entradas[16].chave = strdup("STATEMENT-OPEN_BRACE");
-    entradas[16].quantidade = 7;
-    entradas[16].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 7);
-    inicializar_producao_STATEMENT_OPEN_BRACE(entradas[16].itens);
+    tabela_sdt_entries[16].chave = strdup("STATEMENT-OPEN_BRACE");
+    tabela_sdt_entries[16].quantidade = 7;
+    tabela_sdt_entries[16].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 7);
+    inicializar_producao_STATEMENT_OPEN_BRACE(tabela_sdt_entries[16].itens);
 
     // STATEMENT-INT-FLOAT-STRING
-    entradas[17].chave = strdup("STATEMENT-INT-FLOAT-STRING");
-    entradas[17].quantidade = 3;
-    entradas[17].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
-    inicializar_producao_STATEMENT_INT_FLOAT_STRING(entradas[17].itens);
+    tabela_sdt_entries[17].chave = strdup("STATEMENT-INT-FLOAT-STRING");
+    tabela_sdt_entries[17].quantidade = 3;
+    tabela_sdt_entries[17].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
+    inicializar_producao_STATEMENT_INT_FLOAT_STRING(tabela_sdt_entries[17].itens);
 
     // STATEMENT-SEMICOLON
-    entradas[18].chave = strdup("STATEMENT-SEMICOLON");
-    entradas[18].quantidade = 1;
-    entradas[18].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
-    inicializar_producao_STATEMENT_SEMICOLON(entradas[18].itens);
+    tabela_sdt_entries[18].chave = strdup("STATEMENT-SEMICOLON");
+    tabela_sdt_entries[18].quantidade = 1;
+    tabela_sdt_entries[18].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
+    inicializar_producao_STATEMENT_SEMICOLON(tabela_sdt_entries[18].itens);
 
     // STATEMENT-BREAK
-    entradas[19].chave = strdup("STATEMENT-BREAK");
-    entradas[19].quantidade = 4;
-    entradas[19].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
-    inicializar_producao_STATEMENT_BREAK(entradas[19].itens);
+    tabela_sdt_entries[19].chave = strdup("STATEMENT-BREAK");
+    tabela_sdt_entries[19].quantidade = 4;
+    tabela_sdt_entries[19].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
+    inicializar_producao_STATEMENT_BREAK(tabela_sdt_entries[19].itens);
 
     // STATEMENT-PRINT
-    entradas[20].chave = strdup("STATEMENT-PRINT");
-    entradas[20].quantidade = 4;
-    entradas[20].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
-    inicializar_producao_STATEMENT_PRINT(entradas[20].itens);
+    tabela_sdt_entries[20].chave = strdup("STATEMENT-PRINT");
+    tabela_sdt_entries[20].quantidade = 4;
+    tabela_sdt_entries[20].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
+    inicializar_producao_STATEMENT_PRINT(tabela_sdt_entries[20].itens);
 
     // STATEMENT-READ
-    entradas[21].chave = strdup("STATEMENT-READ");
-    entradas[21].quantidade = 4;
-    entradas[21].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
-    inicializar_producao_STATEMENT_READ(entradas[21].itens);
+    tabela_sdt_entries[21].chave = strdup("STATEMENT-READ");
+    tabela_sdt_entries[21].quantidade = 4;
+    tabela_sdt_entries[21].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
+    inicializar_producao_STATEMENT_READ(tabela_sdt_entries[21].itens);
 
     // STATEMENT-RETURN
-    entradas[22].chave = strdup("STATEMENT-RETURN");
-    entradas[22].quantidade = 4;
-    entradas[22].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
-    inicializar_producao_STATEMENT_RETURN(entradas[22].itens);
+    tabela_sdt_entries[22].chave = strdup("STATEMENT-RETURN");
+    tabela_sdt_entries[22].quantidade = 4;
+    tabela_sdt_entries[22].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
+    inicializar_producao_STATEMENT_RETURN(tabela_sdt_entries[22].itens);
 
     // STATEMENT-IF
-    entradas[23].chave = strdup("STATEMENT-IF");
-    entradas[23].quantidade = 3;
-    entradas[23].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
-    inicializar_producao_STATEMENT_IF(entradas[23].itens);
+    tabela_sdt_entries[23].chave = strdup("STATEMENT-IF");
+    tabela_sdt_entries[23].quantidade = 3;
+    tabela_sdt_entries[23].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
+    inicializar_producao_STATEMENT_IF(tabela_sdt_entries[23].itens);
 
     // STATEMENT-FOR
-    entradas[24].chave = strdup("STATEMENT-FOR");
-    entradas[24].quantidade = 3;
-    entradas[24].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
-    inicializar_producao_STATEMENT_FOR(entradas[24].itens);
+    tabela_sdt_entries[24].chave = strdup("STATEMENT-FOR");
+    tabela_sdt_entries[24].quantidade = 3;
+    tabela_sdt_entries[24].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
+    inicializar_producao_STATEMENT_FOR(tabela_sdt_entries[24].itens);
 
     // INDEX-SEMICOLON
-    entradas[25].chave = strdup("INDEX-SEMICOLON");
-    entradas[25].quantidade = 2;
-    entradas[25].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
-    inicializar_producao_INDEX_SEMICOLON(entradas[25].itens);
+    tabela_sdt_entries[25].chave = strdup("INDEX-SEMICOLON");
+    tabela_sdt_entries[25].quantidade = 2;
+    tabela_sdt_entries[25].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
+    inicializar_producao_INDEX_SEMICOLON(tabela_sdt_entries[25].itens);
 
     // INDEX-OPEN_BRACKET
-    entradas[26].chave = strdup("INDEX-OPEN_BRACKET");
-    entradas[26].quantidade = 6;
-    entradas[26].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 6);
-    inicializar_producao_INDEX_OPEN_BRACKET(entradas[26].itens);
+    tabela_sdt_entries[26].chave = strdup("INDEX-OPEN_BRACKET");
+    tabela_sdt_entries[26].quantidade = 6;
+    tabela_sdt_entries[26].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 6);
+    inicializar_producao_INDEX_OPEN_BRACKET(tabela_sdt_entries[26].itens);
 
     // VARDECL-INT
-    entradas[27].chave = strdup("VARDECL-INT");
-    entradas[27].quantidade = 7;
-    entradas[27].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 7);
-    inicializar_producao_VARDECL_INT(entradas[27].itens);
+    tabela_sdt_entries[27].chave = strdup("VARDECL-INT");
+    tabela_sdt_entries[27].quantidade = 7;
+    tabela_sdt_entries[27].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 7);
+    inicializar_producao_VARDECL_INT(tabela_sdt_entries[27].itens);
 
     // VARDECL-FLOAT
-    entradas[28].chave = strdup("VARDECL-FLOAT");
-    entradas[28].quantidade = 7;
-    entradas[28].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 7);
-    inicializar_producao_VARDECL_FLOAT(entradas[28].itens);
+    tabela_sdt_entries[28].chave = strdup("VARDECL-FLOAT");
+    tabela_sdt_entries[28].quantidade = 7;
+    tabela_sdt_entries[28].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 7);
+    inicializar_producao_VARDECL_FLOAT(tabela_sdt_entries[28].itens);
 
     // VARDECL-STRING
-    entradas[29].chave = strdup("VARDECL-STRING");
-    entradas[29].quantidade = 7;
-    entradas[29].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 7);
-    inicializar_producao_VARDECL_STRING(entradas[29].itens);
+    tabela_sdt_entries[29].chave = strdup("VARDECL-STRING");
+    tabela_sdt_entries[29].quantidade = 7;
+    tabela_sdt_entries[29].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 7);
+    inicializar_producao_VARDECL_STRING(tabela_sdt_entries[29].itens);
 
     // ATRIBSTAT-IDENT
-    entradas[30].chave = strdup("ATRIBSTAT-IDENT");
-    entradas[30].quantidade = 5;
-    entradas[30].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 5);
-    inicializar_producao_ATRIBSTAT_IDENT(entradas[30].itens);
+    tabela_sdt_entries[30].chave = strdup("ATRIBSTAT-IDENT");
+    tabela_sdt_entries[30].quantidade = 5;
+    tabela_sdt_entries[30].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 5);
+    inicializar_producao_ATRIBSTAT_IDENT(tabela_sdt_entries[30].itens);
 
     // ATRIBSTAT'-IDENT-OPEN_PARENTHESIS-NI-PLUS-MINUS-NPF-STRC-NULL
-    entradas[31].chave = strdup("ATRIBSTAT'-IDENT-OPEN_PARENTHESIS-NI-PLUS-MINUS-NPF-STRC-NULL");
-    entradas[31].quantidade = 2;
-    entradas[31].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
-    inicializar_producao_ATRIBSTAT_QUOTE_IDENT(entradas[31].itens);
+    tabela_sdt_entries[31].chave = strdup("ATRIBSTAT'-IDENT-OPEN_PARENTHESIS-NI-PLUS-MINUS-NPF-STRC-NULL");
+    tabela_sdt_entries[31].quantidade = 2;
+    tabela_sdt_entries[31].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
+    inicializar_producao_ATRIBSTAT_QUOTE_IDENT(tabela_sdt_entries[31].itens);
 
     // ATRIBSTAT'-CALL
-    entradas[32].chave = strdup("ATRIBSTAT'-CALL");
-    entradas[32].quantidade = 4;
-    entradas[32].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
-    inicializar_producao_ATRIBSTAT_QUOTE_CALL(entradas[32].itens);
+    tabela_sdt_entries[32].chave = strdup("ATRIBSTAT'-CALL");
+    tabela_sdt_entries[32].quantidade = 4;
+    tabela_sdt_entries[32].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
+    inicializar_producao_ATRIBSTAT_QUOTE_CALL(tabela_sdt_entries[32].itens);
 
     // ATRIBSTAT'-NEW
-    entradas[33].chave = strdup("ATRIBSTAT'-NEW");
-    entradas[33].quantidade = 1;
-    entradas[33].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
-    inicializar_producao_ATRIBSTAT_QUOTE_NEW(entradas[33].itens);
+    tabela_sdt_entries[33].chave = strdup("ATRIBSTAT'-NEW");
+    tabela_sdt_entries[33].quantidade = 1;
+    tabela_sdt_entries[33].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
+    inicializar_producao_ATRIBSTAT_QUOTE_NEW(tabela_sdt_entries[33].itens);
 
     // FUNCCALL-CALL
-    entradas[34].chave = strdup("FUNCCALL-CALL");
-    entradas[34].quantidade = 9;
-    entradas[34].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 9);
-    inicializar_producao_FUNCCALL_CALL(entradas[34].itens);
+    tabela_sdt_entries[34].chave = strdup("FUNCCALL-CALL");
+    tabela_sdt_entries[34].quantidade = 9;
+    tabela_sdt_entries[34].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 9);
+    inicializar_producao_FUNCCALL_CALL(tabela_sdt_entries[34].itens);
 
     // PARAMLISTCALL-IDENT
-    entradas[35].chave = strdup("PARAMLISTCALL-IDENT");
-    entradas[35].quantidade = 4;
-    entradas[35].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
-    inicializar_producao_PARAMLISTCALL_IDENT(entradas[35].itens);
+    tabela_sdt_entries[35].chave = strdup("PARAMLISTCALL-IDENT");
+    tabela_sdt_entries[35].quantidade = 4;
+    tabela_sdt_entries[35].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
+    inicializar_producao_PARAMLISTCALL_IDENT(tabela_sdt_entries[35].itens);
 
     // PARAMLISTCALL-CLOSE_PARENTHESIS
-    entradas[36].chave = strdup("PARAMLISTCALL-CLOSE_PARENTHESIS");
-    entradas[36].quantidade = 1;
-    entradas[36].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
-    inicializar_producao_PARAMLISTCALL_CLOSE_PARENTHESIS(entradas[36].itens);
+    tabela_sdt_entries[36].chave = strdup("PARAMLISTCALL-CLOSE_PARENTHESIS");
+    tabela_sdt_entries[36].quantidade = 1;
+    tabela_sdt_entries[36].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
+    inicializar_producao_PARAMLISTCALL_CLOSE_PARENTHESIS(tabela_sdt_entries[36].itens);
 
     // PARAMLISTCALL'-CLOSE_PARENTHESIS
-    entradas[37].chave = strdup("PARAMLISTCALL'-CLOSE_PARENTHESIS");
-    entradas[37].quantidade = 1;
-    entradas[37].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
-    inicializar_producao_PARAMLISTCALL_QUOTE_CLOSE_PARENTHESIS(entradas[37].itens);
+    tabela_sdt_entries[37].chave = strdup("PARAMLISTCALL'-CLOSE_PARENTHESIS");
+    tabela_sdt_entries[37].quantidade = 1;
+    tabela_sdt_entries[37].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
+    inicializar_producao_PARAMLISTCALL_QUOTE_CLOSE_PARENTHESIS(tabela_sdt_entries[37].itens);
 
     // PARAMLISTCALL'-COMMA
-    entradas[38].chave = strdup("PARAMLISTCALL'-COMMA");
-    entradas[38].quantidade = 4;
-    entradas[38].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
-    inicializar_producao_PARAMLISTCALL_QUOTE_COMMA(entradas[38].itens);
+    tabela_sdt_entries[38].chave = strdup("PARAMLISTCALL'-COMMA");
+    tabela_sdt_entries[38].quantidade = 4;
+    tabela_sdt_entries[38].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
+    inicializar_producao_PARAMLISTCALL_QUOTE_COMMA(tabela_sdt_entries[38].itens);
 
     // PRINTSTAT-PRINT
-    entradas[39].chave = strdup("PRINTSTAT-PRINT");
-    entradas[39].quantidade = 3;
-    entradas[39].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
-    inicializar_producao_PRINTSTAT_PRINT(entradas[39].itens);
+    tabela_sdt_entries[39].chave = strdup("PRINTSTAT-PRINT");
+    tabela_sdt_entries[39].quantidade = 3;
+    tabela_sdt_entries[39].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
+    inicializar_producao_PRINTSTAT_PRINT(tabela_sdt_entries[39].itens);
 
     // READSTAT-READ
-    entradas[40].chave = strdup("READSTAT-READ");
-    entradas[40].quantidade = 3;
-    entradas[40].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
-    inicializar_producao_READSTAT_READ(entradas[40].itens);
+    tabela_sdt_entries[40].chave = strdup("READSTAT-READ");
+    tabela_sdt_entries[40].quantidade = 3;
+    tabela_sdt_entries[40].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
+    inicializar_producao_READSTAT_READ(tabela_sdt_entries[40].itens);
 
     // RETURNSTAT-RETURN
-    entradas[41].chave = strdup("RETURNSTAT-RETURN");
-    entradas[41].quantidade = 3;
-    entradas[41].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
-    inicializar_producao_RETURNSTAT_RETURN(entradas[41].itens);
+    tabela_sdt_entries[41].chave = strdup("RETURNSTAT-RETURN");
+    tabela_sdt_entries[41].quantidade = 3;
+    tabela_sdt_entries[41].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
+    inicializar_producao_RETURNSTAT_RETURN(tabela_sdt_entries[41].itens);
 
     // RETURNSTAT'-IDENT
-    entradas[42].chave = strdup("RETURNSTAT'-IDENT");
-    entradas[42].quantidade = 2;
-    entradas[42].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
-    inicializar_producao_RETURNSTAT_QUOTE_IDENT(entradas[42].itens);
+    tabela_sdt_entries[42].chave = strdup("RETURNSTAT'-IDENT");
+    tabela_sdt_entries[42].quantidade = 2;
+    tabela_sdt_entries[42].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
+    inicializar_producao_RETURNSTAT_QUOTE_IDENT(tabela_sdt_entries[42].itens);
 
     // RETURNSTAT'-SEMICOLON
-    entradas[43].chave = strdup("RETURNSTAT'-SEMICOLON");
-    entradas[43].quantidade = 1;
-    entradas[43].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
-    inicializar_producao_RETURNSTAT_QUOTE_SEMICOLON(entradas[43].itens);
+    tabela_sdt_entries[43].chave = strdup("RETURNSTAT'-SEMICOLON");
+    tabela_sdt_entries[43].quantidade = 1;
+    tabela_sdt_entries[43].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
+    inicializar_producao_RETURNSTAT_QUOTE_SEMICOLON(tabela_sdt_entries[43].itens);
 
     // IFSTAT-IF
-    entradas[44].chave = strdup("IFSTAT-IF");
-    entradas[44].quantidade = 12;
-    entradas[44].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 12);
-    inicializar_producao_IFSTAT_IF(entradas[44].itens);
+    tabela_sdt_entries[44].chave = strdup("IFSTAT-IF");
+    tabela_sdt_entries[44].quantidade = 12;
+    tabela_sdt_entries[44].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 12);
+    inicializar_producao_IFSTAT_IF(tabela_sdt_entries[44].itens);
 
     // IFSTAT'-IDENT-OPEN_BRACE-CLOSE_BRACE-INT-FLOAT-STRING-SEMICOLON-BREAK-PRINT-READ-RETURN-IF-FOR-$
-    entradas[45].chave = strdup("IFSTAT'-IDENT-OPEN_BRACE-CLOSE_BRACE-INT-FLOAT-STRING-SEMICOLON-BREAK-PRINT-READ-RETURN-IF-FOR-$");
-    entradas[45].quantidade = 2;
-    entradas[45].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
-    inicializar_producao_IFSTAT_QUOTE_IDENT(entradas[45].itens);
+    tabela_sdt_entries[45].chave = strdup("IFSTAT'-IDENT-OPEN_BRACE-CLOSE_BRACE-INT-FLOAT-STRING-SEMICOLON-BREAK-PRINT-READ-RETURN-IF-FOR-$");
+    tabela_sdt_entries[45].quantidade = 2;
+    tabela_sdt_entries[45].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
+    inicializar_producao_IFSTAT_QUOTE_IDENT(tabela_sdt_entries[45].itens);
 
     // IFSTAT'-ELSE
-    entradas[46].chave = strdup("IFSTAT'-ELSE");
-    entradas[46].quantidade = 8;
-    entradas[46].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 8);
-    inicializar_producao_IFSTAT_QUOTE_ELSE(entradas[46].itens);
+    tabela_sdt_entries[46].chave = strdup("IFSTAT'-ELSE");
+    tabela_sdt_entries[46].quantidade = 8;
+    tabela_sdt_entries[46].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 8);
+    inicializar_producao_IFSTAT_QUOTE_ELSE(tabela_sdt_entries[46].itens);
 
     // FORSTAT-FOR
-    entradas[47].chave = strdup("FORSTAT-FOR");
-    entradas[47].quantidade = 13;
-    entradas[47].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 13);
-    inicializar_producao_FORSTAT_FOR(entradas[47].itens);
+    tabela_sdt_entries[47].chave = strdup("FORSTAT-FOR");
+    tabela_sdt_entries[47].quantidade = 13;
+    tabela_sdt_entries[47].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 13);
+    inicializar_producao_FORSTAT_FOR(tabela_sdt_entries[47].itens);
 
     // STATELIST-IDENT-OPEN_BRACE-INT-FLOAT-STRING-SEMICOLON-BREAK-PRINT-READ-RETURN-IF-FOR
-    entradas[48].chave = strdup("STATELIST-IDENT-OPEN_BRACE-INT-FLOAT-STRING-SEMICOLON-BREAK-PRINT-READ-RETURN-IF-FOR");
-    entradas[48].quantidade = 5;
-    entradas[48].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 5);
-    inicializar_producao_STATELIST_IDENT(entradas[48].itens);
+    tabela_sdt_entries[48].chave = strdup("STATELIST-IDENT-OPEN_BRACE-INT-FLOAT-STRING-SEMICOLON-BREAK-PRINT-READ-RETURN-IF-FOR");
+    tabela_sdt_entries[48].quantidade = 5;
+    tabela_sdt_entries[48].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 5);
+    inicializar_producao_STATELIST_IDENT(tabela_sdt_entries[48].itens);
 
     // STATELIST'-IDENT-OPEN_BRACE-INT-FLOAT-STRING-SEMICOLON-BREAK-PRINT-READ-RETURN-IF-FOR
-    entradas[49].chave = strdup("STATELIST'-IDENT-OPEN_BRACE-INT-FLOAT-STRING-SEMICOLON-BREAK-PRINT-READ-RETURN-IF-FOR");
-    entradas[49].quantidade = 3;
-    entradas[49].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
-    inicializar_producao_STATELIST_QUOTE_IDENT(entradas[49].itens);
+    tabela_sdt_entries[49].chave = strdup("STATELIST'-IDENT-OPEN_BRACE-INT-FLOAT-STRING-SEMICOLON-BREAK-PRINT-READ-RETURN-IF-FOR");
+    tabela_sdt_entries[49].quantidade = 3;
+    tabela_sdt_entries[49].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
+    inicializar_producao_STATELIST_QUOTE_IDENT(tabela_sdt_entries[49].itens);
 
     // STATELIST'-CLOSE_BRACE
-    entradas[50].chave = strdup("STATELIST'-CLOSE_BRACE");
-    entradas[50].quantidade = 3;
-    entradas[50].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
-    inicializar_producao_STATELIST_QUOTE_CLOSE_BRACE(entradas[50].itens);
+    tabela_sdt_entries[50].chave = strdup("STATELIST'-CLOSE_BRACE");
+    tabela_sdt_entries[50].quantidade = 3;
+    tabela_sdt_entries[50].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
+    inicializar_producao_STATELIST_QUOTE_CLOSE_BRACE(tabela_sdt_entries[50].itens);
 
     // ALLOCAUX-CLOSE_PARENTHESIS-SEMICOLON-CLOSE_BRACKET-ASSIGN-RELOP-PLUS-MINUS-MULTIPLICATION-DIVISION-MODULUS
-    entradas[51].chave = strdup("ALLOCAUX-CLOSE_PARENTHESIS-SEMICOLON-CLOSE_BRACKET-ASSIGN-RELOP-PLUS-MINUS-MULTIPLICATION-DIVISION-MODULUS");
-    entradas[51].quantidade = 1;
-    entradas[51].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
-    inicializar_producao_ALLOCAUX_CLOSE_PARENTHESIS(entradas[51].itens);
+    tabela_sdt_entries[51].chave = strdup("ALLOCAUX-CLOSE_PARENTHESIS-SEMICOLON-CLOSE_BRACKET-ASSIGN-RELOP-PLUS-MINUS-MULTIPLICATION-DIVISION-MODULUS");
+    tabela_sdt_entries[51].quantidade = 1;
+    tabela_sdt_entries[51].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
+    inicializar_producao_ALLOCAUX_CLOSE_PARENTHESIS(tabela_sdt_entries[51].itens);
 
     // ALLOCAUX-OPEN_BRACKET
-    entradas[52].chave = strdup("ALLOCAUX-OPEN_BRACKET");
-    entradas[52].quantidade = 6;
-    entradas[52].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 6);
-    inicializar_producao_ALLOCAUX_OPEN_BRACKET(entradas[52].itens);
+    tabela_sdt_entries[52].chave = strdup("ALLOCAUX-OPEN_BRACKET");
+    tabela_sdt_entries[52].quantidade = 6;
+    tabela_sdt_entries[52].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 6);
+    inicializar_producao_ALLOCAUX_OPEN_BRACKET(tabela_sdt_entries[52].itens);
 
     // ALLOCEXPRESSION-NEW
-    entradas[53].chave = strdup("ALLOCEXPRESSION-NEW");
-    entradas[53].quantidade = 2;
-    entradas[53].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
-    inicializar_producao_ALLOCEXPRESSION_NEW(entradas[53].itens);
+    tabela_sdt_entries[53].chave = strdup("ALLOCEXPRESSION-NEW");
+    tabela_sdt_entries[53].quantidade = 2;
+    tabela_sdt_entries[53].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
+    inicializar_producao_ALLOCEXPRESSION_NEW(tabela_sdt_entries[53].itens);
 
     // ALLOCEXPRESSION'-INT
-    entradas[54].chave = strdup("ALLOCEXPRESSION'-INT");
-    entradas[54].quantidade = 6;
-    entradas[54].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 6);
-    inicializar_producao_ALLOCEXPRESSION_QUOTE_INT(entradas[54].itens);
+    tabela_sdt_entries[54].chave = strdup("ALLOCEXPRESSION'-INT");
+    tabela_sdt_entries[54].quantidade = 6;
+    tabela_sdt_entries[54].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 6);
+    inicializar_producao_ALLOCEXPRESSION_QUOTE_INT(tabela_sdt_entries[54].itens);
 
     // ALLOCEXPRESSION'-FLOAT
-    entradas[55].chave = strdup("ALLOCEXPRESSION'-FLOAT");
-    entradas[55].quantidade = 6;
-    entradas[55].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 6);
-    inicializar_producao_ALLOCEXPRESSION_QUOTE_FLOAT(entradas[55].itens);
+    tabela_sdt_entries[55].chave = strdup("ALLOCEXPRESSION'-FLOAT");
+    tabela_sdt_entries[55].quantidade = 6;
+    tabela_sdt_entries[55].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 6);
+    inicializar_producao_ALLOCEXPRESSION_QUOTE_FLOAT(tabela_sdt_entries[55].itens);
 
     // ALLOCEXPRESSION'-STRING
-    entradas[56].chave = strdup("ALLOCEXPRESSION'-STRING");
-    entradas[56].quantidade = 6;
-    entradas[56].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 6);
-    inicializar_producao_ALLOCEXPRESSION_QUOTE_STRING(entradas[56].itens);
+    tabela_sdt_entries[56].chave = strdup("ALLOCEXPRESSION'-STRING");
+    tabela_sdt_entries[56].quantidade = 6;
+    tabela_sdt_entries[56].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 6);
+    inicializar_producao_ALLOCEXPRESSION_QUOTE_STRING(tabela_sdt_entries[56].itens);
     
     // EXPRESSION-IDENT-OPEN_PARENTHESIS-NI-PLUS-MINUS-NPF-STRC-NULL
-    entradas[57].chave = strdup("EXPRESSION-IDENT-OPEN_PARENTHESIS-NI-PLUS-MINUS-NPF-STRC-NULL");
-    entradas[57].quantidade = 4;
-    entradas[57].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
-    inicializar_producao_EXPRESSION_IDENT(entradas[57].itens);
+    tabela_sdt_entries[57].chave = strdup("EXPRESSION-IDENT-OPEN_PARENTHESIS-NI-PLUS-MINUS-NPF-STRC-NULL");
+    tabela_sdt_entries[57].quantidade = 4;
+    tabela_sdt_entries[57].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
+    inicializar_producao_EXPRESSION_IDENT(tabela_sdt_entries[57].itens);
 
     // EXPRESSION'-CLOSE_PARENTHESIS-SEMICOLON
-    entradas[58].chave = strdup("EXPRESSION'-CLOSE_PARENTHESIS-SEMICOLON");
-    entradas[58].quantidade = 1;
-    entradas[58].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
-    inicializar_producao_EXPRESSION_QUOTE_CLOSE_PARENTHESIS(entradas[58].itens);
+    tabela_sdt_entries[58].chave = strdup("EXPRESSION'-CLOSE_PARENTHESIS-SEMICOLON");
+    tabela_sdt_entries[58].quantidade = 1;
+    tabela_sdt_entries[58].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
+    inicializar_producao_EXPRESSION_QUOTE_CLOSE_PARENTHESIS(tabela_sdt_entries[58].itens);
 
     // EXPRESSION'-RELOP
-    entradas[59].chave = strdup("EXPRESSION'-RELOP");
-    entradas[59].quantidade = 4;
-    entradas[59].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
-    inicializar_producao_EXPRESSION_QUOTE_RELOP(entradas[59].itens);
+    tabela_sdt_entries[59].chave = strdup("EXPRESSION'-RELOP");
+    tabela_sdt_entries[59].quantidade = 4;
+    tabela_sdt_entries[59].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
+    inicializar_producao_EXPRESSION_QUOTE_RELOP(tabela_sdt_entries[59].itens);
 
     // NUMEXPRESSIONAUX-CLOSE_PARENTHESIS-SEMICOLON-CLOSE_BRACKET-RELOP
-    entradas[60].chave = strdup("NUMEXPRESSIONAUX-CLOSE_PARENTHESIS-SEMICOLON-CLOSE_BRACKET-RELOP");
-    entradas[60].quantidade = 1;
-    entradas[60].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
-    inicializar_producao_NUMEXPRESSIONAUX_CLOSE_PARENTHESIS(entradas[60].itens);
+    tabela_sdt_entries[60].chave = strdup("NUMEXPRESSIONAUX-CLOSE_PARENTHESIS-SEMICOLON-CLOSE_BRACKET-RELOP");
+    tabela_sdt_entries[60].quantidade = 1;
+    tabela_sdt_entries[60].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
+    inicializar_producao_NUMEXPRESSIONAUX_CLOSE_PARENTHESIS(tabela_sdt_entries[60].itens);
 
     // NUMEXPRESSIONAUX-PLUS
-    entradas[61].chave = strdup("NUMEXPRESSIONAUX-PLUS");
-    entradas[61].quantidade = 3;
-    entradas[61].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
-    inicializar_producao_NUMEXPRESSIONAUX_PLUS(entradas[61].itens);
+    tabela_sdt_entries[61].chave = strdup("NUMEXPRESSIONAUX-PLUS");
+    tabela_sdt_entries[61].quantidade = 3;
+    tabela_sdt_entries[61].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
+    inicializar_producao_NUMEXPRESSIONAUX_PLUS(tabela_sdt_entries[61].itens);
 
     // NUMEXPRESSIONAUX-MINUS
-    entradas[62].chave = strdup("NUMEXPRESSIONAUX-MINUS");
-    entradas[62].quantidade = 3;
-    entradas[62].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
-    inicializar_producao_NUMEXPRESSIONAUX_MINUS(entradas[62].itens);
+    tabela_sdt_entries[62].chave = strdup("NUMEXPRESSIONAUX-MINUS");
+    tabela_sdt_entries[62].quantidade = 3;
+    tabela_sdt_entries[62].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
+    inicializar_producao_NUMEXPRESSIONAUX_MINUS(tabela_sdt_entries[62].itens);
 
     // NUMEXPRESSION-IDENT-OPEN_PARENTHESIS-NI-PLUS-MINUS-NPF-STRC-NULL
-    entradas[63].chave = strdup("NUMEXPRESSION-IDENT-OPEN_PARENTHESIS-NI-PLUS-MINUS-NPF-STRC-NULL");
-    entradas[63].quantidade = 3;
-    entradas[63].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
-    inicializar_producao_NUMEXPRESSION_IDENT(entradas[63].itens);
+    tabela_sdt_entries[63].chave = strdup("NUMEXPRESSION-IDENT-OPEN_PARENTHESIS-NI-PLUS-MINUS-NPF-STRC-NULL");
+    tabela_sdt_entries[63].quantidade = 3;
+    tabela_sdt_entries[63].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
+    inicializar_producao_NUMEXPRESSION_IDENT(tabela_sdt_entries[63].itens);
 
     // TERM-IDENT-OPEN_PARENTHESIS-NI-PLUS-MINUS-NPF-STRC-NULL
-    entradas[64].chave = strdup("TERM-IDENT-OPEN_PARENTHESIS-NI-PLUS-MINUS-NPF-STRC-NULL");
-    entradas[64].quantidade = 3;
-    entradas[64].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
-    inicializar_producao_TERM_IDENT(entradas[64].itens);
+    tabela_sdt_entries[64].chave = strdup("TERM-IDENT-OPEN_PARENTHESIS-NI-PLUS-MINUS-NPF-STRC-NULL");
+    tabela_sdt_entries[64].quantidade = 3;
+    tabela_sdt_entries[64].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
+    inicializar_producao_TERM_IDENT(tabela_sdt_entries[64].itens);
 
     // UNARYEXPRAUX-CLOSE_PARENTHESIS-SEMICOLON-CLOSE_BRACKET-RELOP-PLUS-MINUS
-    entradas[65].chave = strdup("UNARYEXPRAUX-CLOSE_PARENTHESIS-SEMICOLON-CLOSE_BRACKET-RELOP-PLUS-MINUS");
-    entradas[65].quantidade = 1;
-    entradas[65].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
-    inicializar_producao_UNARYEXPRAUX_CLOSE_PARENTHESIS(entradas[65].itens);
+    tabela_sdt_entries[65].chave = strdup("UNARYEXPRAUX-CLOSE_PARENTHESIS-SEMICOLON-CLOSE_BRACKET-RELOP-PLUS-MINUS");
+    tabela_sdt_entries[65].quantidade = 1;
+    tabela_sdt_entries[65].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
+    inicializar_producao_UNARYEXPRAUX_CLOSE_PARENTHESIS(tabela_sdt_entries[65].itens);
 
     // UNARYEXPRAUX-MULTIPLICATION
-    entradas[66].chave = strdup("UNARYEXPRAUX-MULTIPLICATION");
-    entradas[66].quantidade = 3;
-    entradas[66].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
-    inicializar_producao_UNARYEXPRAUX_MULTIPLICATION(entradas[66].itens);
+    tabela_sdt_entries[66].chave = strdup("UNARYEXPRAUX-MULTIPLICATION");
+    tabela_sdt_entries[66].quantidade = 3;
+    tabela_sdt_entries[66].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
+    inicializar_producao_UNARYEXPRAUX_MULTIPLICATION(tabela_sdt_entries[66].itens);
 
     // UNARYEXPRAUX-DIVISION
-    entradas[67].chave = strdup("UNARYEXPRAUX-DIVISION");
-    entradas[67].quantidade = 3;
-    entradas[67].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
-    inicializar_producao_UNARYEXPRAUX_DIVISION(entradas[67].itens);
+    tabela_sdt_entries[67].chave = strdup("UNARYEXPRAUX-DIVISION");
+    tabela_sdt_entries[67].quantidade = 3;
+    tabela_sdt_entries[67].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
+    inicializar_producao_UNARYEXPRAUX_DIVISION(tabela_sdt_entries[67].itens);
 
     // UNARYEXPRAUX-MODULUS
-    entradas[68].chave = strdup("UNARYEXPRAUX-MODULUS");
-    entradas[68].quantidade = 3;
-    entradas[68].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
-    inicializar_producao_UNARYEXPRAUX_MODULUS(entradas[68].itens);
+    tabela_sdt_entries[68].chave = strdup("UNARYEXPRAUX-MODULUS");
+    tabela_sdt_entries[68].quantidade = 3;
+    tabela_sdt_entries[68].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
+    inicializar_producao_UNARYEXPRAUX_MODULUS(tabela_sdt_entries[68].itens);
 
     // UNARYEXPR-IDENT-OPEN_PARENTHESIS-NI-NPF-STRC-NULL
-    entradas[69].chave = strdup("UNARYEXPR-IDENT-OPEN_PARENTHESIS-NI-NPF-STRC-NULL");
-    entradas[69].quantidade = 2;
-    entradas[69].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
-    inicializar_producao_UNARYEXPR_IDENT(entradas[69].itens);
+    tabela_sdt_entries[69].chave = strdup("UNARYEXPR-IDENT-OPEN_PARENTHESIS-NI-NPF-STRC-NULL");
+    tabela_sdt_entries[69].quantidade = 2;
+    tabela_sdt_entries[69].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
+    inicializar_producao_UNARYEXPR_IDENT(tabela_sdt_entries[69].itens);
 
     // UNARYEXPR-PLUS
-    entradas[70].chave = strdup("UNARYEXPR-PLUS");
-    entradas[70].quantidade = 3;
-    entradas[70].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
-    inicializar_producao_UNARYEXPR_PLUS(entradas[70].itens);
+    tabela_sdt_entries[70].chave = strdup("UNARYEXPR-PLUS");
+    tabela_sdt_entries[70].quantidade = 3;
+    tabela_sdt_entries[70].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
+    inicializar_producao_UNARYEXPR_PLUS(tabela_sdt_entries[70].itens);
 
     // UNARYEXPR-MINUS
-    entradas[71].chave = strdup("UNARYEXPR-MINUS");
-    entradas[71].quantidade = 3;
-    entradas[71].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
-    inicializar_producao_UNARYEXPR_MINUS(entradas[71].itens);
+    tabela_sdt_entries[71].chave = strdup("UNARYEXPR-MINUS");
+    tabela_sdt_entries[71].quantidade = 3;
+    tabela_sdt_entries[71].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 3);
+    inicializar_producao_UNARYEXPR_MINUS(tabela_sdt_entries[71].itens);
 
     // FACTOR-IDENT
-    entradas[72].chave = strdup("FACTOR-IDENT");
-    entradas[72].quantidade = 2;
-    entradas[72].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
-    inicializar_producao_FACTOR_IDENT(entradas[72].itens);
+    tabela_sdt_entries[72].chave = strdup("FACTOR-IDENT");
+    tabela_sdt_entries[72].quantidade = 2;
+    tabela_sdt_entries[72].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
+    inicializar_producao_FACTOR_IDENT(tabela_sdt_entries[72].itens);
 
     // FACTOR-OPEN_PARENTHESIS
-    entradas[73].chave = strdup("FACTOR-OPEN_PARENTHESIS");
-    entradas[73].quantidade = 4;
-    entradas[73].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
-    inicializar_producao_FACTOR_OPEN_PARENTHESIS(entradas[73].itens);
+    tabela_sdt_entries[73].chave = strdup("FACTOR-OPEN_PARENTHESIS");
+    tabela_sdt_entries[73].quantidade = 4;
+    tabela_sdt_entries[73].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 4);
+    inicializar_producao_FACTOR_OPEN_PARENTHESIS(tabela_sdt_entries[73].itens);
 
     // FACTOR-NI
-    entradas[74].chave = strdup("FACTOR-NI");
-    entradas[74].quantidade = 2;
-    entradas[74].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
-    inicializar_producao_FACTOR_NI(entradas[74].itens);
+    tabela_sdt_entries[74].chave = strdup("FACTOR-NI");
+    tabela_sdt_entries[74].quantidade = 2;
+    tabela_sdt_entries[74].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
+    inicializar_producao_FACTOR_NI(tabela_sdt_entries[74].itens);
 
     // FACTOR-NPF
-    entradas[75].chave = strdup("FACTOR-NPF");
-    entradas[75].quantidade = 2;
-    entradas[75].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
-    inicializar_producao_FACTOR_NPF(entradas[75].itens);
+    tabela_sdt_entries[75].chave = strdup("FACTOR-NPF");
+    tabela_sdt_entries[75].quantidade = 2;
+    tabela_sdt_entries[75].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
+    inicializar_producao_FACTOR_NPF(tabela_sdt_entries[75].itens);
 
     // FACTOR-STRC
-    entradas[76].chave = strdup("FACTOR-STRC");
-    entradas[76].quantidade = 2;
-    entradas[76].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
-    inicializar_producao_FACTOR_STRC(entradas[76].itens);
+    tabela_sdt_entries[76].chave = strdup("FACTOR-STRC");
+    tabela_sdt_entries[76].quantidade = 2;
+    tabela_sdt_entries[76].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 2);
+    inicializar_producao_FACTOR_STRC(tabela_sdt_entries[76].itens);
 
     // FACTOR-NULL
-    entradas[77].chave = strdup("FACTOR-NULL");
-    entradas[77].quantidade = 1;
-    entradas[77].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
-    inicializar_producao_FACTOR_NULL(entradas[77].itens);
+    tabela_sdt_entries[77].chave = strdup("FACTOR-NULL");
+    tabela_sdt_entries[77].quantidade = 1;
+    tabela_sdt_entries[77].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 1);
+    inicializar_producao_FACTOR_NULL(tabela_sdt_entries[77].itens);
 
     // LVALUE-IDENT - The one you provided as the last entry
-    entradas[78].chave = strdup("LVALUE-IDENT");
-    entradas[78].quantidade = 6;
-    entradas[78].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 6);
-    entradas[78].itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "IDENT"}};
-    entradas[78].itens[1] = (ItemTabelaSDT){ACAO, {.acao = DECLARAR_VERIFICAR_acao2}};
-    entradas[78].itens[2] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_obter_variavel_lvalue}};
-    entradas[78].itens[3] = (ItemTabelaSDT){ACAO, {.acao = EXPA_avaliar_identificador}};
-    entradas[78].itens[4] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "ALLOCAUX"}};
-    entradas[78].itens[5] = (ItemTabelaSDT){ACAO, {.acao = EXPA_avaliar_identificador}};
+    tabela_sdt_entries[78].chave = strdup("LVALUE-IDENT");
+    tabela_sdt_entries[78].quantidade = 6;
+    tabela_sdt_entries[78].itens = (ItemTabelaSDT*)malloc(sizeof(ItemTabelaSDT) * 6);
+    tabela_sdt_entries[78].itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "IDENT"}};
+    tabela_sdt_entries[78].itens[1] = (ItemTabelaSDT){ACAO, {.acao = DECLARAR_VERIFICAR_acao2}};
+    tabela_sdt_entries[78].itens[2] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_obter_variavel_lvalue}};
+    tabela_sdt_entries[78].itens[3] = (ItemTabelaSDT){ACAO, {.acao = EXPA_avaliar_identificador}};
+    tabela_sdt_entries[78].itens[4] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "ALLOCAUX"}};
+    tabela_sdt_entries[78].itens[5] = (ItemTabelaSDT){ACAO, {.acao = EXPA_avaliar_identificador}};
+}
+
+static void inicializar_producao_PROGRAM_DEF(ItemTabelaSDT* itens) {
+    itens[0] = (ItemTabelaSDT){ACAO, {.acao = ESCOPO_acao1}};
+    itens[1] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_definir_rotulo_final}};
+    itens[2] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_herdar_proximo}};
+    itens[3] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "FUNCLIST"}};
+    itens[4] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "PROGRAM'"}};
+    itens[5] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_ir_para_principal}};
+    itens[6] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_gerar_codigo_final}};
+}
+
+static void inicializar_producao_PROGRAM_IDENT(ItemTabelaSDT* itens) {
+    itens[0] = (ItemTabelaSDT){ACAO, {.acao = ESCOPO_acao1}};
+    itens[1] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_definir_rotulo_final}};
+    itens[2] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_herdar_proximo}};
+    itens[3] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "STATEMENT"}};
+    itens[4] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_obter_codigo_filhos}};
+    itens[5] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_gerar_codigo_final}};
 }
 
 static void inicializar_producao_PROGRAM_DOLAR(ItemTabelaSDT* itens) {
@@ -682,7 +705,7 @@ static void inicializar_producao_STATEMENT_BREAK(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "BREAK"}};
     itens[1] = (ItemTabelaSDT){ACAO, {.acao = BREAK_acao1}};
     itens[2] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "SEMICOLON"}};
-    itens[3] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_handle_break}};
+    itens[3] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_lidar_break}};
 }
 
 static void inicializar_producao_STATEMENT_PRINT(ItemTabelaSDT* itens) {
@@ -770,16 +793,16 @@ static void inicializar_producao_ATRIBSTAT_IDENT(ItemTabelaSDT* itens) {
     itens[1] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "LVALUE"}};
     itens[2] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "ASSIGN"}};
     itens[3] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "ATRIBSTAT'"}};
-    itens[4] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_assign}};
+    itens[4] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_atribuicao}};
 }
 
 static void inicializar_producao_ATRIBSTAT_QUOTE_IDENT(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "EXPRESSION"}};
-    itens[1] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_set_expression_val}};
+    itens[1] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_definir_valor_expressao}};
 }
 
 static void inicializar_producao_ATRIBSTAT_QUOTE_CALL(ItemTabelaSDT* itens) {
-    itens[0] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_get_return_val}};
+    itens[0] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_obter_valor_retorno}};
     itens[1] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_herdar_proximo}};
     itens[2] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "FUNCCALL"}};
     itens[3] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_obter_codigo_filhos}};
@@ -798,14 +821,14 @@ static void inicializar_producao_FUNCCALL_CALL(ItemTabelaSDT* itens) {
     itens[5] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "PARAMLISTCALL"}};
     itens[6] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "CLOSE_PARENTHESIS"}};
     itens[7] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "CLOSE_PARENTHESIS"}};
-    itens[8] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_funccall}};
+    itens[8] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_chamada_funcao}};
 }
 
 static void inicializar_producao_PARAMLISTCALL_IDENT(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "IDENT"}};
     itens[1] = (ItemTabelaSDT){ACAO, {.acao = DECLARAR_VERIFICAR_acao2}};
     itens[2] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "PARAMLISTCALL'"}};
-    itens[3] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_paramlistcall}};
+    itens[3] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_chamada_paramlist}};
 }
 
 static void inicializar_producao_PARAMLISTCALL_CLOSE_PARENTHESIS(ItemTabelaSDT* itens) {
@@ -819,31 +842,31 @@ static void inicializar_producao_PARAMLISTCALL_QUOTE_CLOSE_PARENTHESIS(ItemTabel
 static void inicializar_producao_PARAMLISTCALL_QUOTE_COMMA(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "COMMA"}};
     itens[1] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "PARAMLISTCALL"}};
-    itens[2] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_obter_params}};
+    itens[2] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_obter_parametros}};
     itens[3] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_obter_codigo_filhos}};
 }
 
 static void inicializar_producao_PRINTSTAT_PRINT(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "PRINT"}};
     itens[1] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "EXPRESSION"}};
-    itens[2] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_handle_printstat}};
+    itens[2] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_lidar_impressao}};
 }
 
 static void inicializar_producao_READSTAT_READ(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "READ"}};
     itens[1] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "LVALUE"}};
-    itens[2] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_handle_readstat}};
+    itens[2] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_lidar_leitura}};
 }
 
 static void inicializar_producao_RETURNSTAT_RETURN(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "RETURN"}};
     itens[1] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "RETURNSTAT'"}};
-    itens[2] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_handle_return}};
+    itens[2] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_lidar_retorno}};
 }
 
 static void inicializar_producao_RETURNSTAT_QUOTE_IDENT(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "LVALUE"}};
-    itens[1] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_handle_return2}};
+    itens[1] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_lidar_retorno2}};
 }
 
 static void inicializar_producao_RETURNSTAT_QUOTE_SEMICOLON(ItemTabelaSDT* itens) {
@@ -862,28 +885,28 @@ static void inicializar_producao_IFSTAT_IF(ItemTabelaSDT* itens) {
     itens[8] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "CLOSE_BRACE"}};
     itens[9] = (ItemTabelaSDT){ACAO, {.acao = ESCOPO_acao2}};
     itens[10] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "IFSTAT'"}};
-    itens[11] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_if_action_s}};
+    itens[11] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_acao_if_s}};
 }
 
 static void inicializar_producao_IFSTAT_QUOTE_IDENT(ItemTabelaSDT* itens) {
-    itens[0] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_empty_else_action}};
+    itens[0] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_acao_else_vazio}};
     itens[1] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "ε"}};
 }
 
 static void inicializar_producao_IFSTAT_QUOTE_ELSE(ItemTabelaSDT* itens) {
-    itens[0] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_else_action_h}};
+    itens[0] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_acao_else_h}};
     itens[1] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "ELSE"}};
     itens[2] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "OPEN_BRACE"}};
     itens[3] = (ItemTabelaSDT){ACAO, {.acao = ESCOPO_acao6}};
     itens[4] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "STATEMENT"}};
     itens[5] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "CLOSE_BRACE"}};
     itens[6] = (ItemTabelaSDT){ACAO, {.acao = ESCOPO_acao2}};
-    itens[7] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_else_action_s}};
+    itens[7] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_acao_else_s}};
 }
 
 static void inicializar_producao_FORSTAT_FOR(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_herdar_proximo}};
-    itens[1] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_herdar_for_proximo}};
+    itens[1] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_herdar_proximo_for}};
     itens[2] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "FOR"}};
     itens[3] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "OPEN_PARENTHESIS"}};
     itens[4] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "ATRIBSTAT"}};
@@ -895,12 +918,12 @@ static void inicializar_producao_FORSTAT_FOR(ItemTabelaSDT* itens) {
     itens[10] = (ItemTabelaSDT){ACAO, {.acao = ESCOPO_acao7}};
     itens[11] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "STATEMENT"}};
     itens[12] = (ItemTabelaSDT){ACAO, {.acao = ESCOPO_acao2}};
-    itens[13] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_for_action}};
+    itens[13] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_acao_for}};
 }
 
 static void inicializar_producao_STATELIST_IDENT(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_herdar_proximo}};
-    itens[1] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_set_rotulo}};
+    itens[1] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_definir_rotulo}};
     itens[2] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "STATEMENT"}};
     itens[3] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "STATELIST'"}};
     itens[4] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_obter_codigo_filhos_2}};
@@ -927,8 +950,8 @@ static void inicializar_producao_ALLOCAUX_OPEN_BRACKET(ItemTabelaSDT* itens) {
     itens[1] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "NUMEXPRESSION"}};
     itens[2] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "CLOSE_BRACKET"}};
     itens[3] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "ALLOCAUX"}};
-    itens[4] = (ItemTabelaSDT){ACAO, {.acao = EXPA_printExpression1}};
-    itens[5] = (ItemTabelaSDT){ACAO, {.acao = EXPA_arrayCounter}};
+    itens[4] = (ItemTabelaSDT){ACAO, {.acao = EXPA_imprimir_expressao1}};
+    itens[5] = (ItemTabelaSDT){ACAO, {.acao = EXPA_contador_vetor}};
 }
 
 static void inicializar_producao_ALLOCEXPRESSION_NEW(ItemTabelaSDT* itens) {
@@ -942,7 +965,7 @@ static void inicializar_producao_ALLOCEXPRESSION_QUOTE_INT(ItemTabelaSDT* itens)
     itens[2] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "NUMEXPRESSION"}};
     itens[3] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "CLOSE_BRACKET"}};
     itens[4] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "ALLOCAUX"}};
-    itens[5] = (ItemTabelaSDT){ACAO, {.acao = EXPA_printExpression2}};
+    itens[5] = (ItemTabelaSDT){ACAO, {.acao = EXPA_imprimir_expressao2}};
 }
 
 static void inicializar_producao_ALLOCEXPRESSION_QUOTE_FLOAT(ItemTabelaSDT* itens) {
@@ -951,7 +974,7 @@ static void inicializar_producao_ALLOCEXPRESSION_QUOTE_FLOAT(ItemTabelaSDT* iten
     itens[2] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "NUMEXPRESSION"}};
     itens[3] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "CLOSE_BRACKET"}};
     itens[4] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "ALLOCAUX"}};
-    itens[5] = (ItemTabelaSDT){ACAO, {.acao = EXPA_printExpression2}};
+    itens[5] = (ItemTabelaSDT){ACAO, {.acao = EXPA_imprimir_expressao2}};
 }
 
 static void inicializar_producao_ALLOCEXPRESSION_QUOTE_STRING(ItemTabelaSDT* itens) {
@@ -960,14 +983,14 @@ static void inicializar_producao_ALLOCEXPRESSION_QUOTE_STRING(ItemTabelaSDT* ite
     itens[2] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "NUMEXPRESSION"}};
     itens[3] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "CLOSE_BRACKET"}};
     itens[4] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "ALLOCAUX"}};
-    itens[5] = (ItemTabelaSDT){ACAO, {.acao = EXPA_printExpression2}};
+    itens[5] = (ItemTabelaSDT){ACAO, {.acao = EXPA_imprimir_expressao2}};
 }
 
 static void inicializar_producao_EXPRESSION_IDENT(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "NUMEXPRESSION"}};
-    itens[1] = (ItemTabelaSDT){ACAO, {.acao = EXPA_printExpression0_h}};
+    itens[1] = (ItemTabelaSDT){ACAO, {.acao = EXPA_imprimir_expressao0_h}};
     itens[2] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "EXPRESSION'"}};
-    itens[3] = (ItemTabelaSDT){ACAO, {.acao = EXPA_printExpression0}};
+    itens[3] = (ItemTabelaSDT){ACAO, {.acao = EXPA_imprimir_expressao0_h}};
 }
 
 static void inicializar_producao_EXPRESSION_QUOTE_CLOSE_PARENTHESIS(ItemTabelaSDT* itens) {
@@ -977,7 +1000,7 @@ static void inicializar_producao_EXPRESSION_QUOTE_CLOSE_PARENTHESIS(ItemTabelaSD
 static void inicializar_producao_EXPRESSION_QUOTE_RELOP(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "RELOP"}};
     itens[1] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "NUMEXPRESSION"}};
-    itens[2] = (ItemTabelaSDT){ACAO, {.acao = EXPA_printExpression1}};
+    itens[2] = (ItemTabelaSDT){ACAO, {.acao = EXPA_imprimir_expressao1}};
     itens[3] = (ItemTabelaSDT){ACAO, {.acao = CODIGO_relop_action}};
 }
 
@@ -988,25 +1011,25 @@ static void inicializar_producao_NUMEXPRESSIONAUX_CLOSE_PARENTHESIS(ItemTabelaSD
 static void inicializar_producao_NUMEXPRESSIONAUX_PLUS(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "PLUS"}};
     itens[1] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "NUMEXPRESSION"}};
-    itens[2] = (ItemTabelaSDT){ACAO, {.acao = EXPA_setOperation}};
+    itens[2] = (ItemTabelaSDT){ACAO, {.acao = EXPA_definir_operacao}};
 }
 
 static void inicializar_producao_NUMEXPRESSIONAUX_MINUS(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "MINUS"}};
     itens[1] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "NUMEXPRESSION"}};
-    itens[2] = (ItemTabelaSDT){ACAO, {.acao = EXPA_setOperation}};
+    itens[2] = (ItemTabelaSDT){ACAO, {.acao = EXPA_definir_operacao}};
 }
 
 static void inicializar_producao_NUMEXPRESSION_IDENT(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "TERM"}};
     itens[1] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "NUMEXPRESSIONAUX"}};
-    itens[2] = (ItemTabelaSDT){ACAO, {.acao = EXPA_generateNode}};
+    itens[2] = (ItemTabelaSDT){ACAO, {.acao = EXPA_gerar_no}};
 }
 
 static void inicializar_producao_TERM_IDENT(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "UNARYEXPR"}};
     itens[1] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "UNARYEXPRAUX"}};
-    itens[2] = (ItemTabelaSDT){ACAO, {.acao = EXPA_term}};
+    itens[2] = (ItemTabelaSDT){ACAO, {.acao = EXPA_termo}};
 }
 
 static void inicializar_producao_UNARYEXPRAUX_CLOSE_PARENTHESIS(ItemTabelaSDT* itens) {
@@ -1016,63 +1039,63 @@ static void inicializar_producao_UNARYEXPRAUX_CLOSE_PARENTHESIS(ItemTabelaSDT* i
 static void inicializar_producao_UNARYEXPRAUX_MULTIPLICATION(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "MULTIPLICATION"}};
     itens[1] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "TERM"}};
-    itens[2] = (ItemTabelaSDT){ACAO, {.acao = EXPA_setOperation2}};
+    itens[2] = (ItemTabelaSDT){ACAO, {.acao = EXPA_definir_operacao2}};
 }
 
 static void inicializar_producao_UNARYEXPRAUX_DIVISION(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "DIVISION"}};
     itens[1] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "TERM"}};
-    itens[2] = (ItemTabelaSDT){ACAO, {.acao = EXPA_setOperation2}};
+    itens[2] = (ItemTabelaSDT){ACAO, {.acao = EXPA_definir_operacao2}};
 }
 
 static void inicializar_producao_UNARYEXPRAUX_MODULUS(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "MODULUS"}};
     itens[1] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "TERM"}};
-    itens[2] = (ItemTabelaSDT){ACAO, {.acao = EXPA_setOperation2}};
+    itens[2] = (ItemTabelaSDT){ACAO, {.acao = EXPA_definir_operacao2}};
 }
 
 static void inicializar_producao_UNARYEXPR_IDENT(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "FACTOR"}};
-    itens[1] = (ItemTabelaSDT){ACAO, {.acao = EXPA_valueUp}};
+    itens[1] = (ItemTabelaSDT){ACAO, {.acao = EXPA_valor_para_cima}};
 }
 
 static void inicializar_producao_UNARYEXPR_PLUS(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "PLUS"}};
     itens[1] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "FACTOR"}};
-    itens[2] = (ItemTabelaSDT){ACAO, {.acao = EXPA_secondChildValueUp}};
+    itens[2] = (ItemTabelaSDT){ACAO, {.acao = EXPA_valor_segundo_filho_para_cima}};
 }
 
 static void inicializar_producao_UNARYEXPR_MINUS(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "MINUS"}};
     itens[1] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "FACTOR"}};
-    itens[2] = (ItemTabelaSDT){ACAO, {.acao = EXPA_secondChildValueUp}};
+    itens[2] = (ItemTabelaSDT){ACAO, {.acao = EXPA_valor_segundo_filho_para_cima}};
 }
 
 static void inicializar_producao_FACTOR_IDENT(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "LVALUE"}};
-    itens[1] = (ItemTabelaSDT){ACAO, {.acao = EXPA_identUp}};
+    itens[1] = (ItemTabelaSDT){ACAO, {.acao = EXPA_ident_para_cima}};
 }
 
 static void inicializar_producao_FACTOR_OPEN_PARENTHESIS(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "OPEN_PARENTHESIS"}};
     itens[1] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "NUMEXPRESSION"}};
     itens[2] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "CLOSE_PARENTHESIS"}};
-    itens[3] = (ItemTabelaSDT){ACAO, {.acao = EXPA_passNum}};
+    itens[3] = (ItemTabelaSDT){ACAO, {.acao = EXPA_passar_numero}};
 }
 
 static void inicializar_producao_FACTOR_NI(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "NI"}};
-    itens[1] = (ItemTabelaSDT){ACAO, {.acao = EXPA_lexemeToValue}};
+    itens[1] = (ItemTabelaSDT){ACAO, {.acao = EXPA_lexema_para_valor}};
 }
 
 static void inicializar_producao_FACTOR_NPF(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "NPF"}};
-    itens[1] = (ItemTabelaSDT){ACAO, {.acao = EXPA_lexemeToValue}};
+    itens[1] = (ItemTabelaSDT){ACAO, {.acao = EXPA_lexema_para_valor}};
 }
 
 static void inicializar_producao_FACTOR_STRC(ItemTabelaSDT* itens) {
     itens[0] = (ItemTabelaSDT){SIMBOLO, {.simbolo = "STRC"}};
-    itens[1] = (ItemTabelaSDT){ACAO, {.acao = EXPA_lexemeToValue}};
+    itens[1] = (ItemTabelaSDT){ACAO, {.acao = EXPA_lexema_para_valor}};
 }
 
 static void inicializar_producao_FACTOR_NULL(ItemTabelaSDT* itens) {

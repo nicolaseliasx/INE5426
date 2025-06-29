@@ -5,18 +5,6 @@
 #include "token.h"
 
 // =================================================================
-// Funções auxiliares
-// =================================================================
-
-static int eh_letra(char c) {
-    return isalpha((unsigned char)c) || c == '_';
-}
-
-static int eh_digito(char c) {
-    return isdigit((unsigned char)c);
-}
-
-// =================================================================
 // Implementações das funções de transição para cada identificador
 // =================================================================
 
@@ -182,7 +170,7 @@ static TransicaoEstado transicoes_ident[] = {
 static const char* estados_finais_ident[] = {"final"};
 static const char* estados_mortos_ident[] = {"morto"};
 
-static MaquinaEstado maquina_ident = {
+static MaquinaEstados maquina_ident = {
     transicoes_ident,
     sizeof(transicoes_ident) / sizeof(TransicaoEstado),
     "0",
@@ -204,7 +192,7 @@ static TransicaoEstado transicoes_inteiro[] = {
 static const char* estados_finais_inteiro[] = {"final"};
 static const char* estados_mortos_inteiro[] = {"morto"};
 
-static MaquinaEstado maquina_inteiro = {
+static MaquinaEstados maquina_inteiro = {
     transicoes_inteiro,
     sizeof(transicoes_inteiro) / sizeof(TransicaoEstado),
     "0",
@@ -229,7 +217,7 @@ static TransicaoEstado transicoes_float[] = {
 static const char* estados_finais_float[] = {"final"};
 static const char* estados_mortos_float[] = {"morto"};
 
-static MaquinaEstado maquina_float = {
+static MaquinaEstados maquina_float = {
     transicoes_float,
     sizeof(transicoes_float) / sizeof(TransicaoEstado),
     "0",
@@ -247,7 +235,7 @@ static TransicaoEstado transicoes_mathop[] = {
 static const char* estados_finais_mathop[] = {"final"};
 static const char* estados_mortos_mathop[] = {"morto"};
 
-static MaquinaEstado maquina_mathop = {
+static MaquinaEstados maquina_mathop = {
     transicoes_mathop,
     sizeof(transicoes_mathop) / sizeof(TransicaoEstado),
     "0",
@@ -265,7 +253,7 @@ static TransicaoEstado transicoes_onechar[] = {
 static const char* estados_finais_onechar[] = {"final"};
 static const char* estados_mortos_onechar[] = {"morto"};
 
-static MaquinaEstado maquina_onechar = {
+static MaquinaEstados maquina_onechar = {
     transicoes_onechar,
     sizeof(transicoes_onechar) / sizeof(TransicaoEstado),
     "0",
@@ -284,7 +272,7 @@ static TransicaoEstado transicoes_strc[] = {
 static const char* estados_finais_strc[] = {"final"};
 static const char* estados_mortos_strc[] = {"morto"};
 
-static MaquinaEstado maquina_strc = {
+static MaquinaEstados maquina_strc = {
     transicoes_strc,
     sizeof(transicoes_strc) / sizeof(TransicaoEstado),
     "0",
@@ -304,7 +292,7 @@ static TransicaoEstado transicoes_relop[] = {
 static const char* estados_finais_relop[] = {"final_1", "final_2"};
 static const char* estados_mortos_relop[] = {"morto"};
 
-static MaquinaEstado maquina_relop = {
+static MaquinaEstados maquina_relop = {
     transicoes_relop,
     sizeof(transicoes_relop) / sizeof(TransicaoEstado),
     "0",

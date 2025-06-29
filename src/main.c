@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
     printf("\n************************************************************\n\n");
 
     printf("Tabelas de Símbolos Geradas:\n\n");
-    imprimir_tabelas(scope_manager, stdout);
+    imprimir_tabelas_gerenciador(scope_manager, stdout);
 
     printf("\n************************************************************\n\n");
     printf("Código Intermediário Gerado:\n\n");

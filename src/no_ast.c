@@ -1,3 +1,4 @@
+#define _DEFAULT_SOURCE
 #include "no_ast.h"
 #include "erros.h"
 #include <stdio.h>
@@ -22,19 +23,19 @@ NoAST* criar_no_ast(const char* identificador, int* contador_rotulos) {
     no->codigo = criar_lista_string();
     no->proximo = NULL;
     
-    no->para_proximo = NULL; // MUDANÇA: de 'proximo_para_for'
+    no->para_proximo = NULL;
     
-    no->sdt_dec.tipo_inicial = NULL; // MUDANÇA: de 'decSDT'
+    no->sdt_dec.tipo_inicial = NULL;
     no->sdt_dec.tipo = NULL;
     
-    no->res_var_codigo.var = NULL; // MUDANÇA: de 'codigo_res_var.variavel'
+    no->res_var_codigo.var = NULL;
     no->res_var_codigo.inicio = NULL;
-    no->res_var_codigo.ret = NULL; // MUDANÇA: de 'codigo_res_var.retorno'
+    no->res_var_codigo.ret = NULL;
     no->res_var_codigo.valor_retorno = strdup("0");
-    no->res_var_codigo.contador_param = 0; // MUDANÇA: de 'codigo_res_var.contador_parametros'
+    no->res_var_codigo.contador_param = 0;
     
-    no->sdt_mat.contador_vetor = 0; // MUDANÇA: de 'mathSDT.contador_arrays'
-    no->sdt_mat.vetor_array_var = criar_lista_string(); // MUDANÇA: de 'mathSDT.variaveis_array'
+    no->sdt_mat.contador_vetor = 0;
+    no->sdt_mat.vetor_array_var = criar_lista_string();
     no->sdt_mat.operacao = '\0';
     no->sdt_mat.no = NULL;
     

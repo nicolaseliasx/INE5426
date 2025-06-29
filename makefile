@@ -1,27 +1,23 @@
 # Makefile para o Projeto de Compilador
-# Este Makefile compila todos os ficheiros .c e os liga num único executável.
 
-# Compilador a ser usado (GNU C Compiler)
+# Compilador e Flags
 CC = gcc
-
-# Flags do compilador:
-# -Wall -Wextra: Ativa quase todos os avisos do compilador, o que é bom para apanhar erros.
-# -g: Adiciona informação de depuração ao executável (essencial para usar com gdb).
-# -std=c99: Especifica a versão do padrão da linguagem C.
 CFLAGS = -Wall -Wextra -g -std=c99
 
-# --- CONFIGURAÇÃO DOS DIRETÓRIOS ---
-# Diretório onde os ficheiros de código-fonte (.c e .h) estão localizados
+# --- Diretórios ---
 SRC_DIR = src
-# Adiciona o diretório de cabeçalhos aos flags para que o compilador encontre os #includes
+OBJ_DIR = obj
+
+# Adiciona o diretório de includes aos flags
 CPPFLAGS = -I$(SRC_DIR)
 
+# --- Arquivos ---
 # Nome do executável final
 EXEC = compilador
 
-# Lista dos NOMES BASE dos ficheiros de código fonte (.c), sem o caminho.
-# Adicionado: pilha.c
+# Lista dos NOMES BASE dos ficheiros de código fonte (.c)
 SRCS = \
+    main.c \
     acoes_semanticas.c \
     analisador_lexico.c \
     analisador_sintatico.c \
@@ -39,53 +35,40 @@ SRCS = \
     tipo_enum.c \
     token.c
 
-# Gera automaticamente a lista de ficheiros de objeto (.o) a partir da lista de fontes.
-# Os ficheiros .o serão criados no diretório raiz, onde o 'make' é executado.
-OBJS = $(SRCS:.c=.o)
+# Gera automaticamente a lista de ficheiros de objeto (.o) com o caminho para o diretório obj/
+OBJS = $(addprefix $(OBJ_DIR)/, $(SRCS:.c=.o))
 
-# Lista dos NOMES BASE dos ficheiros de cabeçalho (.h)
-# Adicionado: pilha.h
-HEADERS = \
-    acoes_semanticas.h \
-    analisador_lexico.h \
-    analisador_sintatico.h \
-    erros.h \
-    gerenciador_escopo.h \
-    identificadores_tokens.h \
-    item_pilha_analise.h \
-    maquina_estados.h \
-    no_ast.h \
-    pilha.h \
-    resolvedor_expressao.h \
-    tabela_analise.h \
-    tabela_sdt_auxiliar.h \
-    tabela_simbolos.h \
-    tipo_enum.h \
-    token.h
 
-# Gera a lista completa de dependências de cabeçalho com o caminho
-DEPS = $(addprefix $(SRC_DIR)/, $(HEADERS))
+# --- Regras do Make ---
 
-# A regra 'all' é a regra padrão. Executar 'make' ou 'make all' irá construir o projeto.
+# A regra 'all' é a regra padrão.
 .PHONY: all
 all: $(EXEC)
 
 # Regra para ligar (link) todos os ficheiros objeto e criar o executável final.
 $(EXEC): $(OBJS)
-	$(CC) $(CFLAGS) -o $(EXEC) $(OBJS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^
 
-# Regra genérica para compilar um ficheiro .c num ficheiro .o.
-# Para criar um ficheiro .o na raiz (ex: acoes_semanticas.o),
-# esta regra diz ao 'make' para usar o .c correspondente que está dentro de $(SRC_DIR).
-%.o: $(SRC_DIR)/%.c $(DEPS)
+# MUDANÇA PRINCIPAL:
+# Regra para compilar um ficheiro .c de src/ para um .o em obj/
+# A dependência `| $(OBJ_DIR)` é uma "dependência de ordem". 
+# Ela garante que a pasta obj/ seja criada ANTES de tentar compilar o .o
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
+
+# Regra para criar o diretório de objetos, se ele não existir.
+# O @ na frente do comando esconde a sua execução no terminal (deixa a saída mais limpa).
+$(OBJ_DIR):
+	@mkdir -p $(OBJ_DIR)
 
 # A regra 'run' executa o programa compilado.
 .PHONY: run
 run: $(EXEC)
-	./$(EXEC)
+	./$(EXEC) $(ARGS) # ARGS permite passar argumentos da linha de comando, ex: make run ARGS="test.txt"
 
-# A regra 'clean' remove todos os ficheiros compilados (objetos e o executável) da raiz.
+# A regra 'clean' remove o diretório obj e o executável.
 .PHONY: clean
 clean:
-	rm -f $(OBJS) $(EXEC)
+	@echo "Limpando ficheiros compilados..."
+	@rm -rf $(OBJ_DIR) $(EXEC)
+	@echo "Limpeza concluída."

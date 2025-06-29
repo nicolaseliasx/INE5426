@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 // Estados da máquina
 typedef enum {
@@ -12,39 +13,43 @@ typedef enum {
     MAQ_ERRO
 } EstadoMaquina;
 
-// Estrutura para entrada de transição
-typedef struct {
-    char* estado;
-    char* (*funcao_transicao)(char c, int is_eof);
-} EntradaTransicao;
+typedef const char* (*FuncaoTransicao)(char c, int is_eof);
 
-// Estrutura principal da máquina de estados
 typedef struct {
-    EntradaTransicao* transicoes;
+    const char* estado;
+    FuncaoTransicao funcao_transicao;
+} TransicaoEstado;
+
+
+typedef struct MaquinaEstados {
+    TransicaoEstado* transicoes;
     int num_transicoes;
     
-    char* estado_inicial;
-    char** estados_finais;
-    char** estados_retrocesso;
+    const char* estado_inicial;
+    const char** estados_finais; 
+    int num_estados_finais;
+    const char** estados_retrocesso;
+    int num_estados_retrocesso;
     
-    char* estado_atual;
+    // Atributos de execução
+    const char* estado_atual;
     char* lexema;
     EstadoMaquina status;
+
 } MaquinaEstados;
 
-// Funções públicas
-MaquinaEstados* criar_maquina_estados(EntradaTransicao* transicoes, int num_trans,
+
+// Funções públicas (usando o nome padronizado MaquinaEstado)
+MaquinaEstados* criar_maquina_estados(TransicaoEstado* transicoes, int num_trans,
                                       const char* estado_inicial, 
-                                      char** estados_finais,
-                                      char** estados_retrocesso);
+                                      const char** estados_finais,
+                                      const char** estados_retrocesso);
 
 void reiniciar_maquina(MaquinaEstados* maq);
 EstadoMaquina transicionar_maquina(MaquinaEstados* maq, char c, int is_eof);
 int deve_retroceder_cursor(MaquinaEstados* maq);
 void liberar_maquina_estados(MaquinaEstados* maq);
-
-// Funções auxiliares
 EstadoMaquina obter_status_maquina(MaquinaEstados* maq);
 const char* obter_lexema_maquina(MaquinaEstados* maq);
 
-#endif
+#endif // MAQUINA_ESTADOS_H

@@ -5,16 +5,16 @@
 #include "gerenciador_escopo.h"
 
 typedef enum {
-    TIPO_SIMBOLO,
-    TIPO_ACAO
+    SIMBOLO,
+    ACAO
 } TipoItemPilha;
 
 typedef void (*FuncaoAcaoSemantica)(NoAST* no_pai, GerenciadorEscopo* gerenciador_escopo);
 
 typedef struct ItemPilha {
     TipoItemPilha tipo;
-    char* simbolo; // Para itens do tipo TIPO_SIMBOLO
-    FuncaoAcaoSemantica acao_semantica; // Para itens do tipo TIPO_ACAO
+    char* simbolo;
+    FuncaoAcaoSemantica acao_semantica;
     NoAST* no_ast;
     NoAST* ancestral;
 } ItemPilha;

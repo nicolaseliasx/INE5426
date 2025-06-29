@@ -3,8 +3,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 #include "analisador_sintatico.h"
+#include "erros.h"
 
 
 // Função auxiliar para buscar produção na tabela
@@ -61,14 +63,14 @@ void analisar_token(AnalisadorSintatico* analisador, Token* token) {
             char erro_msg[100];
             snprintf(erro_msg, sizeof(erro_msg), 
                      "Token inesperado em %d:%d", token->linha, token->coluna);
-            erro_sintatico(erro_msg);
+            criar_erro_sintatico(erro_msg);
             return;
         }
         
         ItemPilha* topo = topo_pilha(analisador->pilha);
         
         // Tratar ação semântica
-        if (topo->tipo == TIPO_ACAO) {
+        if (topo->tipo == ACAO) {
             topo->acao_semantica(topo->ancestral, analisador->gerenciador_escopo);
             liberar_item_pilha(desempilhar(analisador->pilha));
             continue;
@@ -77,7 +79,7 @@ void analisar_token(AnalisadorSintatico* analisador, Token* token) {
         // Caso terminal coincida
         if (strcmp(topo->simbolo, token->id) == 0) {
             if (strcmp(token->lexema, "$") != 0) {
-                associar_token_no(topo->no_ast, token);
+                definir_token(topo->no_ast, token);
             }
             liberar_item_pilha(desempilhar(analisador->pilha));
             return;
@@ -96,7 +98,7 @@ void analisar_token(AnalisadorSintatico* analisador, Token* token) {
             snprintf(erro_msg, sizeof(erro_msg), 
                      "Token inválido '%s' em %d:%d", 
                      token->lexema, token->linha, token->coluna);
-            erro_sintatico(erro_msg);
+            criar_erro_sintatico(erro_msg);
             return;
         }
         
@@ -111,12 +113,12 @@ void analisar_token(AnalisadorSintatico* analisador, Token* token) {
             ItemPilha* item = &producao->producao[i];
             
             // Ignorar produções vazias
-            if (item->tipo == TIPO_SIMBOLO && strcmp(item->simbolo, "ε") == 0) {
+            if (item->tipo == SIMBOLO && strcmp(item->simbolo, "ε") == 0) {
                 continue;
             }
             
             ItemPilha* novo_item;
-            if (item->tipo == TIPO_ACAO) {
+            if (item->tipo == ACAO) {
                 novo_item = criar_item_acao(item->acao_semantica);
                 definir_ancestralidade(novo_item, NULL, topo->no_ast);
             } else {

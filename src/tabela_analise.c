@@ -6,7 +6,7 @@
 #include <stddef.h>
 
 
-extern const EntradaTabelaSDT tabela_sdt_entries[];
+extern EntradaTabelaAuxSDT tabela_sdt_entries[];
 extern const size_t num_entradas_sdt; 
 
 const ItemTabelaSDT* obter_itens_sdt(const char* chave, size_t* quantidade) {
@@ -14,6 +14,15 @@ const ItemTabelaSDT* obter_itens_sdt(const char* chave, size_t* quantidade) {
         if (strcmp(tabela_sdt_entries[i].chave, chave) == 0) {
             *quantidade = tabela_sdt_entries[i].quantidade;
             return tabela_sdt_entries[i].itens;
+        }
+    }
+    return NULL;
+}
+
+const EntradaTabelaSDT* buscar_entrada_sdt(const char* chave) {
+    for (size_t i = 0; i < num_entradas_sdt; i++) {
+        if (strcmp(tabela_sdt_entries[i].chave, chave) == 0) {
+            return (const EntradaTabelaSDT*)&tabela_sdt_entries[i];
         }
     }
     return NULL;

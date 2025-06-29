@@ -1,10 +1,11 @@
+#define _DEFAULT_SOURCE
 #include "item_pilha_analise.h"
-#include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 
 ItemPilha* criar_item_simbolo(const char* simbolo) {
     ItemPilha* item = (ItemPilha*)malloc(sizeof(ItemPilha));
-    item->tipo = TIPO_SIMBOLO;
+    item->tipo = SIMBOLO;
     item->simbolo = strdup(simbolo);
     item->acao_semantica = NULL;
     item->no_ast = NULL;
@@ -14,7 +15,7 @@ ItemPilha* criar_item_simbolo(const char* simbolo) {
 
 ItemPilha* criar_item_acao(FuncaoAcaoSemantica acao) {
     ItemPilha* item = (ItemPilha*)malloc(sizeof(ItemPilha));
-    item->tipo = TIPO_ACAO;
+    item->tipo = ACAO;
     item->simbolo = NULL;
     item->acao_semantica = acao;
     item->no_ast = NULL;

@@ -1,6 +1,8 @@
 #ifndef TIPO_ENUM_H
 #define TIPO_ENUM_H
 
+#include <stdio.h>
+
 typedef enum {
     TIPO_FUNCAO,
     TIPO_INTEIRO,
