@@ -71,7 +71,7 @@ void tabela_simbolos_adicionar(TabelaSimbolos* tabela, Token* token) {
     tabela->tamanho++;
 }
 
-void definir_tipo_simbolo(TabelaSimbolos* tabela, Token* token, const char* tipo) {
+void tabela_definir_tipo_simbolo(TabelaSimbolos* tabela, Token* token, const char* tipo) {
     int indice = buscar_indice(tabela, token->lexema);
     if (indice == -1) return;
     
@@ -85,14 +85,14 @@ bool simbolo_existe(TabelaSimbolos* tabela, const char* lexema) {
     return buscar_indice(tabela, lexema) != -1;
 }
 
-bool simbolo_e_tipo(TabelaSimbolos* tabela, Token* token, const char* tipo) {
+bool tabela_simbolo_e_tipo(TabelaSimbolos* tabela, Token* token, const char* tipo) {
     int indice = buscar_indice(tabela, token->lexema);
     if (indice == -1) return false;
     
     return strcmp(tabela->entradas[indice]->tipo, tipo) == 0;
 }
 
-char* obter_tipo_simbolo(TabelaSimbolos* tabela, Token* token) {
+char* tabela_obter_tipo_simbolo(TabelaSimbolos* tabela, Token* token) {
     int indice = buscar_indice(tabela, token->lexema);
     if (indice == -1) {
         // Tratar erro conforme necessário
@@ -101,7 +101,7 @@ char* obter_tipo_simbolo(TabelaSimbolos* tabela, Token* token) {
     return strdup(tabela->entradas[indice]->tipo);
 }
 
-void imprimir_tabela(TabelaSimbolos* tabela, FILE* saida) {
+void imprimir_tabela_simbolos(TabelaSimbolos* tabela, FILE* saida) {
     for (int i = 0; i < tabela->tamanho; i++) {
         fprintf(saida, "\tSímbolo: %s\n", tabela->chaves[i]);
         fprintf(saida, "\t\tTipo: %s\n", tabela->entradas[i]->tipo);

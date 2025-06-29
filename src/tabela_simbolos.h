@@ -3,6 +3,7 @@
 
 #include "token.h"
 #include <stdbool.h>
+#include <stdio.h>
 
 // Estrutura para uma entrada na tabela de símbolos
 typedef struct {
@@ -26,19 +27,19 @@ TabelaSimbolos* criar_tabela_simbolos();
 void tabela_simbolos_adicionar(TabelaSimbolos* tabela, Token* token);
 
 // Define o tipo de um símbolo
-void definir_tipo_simbolo(TabelaSimbolos* tabela, Token* token, const char* tipo);
+void tabela_definir_tipo_simbolo(TabelaSimbolos* tabela, Token* token, const char* tipo);
 
 // Verifica se um lexema está na tabela
 bool simbolo_existe(TabelaSimbolos* tabela, const char* lexema);
 
 // Verifica se um símbolo é de um tipo específico
-bool simbolo_e_tipo(TabelaSimbolos* tabela, Token* token, const char* tipo);
+bool tabela_simbolo_e_tipo(TabelaSimbolos* tabela, Token* token, const char* tipo);
 
 // Obtém o tipo de um símbolo
-char* obter_tipo_simbolo(TabelaSimbolos* tabela, Token* token);
+char* tabela_obter_tipo_simbolo(TabelaSimbolos* tabela, Token* token);
 
 // Imprime o conteúdo da tabela
-void imprimir_tabela(TabelaSimbolos* tabela, FILE* saida);
+void imprimir_tabela_simbolos(TabelaSimbolos* tabela, FILE* saida);
 
 // Libera a memória da tabela
 void liberar_tabela_simbolos(TabelaSimbolos* tabela);

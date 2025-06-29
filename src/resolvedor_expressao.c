@@ -34,7 +34,7 @@ void imprimir_arvore_prefixo(const char* prefixo, NoExpressao* no, int eh_esquer
     }
 }
 
-void imprimir_erro(char operacao, NoExpressao* noA, NoExpressao* noB) {
+void imprimir_erro_expressao(char operacao, NoExpressao* noA, NoExpressao* noB) {
     printf("====================================================\n");
     printf("Erro: operação '%c' entre tipos incompatíveis\n", operacao);
     

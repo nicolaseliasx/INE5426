@@ -1,13 +1,28 @@
+#define _DEFAULT_SOURCE
+
 #include "acoes_semanticas.h"
+
 #include "gerenciador_escopo.h"
 #include "no_ast.h"
 #include "tabela_simbolos.h"
 #include "token.h"
 #include "resolvedor_expressao.h"
 #include "erros.h" 
-#include <stdlib.h>
+
 #include <string.h>
+#include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
+
+// Cria uma instância única do resolvedor para este arquivo.
+static ResolvedorExpressao* resolvedor_global = NULL;
+
+// Função para inicializar o resolvedor (chame no início do seu programa)
+void inicializar_resolvedor_global() {
+    if (resolvedor_global == NULL) {
+        resolvedor_global = criar_resolvedor_expressao();
+    }
+}
 
 // =================================================================
 // Implementações do namespace CODIGO (Geração de código)
@@ -31,7 +46,7 @@ void CODIGO_relop_action(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
              no_pai->res_var_codigo.var,
              relop->token->lexema,
              numexpression->res_var_codigo.var);
-    lista_codigo_adicionar_string(no_pai->codigo, strdup(buffer));
+    adicionar_string(no_pai->codigo, buffer);
 }
 
 void CODIGO_lidar_break(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -39,7 +54,7 @@ void CODIGO_lidar_break(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     // STATEMENT.code = goto STATEMENT.for_nxt [0]
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "goto %s", no_pai->para_proximo);
-    lista_codigo_adicionar_string(no_pai->codigo, strdup(buffer));
+    adicionar_string(no_pai->codigo, buffer);
 }
 
 void CODIGO_lidar_leitura(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -48,7 +63,7 @@ void CODIGO_lidar_leitura(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     NoAST* lvalue = no_pai->filhos[1];
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "read %s", lvalue->res_var_codigo.var);
-    lista_codigo_adicionar_string(no_pai->codigo, strdup(buffer));
+    adicionar_string(no_pai->codigo, buffer);
 }
 
 void CODIGO_lidar_impressao(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -60,7 +75,7 @@ void CODIGO_lidar_impressao(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "print %s", expressao->res_var_codigo.var);
-    lista_codigo_adicionar_string(no_pai->codigo, strdup(buffer));
+    adicionar_string(no_pai->codigo, buffer);
 }
 
 void CODIGO_obter_variavel_lvalue(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -84,7 +99,7 @@ void CODIGO_lidar_retorno(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "goto %s", no_pai->proximo);
-    lista_codigo_adicionar_string(no_pai->codigo, strdup(buffer));
+    adicionar_string(no_pai->codigo, buffer);
 }
 
 void CODIGO_lidar_retorno2(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -93,7 +108,7 @@ void CODIGO_lidar_retorno2(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     NoAST* lvalue = no_pai->filhos[0];
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "$rv = %s", lvalue->res_var_codigo.var);
-    lista_codigo_adicionar_string(no_pai->codigo, strdup(buffer));
+    adicionar_string(no_pai->codigo, buffer);
 }
 
 void CODIGO_obter_parametros(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -114,7 +129,7 @@ void CODIGO_chamada_paramlist(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "param %s", ident->token->lexema);
-    lista_codigo_adicionar_string(no_pai->codigo, strdup(buffer));
+    adicionar_string(no_pai->codigo, buffer);
     lista_codigo_adicionar_lista(no_pai->codigo, paramlist->codigo);
 }
 
@@ -132,15 +147,15 @@ void CODIGO_chamada_funcao(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "$r = %s", no_pai->res_var_codigo.ret);
-    lista_codigo_adicionar_string(no_pai->codigo, strdup(buffer));
+    adicionar_string(no_pai->codigo, buffer);
 
     snprintf(buffer, sizeof(buffer), "call %s %d",
              ident->token->lexema,
              paramlistcall->res_var_codigo.contador_param);
-    lista_codigo_adicionar_string(no_pai->codigo, strdup(buffer));
+    adicionar_string(no_pai->codigo, buffer);
 
     snprintf(buffer, sizeof(buffer), "%s:", no_pai->res_var_codigo.ret);
-    lista_codigo_adicionar_string(no_pai->codigo, strdup(buffer));
+    adicionar_string(no_pai->codigo, buffer);
 }
 
 void CODIGO_ir_para_principal(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -149,9 +164,9 @@ void CODIGO_ir_para_principal(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     NoAST* funclist = no_pai->filhos[0];
     NoAST* program_linha = no_pai->filhos[1];
 
-    lista_codigo_adicionar_string(no_pai->codigo, strdup("goto MAIN"));
+    adicionar_string(no_pai->codigo, strdup("goto MAIN"));
     lista_codigo_adicionar_lista(no_pai->codigo, funclist->codigo);
-    lista_codigo_adicionar_string(no_pai->codigo, strdup("MAIN:"));
+    adicionar_string(no_pai->codigo, strdup("MAIN:"));
     lista_codigo_adicionar_lista(no_pai->codigo, program_linha->codigo);
 }
 
@@ -173,12 +188,12 @@ void CODIGO_funcdef_s(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "%s:", no_pai->res_var_codigo.inicio);
-    lista_codigo_adicionar_string(no_pai->codigo, strdup(buffer));
+    adicionar_string(no_pai->codigo, buffer);
 
     lista_codigo_adicionar_lista(no_pai->codigo, statelist->codigo);
 
     snprintf(buffer, sizeof(buffer), "goto %s", statelist->proximo);
-    lista_codigo_adicionar_string(no_pai->codigo, strdup(buffer));
+    adicionar_string(no_pai->codigo, buffer);
 }
 
 void CODIGO_acao_else_vazio(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -204,12 +219,12 @@ void CODIGO_acao_else_s(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "%s:", no_pai->res_var_codigo.inicio);
-    lista_codigo_adicionar_string(no_pai->codigo, strdup(buffer));
+    adicionar_string(no_pai->codigo, buffer);
 
     lista_codigo_adicionar_lista(no_pai->codigo, statement->codigo);
 
     snprintf(buffer, sizeof(buffer), "goto %s", statement->proximo);
-    lista_codigo_adicionar_string(no_pai->codigo, strdup(buffer));
+    adicionar_string(no_pai->codigo, buffer);
 }
 
 void CODIGO_acao_if_s(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -228,12 +243,12 @@ void CODIGO_acao_if_s(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     snprintf(buffer, sizeof(buffer), "if False %s goto %s",
              expressao->res_var_codigo.var,
              ifstat_linha->res_var_codigo.inicio);
-    lista_codigo_adicionar_string(no_pai->codigo, strdup(buffer));
+    adicionar_string(no_pai->codigo, buffer);
 
     lista_codigo_adicionar_lista(no_pai->codigo, statement->codigo);
 
     snprintf(buffer, sizeof(buffer), "goto %s", statement->proximo);
-    lista_codigo_adicionar_string(no_pai->codigo, strdup(buffer));
+    adicionar_string(no_pai->codigo, buffer);
 
     lista_codigo_adicionar_lista(no_pai->codigo, ifstat_linha->codigo);
 }
@@ -257,20 +272,20 @@ void CODIGO_acao_for(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "%s:", rotulo_inicio_laco);
-    lista_codigo_adicionar_string(no_pai->codigo, strdup(buffer));
+    adicionar_string(no_pai->codigo, buffer);
 
     lista_codigo_adicionar_lista(no_pai->codigo, expressao->codigo);
 
     snprintf(buffer, sizeof(buffer), "if False %s goto %s",
              expressao->res_var_codigo.var,
              no_pai->proximo); // FORSTAT.next is no_pai->proximo
-    lista_codigo_adicionar_string(no_pai->codigo, strdup(buffer));
+    adicionar_string(no_pai->codigo, buffer);
 
     lista_codigo_adicionar_lista(no_pai->codigo, statement->codigo);
     lista_codigo_adicionar_lista(no_pai->codigo, atribstat2->codigo);
 
     snprintf(buffer, sizeof(buffer), "goto %s", rotulo_inicio_laco);
-    lista_codigo_adicionar_string(no_pai->codigo, strdup(buffer));
+    adicionar_string(no_pai->codigo, buffer);
 
     free(rotulo_inicio_laco); // Free the dynamically allocated label
 }
@@ -300,14 +315,14 @@ void CODIGO_atribuicao(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
         snprintf(buffer, sizeof(buffer), "%s = %s",
                  lvalue->sdt_mat.no->valor, // This might need more resolution
                  atribstat_linha->res_var_codigo.var);
-        assign_code = strdup(buffer);
+        assign_code = buffer;
     } else {
         snprintf(buffer, sizeof(buffer), "%s = %s",
                  lvalue->filhos[0]->token->lexema, // Direct identifier lexeme
                  atribstat_linha->res_var_codigo.var);
-        assign_code = strdup(buffer);
+        assign_code = buffer;
     }
-    lista_codigo_adicionar_string(no_pai->codigo, assign_code);
+    adicionar_string(no_pai->codigo, assign_code);
 }
 
 void CODIGO_definir_valor_expressao(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -339,7 +354,7 @@ void CODIGO_obter_codigo_filhos_2(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "%s:", statement->proximo);
-    lista_codigo_adicionar_string(no_pai->codigo, strdup(buffer));
+    adicionar_string(no_pai->codigo, buffer);
 
     lista_codigo_adicionar_lista(no_pai->codigo, statelist_linha->codigo);
 }
@@ -365,7 +380,7 @@ void CODIGO_definir_rotulo_final(NoAST* no_pai, GerenciadorEscopo* gerenciador) 
 void CODIGO_gerar_codigo_final(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "%s:", no_pai->proximo);
-    lista_codigo_adicionar_string(no_pai->codigo, strdup(buffer));
+    adicionar_string(no_pai->codigo, buffer);
 }
 
 void CODIGO_imprimir_codigo(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -438,28 +453,28 @@ void DEC_acao1(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     // FUNCDEF -> def ident ( PARAMLIST ) { STATELIST }
     // add_type(ident.val_lex, "function")
     NoAST* ident = no_pai->filhos[1];
-    gerenciador_adicionar_tipo(gerenciador, ident->token, strdup("function"));
+    gerenciador_definir_tipo_simbolo(gerenciador, ident->token, strdup("function"));
 }
 
 void DEC_acao2(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     // PARAMLIST -> int ident PARAMLIST'
     // add_type(ident.val_lex, "int")
     NoAST* ident = no_pai->filhos[1];
-    gerenciador_adicionar_tipo(gerenciador, ident->token, strdup("int"));
+    gerenciador_definir_tipo_simbolo(gerenciador, ident->token, strdup("int"));
 }
 
 void DEC_acao3(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     // PARAMLIST -> float ident PARAMLIST'
     // add_type(ident.val_lex, "float")
     NoAST* ident = no_pai->filhos[1];
-    gerenciador_adicionar_tipo(gerenciador, ident->token, strdup("float"));
+    gerenciador_definir_tipo_simbolo(gerenciador, ident->token, strdup("float"));
 }
 
 void DEC_acao4(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     // PARAMLIST -> string ident PARAMLIST'
     // add_type(ident.val_lex, "string")
     NoAST* ident = no_pai->filhos[1];
-    gerenciador_adicionar_tipo(gerenciador, ident->token, strdup("string"));
+    gerenciador_definir_tipo_simbolo(gerenciador, ident->token, strdup("string"));
 }
 
 void DEC_acao5(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -478,7 +493,7 @@ void DEC_acao6(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     NoAST* int_const = no_pai->filhos[1];
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "array(%s, %s)", int_const->token->lexema, index1->sdt_dec.tipo);
-    index->sdt_dec.tipo = strdup(buffer);
+    index->sdt_dec.tipo = buffer;
 }
 
 void DEC_acao7(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -516,7 +531,7 @@ void DEC_acao11(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     // add_type(ident.val_lex, INDEX.type)
     NoAST* ident = no_pai->filhos[1];
     NoAST* index = no_pai->filhos[2];
-    gerenciador_adicionar_tipo(gerenciador, ident->token, strdup(index->sdt_dec.tipo));
+    gerenciador_definir_tipo_simbolo(gerenciador, ident->token, strdup(index->sdt_dec.tipo));
 }
 
 // =================================================================
@@ -528,18 +543,18 @@ void DECLARAR_VERIFICAR_acao1(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     // is_declared(ident.val_lex)
     // is_type(ident.val_lex, "function")
     NoAST* ident = no_pai->filhos[2];
-    if (!gerenciador_esta_declarado(gerenciador, ident->token)) {
+    if (!gerenciador_simbolo_declarado(gerenciador, ident->token)) {
         char msg_error[512];
         snprintf(msg_error, sizeof(msg_error), "%s usado antes da declaracao na linha %d:%d",
                  ident->token->lexema, ident->token->linha, ident->token->coluna);
-        // Assuming your 'erros.h' has a function like `reportar_erro_semantico`
-        reportar_erro_semantico(msg_error);
+        // Assuming your 'erros.h' has a function like `criar_erro_semantico`
+        criar_erro_semantico(msg_error);
     }
-    if (!gerenciador_e_do_tipo(gerenciador, ident->token, "function")) {
+    if (!gerenciador_simbolo_e_tipo(gerenciador, ident->token, "function")) {
         char msg_error[512];
         snprintf(msg_error, sizeof(msg_error), "%s na linha %d:%d nao e uma funcao",
                  ident->token->lexema, ident->token->linha, ident->token->coluna);
-        reportar_erro_semantico(msg_error);
+        criar_erro_semantico(msg_error);
     }
 }
 
@@ -548,11 +563,11 @@ void DECLARAR_VERIFICAR_acao2(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     // LVALUE -> ident ALLOCAUX
     // is_declared(ident.val_lex)
     NoAST* ident = no_pai->filhos[0]; // Assuming ident is always the first child
-    if (!gerenciador_esta_declarado(gerenciador, ident->token)) {
+    if (!gerenciador_simbolo_declarado(gerenciador, ident->token)) {
         char msg_error[512];
         snprintf(msg_error, sizeof(msg_error), "%s usado antes da declaracao na linha %d:%d",
                  ident->token->lexema, ident->token->linha, ident->token->coluna);
-        reportar_erro_semantico(msg_error);
+        criar_erro_semantico(msg_error);
     }
 }
 
@@ -562,12 +577,12 @@ void DECLARAR_VERIFICAR_acao2(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 
 void BREAK_acao1(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     // STATEMENT -> break ;
-    if (!gerenciador_esta_em_escopo(gerenciador, "for")) {
+    if (!gerenciador_esta_no_escopo(gerenciador, "for")) {
         NoAST* break_t = no_pai->filhos[0];
         char msg_error[512];
         snprintf(msg_error, sizeof(msg_error), "break usado fora de um comando for na linha %d:%d",
                  break_t->token->linha, break_t->token->coluna);
-        reportar_erro_semantico(msg_error);
+        criar_erro_semantico(msg_error);
     }
 }
 
@@ -592,7 +607,7 @@ char* AUXILIAR_obter_tipo(const char* tipo_str, int contador_vetor) {
     if (!(f == 'a')) {
         char msg_error[256];
         snprintf(msg_error, sizeof(msg_error), "TIPO INVALIDO: %s", tipo_str);
-        reportar_erro_semantico(msg_error);
+        criar_erro_semantico(msg_error);
         return NULL; // Should not reach here if error reporting exits
     }
 
@@ -612,7 +627,7 @@ char* AUXILIAR_obter_tipo(const char* tipo_str, int contador_vetor) {
     }
 
     if (counter != contador_vetor) {
-        reportar_erro_semantico("tentativa de operacoes com arrays com numero incorreto de dimensoes");
+        criar_erro_semantico("tentativa de operacoes com arrays com numero incorreto de dimensoes");
         free(final_tipo); // Free if it was allocated
         return NULL;
     }
@@ -659,7 +674,7 @@ int* AUXILIAR_obter_tamanhos_vetor(const char* tipo_str, int* num_elementos) {
     int* values = (int*)malloc(sizeof(int) * count);
     if (values == NULL) {
         // Lidar com erro de alocação de memória.
-        reportar_erro_semantico("Erro de alocacao de memoria para tamanhos de vetor.");
+        criar_erro_semantico("Erro de alocacao de memoria para tamanhos de vetor.");
         return NULL;
     }
 
@@ -680,7 +695,7 @@ void EXPA_avaliar_identificador(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     NoAST* ident_node = no_pai->filhos[0];
     NoAST* allocaux_node = no_pai->filhos[1];
 
-    char* type_str = obter_tipo_simbolo(gerenciador, ident_node->token);
+    char* type_str = gerenciador_obter_tipo_simbolo(gerenciador, ident_node->token);
     int num_elements;
     int* max_dims = AUXILIAR_obter_tamanhos_vetor(type_str, &num_elements);
 
@@ -692,7 +707,7 @@ void EXPA_avaliar_identificador(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
         // MUDANÇA: 'VetorStrings*' foi trocado por 'ListaString*', que é o tipo correto.
         ListaString* array_indexation_vars = allocaux_node->sdt_mat.vetor_array_var;
 
-        // Supondo que resolvedor_expressao_gerar_var_temp() existe e aloca memória
+        // Supondo que gerar_variavel_temporaria(resolvedor_global) existe e aloca memória
         char* somador_temp_var = gerar_variavel_temporaria(NULL); // Ajuste se necessário
         char buffer[256];
         snprintf(buffer, sizeof(buffer), "%s = 0", somador_temp_var);
@@ -722,7 +737,7 @@ void EXPA_avaliar_identificador(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
         }
 
         snprintf(buffer, sizeof(buffer), "%s[%s]", ident_node->token->lexema, somador_temp_var);
-        // Supondo que no_arvore_expressao_criar_no foi substituído por criar_no_expressao_simples/basico
+        // Supondo que criar_no_expressao_simples foi substituído por criar_no_expressao_simples/basico
         lvalue_node->sdt_mat.no = criar_no_expressao_simples('n', type_str, buffer);
         
         free(somador_temp_var); // Libera a variável temporária do somador
@@ -802,17 +817,17 @@ void EXPA_valor_segundo_filho_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenc
     NoAST* symbol_node = no_pai->filhos[0]; // PLUS or MINUS
     NoAST* factor_node = no_pai->filhos[1];
 
-    unaryexpr_node->res_var_codigo.var = resolvedor_expressao_gerar_var_temp();
+    unaryexpr_node->res_var_codigo.var = gerar_variavel_temporaria(resolvedor_global);
 
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "%s = %c%s",
              unaryexpr_node->res_var_codigo.var,
              symbol_node->token->lexema[0],
              factor_node->sdt_mat.no->valor);
-    lista_codigo_adicionar_string(unaryexpr_node->codigo, strdup(buffer));
+    adicionar_string(unaryexpr_node->codigo, buffer);
 
     // Create a new node representing the unary operation
-    unaryexpr_node->sdt_mat.no = no_arvore_expressao_criar_no(symbol_node->token->lexema[0], strdup("N"), factor_node->sdt_mat.no, NULL);
+    unaryexpr_node->sdt_mat.no = criar_no_expressao_unario(symbol_node->token->lexema[0], "N", factor_node->sdt_mat.no);
 }
 
 void EXPA_gerar_no(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -829,7 +844,7 @@ void EXPA_gerar_no(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
         if (strcmp(term_type, aux_type) != 0 &&
             !( (strcmp(term_type, "int") == 0 && strcmp(aux_type, "float") == 0) ||
                (strcmp(term_type, "float") == 0 && strcmp(aux_type, "int") == 0) ) ) {
-            reportar_erro_semantico("Incompatibilidade de tipos em operacao aritmetica/logica.");
+            criar_erro_semantico("Incompatibilidade de tipos em operacao aritmetica/logica.");
         }
         free(term_type);
         free(aux_type);
@@ -840,20 +855,20 @@ void EXPA_gerar_no(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
         lista_codigo_adicionar_lista(numexpression_node->codigo, term_node->codigo);
         lista_codigo_adicionar_lista(numexpression_node->codigo, numexpression_aux_node->codigo);
 
-        numexpression_node->res_var_codigo.var = resolvedor_expressao_gerar_var_temp();
+        numexpression_node->res_var_codigo.var = gerar_variavel_temporaria(resolvedor_global);
         char buffer[256];
         snprintf(buffer, sizeof(buffer), "%s = %s %c %s",
                  numexpression_node->res_var_codigo.var,
                  varA,
                  numexpression_aux_node->sdt_mat.operacao,
                  varB);
-        lista_codigo_adicionar_string(numexpression_node->codigo, strdup(buffer));
+        adicionar_string(numexpression_node->codigo, buffer);
         free(varA);
         free(varB);
 
-        numexpression_node->sdt_mat.no = no_arvore_expressao_criar_no(
+        numexpression_node->sdt_mat.no = criar_no_expressao_binario(
             numexpression_aux_node->sdt_mat.operacao,
-            strdup("N"), // Type could be resolved more accurately here
+            "N",
             term_node->sdt_mat.no,
             numexpression_aux_node->sdt_mat.no
         );
@@ -889,7 +904,7 @@ void EXPA_termo(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
         term_node->sdt_mat.contador_vetor = unaryexpr_node->sdt_mat.contador_vetor;
         lista_codigo_adicionar_lista(term_node->codigo, unaryexpr_node->codigo);
 
-        term_node->res_var_codigo.var = resolvedor_expressao_gerar_var_temp();
+        term_node->res_var_codigo.var = gerar_variavel_temporaria(resolvedor_global);
         char buffer[256];
         char* varA_val = (unaryexpr_node->res_var_codigo.var != NULL && strlen(unaryexpr_node->res_var_codigo.var) > 0) ?
                          strdup(unaryexpr_node->res_var_codigo.var) : strdup(unaryexpr_node->sdt_mat.no->valor);
@@ -900,7 +915,7 @@ void EXPA_termo(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
         } else {
             snprintf(buffer, sizeof(buffer), "%s = %s", term_node->res_var_codigo.var, varA_val);
         }
-        lista_codigo_adicionar_string(term_node->codigo, strdup(buffer));
+        adicionar_string(term_node->codigo, buffer);
         free(varA_val);
 
     } else {
@@ -911,7 +926,7 @@ void EXPA_termo(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
         if (strcmp(unary_type, aux_type) != 0 &&
             !( (strcmp(unary_type, "int") == 0 && strcmp(aux_type, "float") == 0) ||
                (strcmp(unary_type, "float") == 0 && strcmp(aux_type, "int") == 0) ) ) {
-            reportar_erro_semantico("Incompatibilidade de tipos em operacao aritmetica/logica.");
+            criar_erro_semantico("Incompatibilidade de tipos em operacao aritmetica/logica.");
         }
         free(unary_type);
         free(aux_type);
@@ -922,20 +937,20 @@ void EXPA_termo(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
         lista_codigo_adicionar_lista(term_node->codigo, unaryexpr_node->codigo);
         lista_codigo_adicionar_lista(term_node->codigo, unaryexpr_aux_node->codigo);
 
-        term_node->res_var_codigo.var = resolvedor_expressao_gerar_var_temp();
+        term_node->res_var_codigo.var = gerar_variavel_temporaria(resolvedor_global);
         char buffer[256];
         snprintf(buffer, sizeof(buffer), "%s = %s %c %s",
                  term_node->res_var_codigo.var,
                  varA,
                  unaryexpr_aux_node->sdt_mat.operacao,
                  varB);
-        lista_codigo_adicionar_string(term_node->codigo, strdup(buffer));
+        adicionar_string(term_node->codigo, buffer);
         free(varA);
         free(varB);
 
-        term_node->sdt_mat.no = no_arvore_expressao_criar_no(
+        term_node->sdt_mat.no = criar_no_expressao_binario(
             unaryexpr_aux_node->sdt_mat.operacao,
-            strdup("N"), // Type could be resolved here
+            "N",
             unaryexpr_node->sdt_mat.no,
             unaryexpr_aux_node->sdt_mat.no
         );
@@ -960,8 +975,8 @@ void EXPA_imprimir_expressao0(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     lista_codigo_adicionar_lista(expression_node->codigo, numexpression_node->codigo);
     lista_codigo_adicionar_lista(expression_node->codigo, expression_linha_node->codigo);
 
-    // This calls a C function `resolvedor_expressao_imprimir_arvore_binaria`
-    resolvedor_expressao_imprimir_arvore_binaria(numexpression_node->sdt_mat.no);
+    // This calls a C function `imprimir_arvore`
+    imprimir_arvore(numexpression_node->sdt_mat.no);
 }
 
 void EXPA_passar_numero(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -977,13 +992,13 @@ void EXPA_passar_numero(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 void EXPA_imprimir_expressao1(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     // EXPRESSION' -> RELOP NUMEXPRESSION
     NoAST* numexpression_node = no_pai->filhos[1];
-    resolvedor_expressao_imprimir_arvore_binaria(numexpression_node->sdt_mat.no);
+    imprimir_arvore(numexpression_node->sdt_mat.no);
 }
 
 void EXPA_imprimir_expressao2(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     // ALLOCEXPRESSION' -> TYPE OPEN_BRACKET NUMEXPRESSION CLOSE_BRACKET ALLOCAUX
     NoAST* numexpression_node = no_pai->filhos[2];
-    resolvedor_expressao_imprimir_arvore_binaria(numexpression_node->sdt_mat.no);
+    imprimir_arvore(numexpression_node->sdt_mat.no);
 }
 
 void EXPA_contador_vetor(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -994,10 +1009,15 @@ void EXPA_contador_vetor(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 
     // Ensure vetor_array_var is initialized
     if (allocaux_node->sdt_mat.vetor_array_var == NULL) {
-        allocaux_node->sdt_mat.vetor_array_var = vetor_strings_criar();
+        // CORREÇÃO: Usando a função que realmente existe
+        allocaux_node->sdt_mat.vetor_array_var = criar_lista_string();
     }
-    vetor_strings_adicionar(allocaux_node->sdt_mat.vetor_array_var, strdup(numexpression_node->res_var_codigo.var));
-    vetor_strings_adicionar_vetor(allocaux_node->sdt_mat.vetor_array_var, allocaux1_node->sdt_mat.vetor_array_var); // Splice the vector
+    
+    // CORREÇÃO: Usando a função que realmente existe
+    adicionar_string(allocaux_node->sdt_mat.vetor_array_var, strdup(numexpression_node->res_var_codigo.var));
+    
+    // CORREÇÃO: Usando a função que realmente existe para juntar as listas
+    lista_codigo_adicionar_lista(allocaux_node->sdt_mat.vetor_array_var, allocaux1_node->sdt_mat.vetor_array_var); // Splice the vector
 
     allocaux_node->sdt_mat.contador_vetor = allocaux1_node->sdt_mat.contador_vetor + 1;
 

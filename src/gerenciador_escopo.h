@@ -24,31 +24,31 @@ typedef struct {
 GerenciadorEscopo* criar_gerenciador_escopo();
 
 // Abre um novo escopo
-void abrir_escopo(GerenciadorEscopo* gerenciador, const char* nome_escopo);
+void gerenciador_abrir_escopo(GerenciadorEscopo* gerenciador, const char* nome_escopo);
 
 // Fecha o escopo atual
-void fechar_escopo(GerenciadorEscopo* gerenciador);
+void gerenciador_fechar_escopo(GerenciadorEscopo* gerenciador);
 
 // Adiciona um novo símbolo ao escopo atual
 void gerenciador_escopo_adicionar_simbolo(GerenciadorEscopo* gerenciador, Token* token);
 
 // Define o tipo de um símbolo
-void definir_tipo_simbolo(GerenciadorEscopo* gerenciador, Token* token, const char* tipo);
+void gerenciador_definir_tipo_simbolo(GerenciadorEscopo* gerenciador, Token* token, const char* tipo);
 
 // Verifica se um símbolo está declarado
-bool simbolo_declarado(GerenciadorEscopo* gerenciador, Token* token);
+bool gerenciador_simbolo_declarado(GerenciadorEscopo* gerenciador, Token* token);
 
 // Verifica se um símbolo é de um tipo específico
-bool simbolo_e_tipo(GerenciadorEscopo* gerenciador, Token* token, const char* tipo);
+bool gerenciador_simbolo_e_tipo(GerenciadorEscopo* gerenciador, Token* token, const char* tipo);
 
 // Obtém o tipo de um símbolo
-char* obter_tipo_simbolo(GerenciadorEscopo* gerenciador, Token* token);
+char* gerenciador_obter_tipo_simbolo(GerenciadorEscopo* gerenciador, Token* token);
 
 // Verifica se está em um tipo específico de escopo
-bool esta_no_escopo(GerenciadorEscopo* gerenciador, const char* tipo_escopo);
+bool gerenciador_esta_no_escopo(GerenciadorEscopo* gerenciador, const char* tipo_escopo);
 
 // Imprime todas as tabelas de símbolos
-void imprimir_tabelas(GerenciadorEscopo* gerenciador, FILE* saida);
+void imprimir_tabelas_gerenciador(GerenciadorEscopo* gerenciador, FILE* saida);
 
 // Libera a memória do gerenciador de escopos
 void liberar_gerenciador_escopo(GerenciadorEscopo* gerenciador);

@@ -1,7 +1,11 @@
-#include "analisador_sintatico.h"
-#include <stdlib.h>
+#define _DEFAULT_SOURCE
 #include <string.h>
+#include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
+
+#include "analisador_sintatico.h"
+
 
 // Função auxiliar para buscar produção na tabela
 const EntradaTabelaSDT* buscar_producao(
@@ -57,7 +61,7 @@ void analisar_token(AnalisadorSintatico* analisador, Token* token) {
             char erro_msg[100];
             snprintf(erro_msg, sizeof(erro_msg), 
                      "Token inesperado em %d:%d", token->linha, token->coluna);
-            erro_sintatico(erro_msg); // Função de tratamento de erro
+            erro_sintatico(erro_msg);
             return;
         }
         

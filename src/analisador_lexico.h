@@ -1,6 +1,9 @@
 #ifndef ANALISADOR_LEXICO_H
 #define ANALISADOR_LEXICO_H
 
+#define _DEFAULT_SOURCE
+
+#include <string.h>
 #include "token.h"
 #include "tabela_simbolos.h"
 #include "identificadores_tokens.h"

@@ -12,6 +12,9 @@
     "tabela_simbolos.h": "c",
     "acoes_semanticas.h": "c",
     "stdio.h": "c",
-    "token.h": "c"
+    "token.h": "c",
+    "stdlib.h": "c",
+    "string.h": "c",
+    "erros.h": "c"
   }
 }

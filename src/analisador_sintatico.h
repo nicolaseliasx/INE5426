@@ -3,10 +3,10 @@
 
 #include "no_ast.h"
 #include "gerenciador_escopo.h"
-#include "item_pilha_analise.h" // Supondo que este define 'Pilha'
+#include "item_pilha_analise.h"
 #include "tabela_analise.h"
 #include "token.h"
-#include <stddef.h> // Para size_t
+#include <stddef.h>
 #include "pilha.h"
 
 typedef struct {

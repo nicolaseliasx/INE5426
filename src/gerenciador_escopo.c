@@ -12,7 +12,7 @@ GerenciadorEscopo* criar_gerenciador_escopo() {
     return gerenciador;
 }
 
-void abrir_escopo(GerenciadorEscopo* gerenciador, const char* nome_escopo) {
+void gerenciador_abrir_escopo(GerenciadorEscopo* gerenciador, const char* nome_escopo) {
     // Criar novo item de escopo
     ItemEscopo* novo_escopo = malloc(sizeof(ItemEscopo));
     novo_escopo->nome = strdup(nome_escopo);
@@ -44,7 +44,7 @@ void abrir_escopo(GerenciadorEscopo* gerenciador, const char* nome_escopo) {
     gerenciador->escopo_atual = novo_escopo;
 }
 
-void fechar_escopo(GerenciadorEscopo* gerenciador) {
+void gerenciador_fechar_escopo(GerenciadorEscopo* gerenciador) {
     if (gerenciador->escopo_atual && gerenciador->escopo_atual->escopo_ancestral) {
         gerenciador->escopo_atual = gerenciador->escopo_atual->escopo_ancestral;
     }
@@ -64,12 +64,12 @@ void gerenciador_escopo_adicionar_simbolo(GerenciadorEscopo* gerenciador, Token*
     tabela_simbolos_adicionar(gerenciador->escopo_atual->tabela_simbolos, token);
 }
 
-void definir_tipo_simbolo(GerenciadorEscopo* gerenciador, Token* token, const char* tipo) {
+void gerenciador_definir_tipo_simbolo(GerenciadorEscopo* gerenciador, Token* token, const char* tipo) {
     ItemEscopo* escopo = gerenciador->escopo_atual;
     
     while (escopo) {
         if (simbolo_existe(escopo->tabela_simbolos, token->lexema)) {
-            definir_tipo_simbolo_tabela(escopo->tabela_simbolos, token, tipo);
+            tabela_definir_tipo_simbolo(escopo->tabela_simbolos, token, tipo);
             return;
         }
         escopo = escopo->escopo_ancestral;
@@ -94,7 +94,7 @@ bool simbolo_declarado(GerenciadorEscopo* gerenciador, Token* token) {
     return false;
 }
 
-bool simbolo_e_tipo(GerenciadorEscopo* gerenciador, Token* token, const char* tipo) {
+bool gerenciador_simbolo_e_tipo(GerenciadorEscopo* gerenciador, Token* token, const char* tipo) {
     ItemEscopo* escopo = gerenciador->escopo_atual;
     
     while (escopo) {
@@ -106,7 +106,7 @@ bool simbolo_e_tipo(GerenciadorEscopo* gerenciador, Token* token, const char* ti
     return false;
 }
 
-char* obter_tipo_simbolo(GerenciadorEscopo* gerenciador, Token* token) {
+char* gerenciador_obter_tipo_simbolo(GerenciadorEscopo* gerenciador, Token* token) {
     ItemEscopo* escopo = gerenciador->escopo_atual;
     
     while (escopo) {
@@ -118,7 +118,7 @@ char* obter_tipo_simbolo(GerenciadorEscopo* gerenciador, Token* token) {
     return "";
 }
 
-bool esta_no_escopo(GerenciadorEscopo* gerenciador, const char* tipo_escopo) {
+bool gerenciador_esta_no_escopo(GerenciadorEscopo* gerenciador, const char* tipo_escopo) {
     ItemEscopo* escopo = gerenciador->escopo_atual;
     
     while (escopo) {
@@ -130,7 +130,7 @@ bool esta_no_escopo(GerenciadorEscopo* gerenciador, const char* tipo_escopo) {
     return false;
 }
 
-void imprimir_tabelas(GerenciadorEscopo* gerenciador, FILE* saida) {
+void imprimir_tabelas_gerenciador(GerenciadorEscopo* gerenciador, FILE* saida) {
     if (!gerenciador->escopo_raiz) return;
     
     // Pilha para percurso em profundidade
