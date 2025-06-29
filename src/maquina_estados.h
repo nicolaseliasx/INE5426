@@ -1,58 +1,61 @@
+// Arquivo: maquina_estados.h (VERSÃO REATORADA E CORRETA)
+
 #ifndef MAQUINA_ESTADOS_H
 #define MAQUINA_ESTADOS_H
 
-#include <stdlib.h>
-#include <string.h>
 #include <stdbool.h>
 
-// Estados da máquina
+// Enum para o status da máquina, mais detalhado
 typedef enum {
-    MAQ_OCIOSA,
-    MAQ_EXECUTANDO,
-    MAQ_SUCESSO,
-    MAQ_ERRO
+    MAQ_INICIAL,      // Pronta para começar, lexema vazio.
+    MAQ_EXECUTANDO,   // Processando caracteres, ainda não há um match.
+    MAQ_SUCESSO,      // Atingiu um estado final.
+    MAQ_ERRO          // Atingiu um estado morto.
 } EstadoMaquina;
 
-typedef const char* (*FuncaoTransicao)(char c, int is_eof);
+// Ponteiro para uma função que define a lógica de uma transição de estado
+typedef const char* (*FuncaoTransicao)(char c, int eof);
 
+// Struct que mapeia um nome de estado para sua função de transição
 typedef struct {
     const char* estado;
     FuncaoTransicao funcao_transicao;
 } TransicaoEstado;
 
-
+// A struct principal da Máquina de Estados
 typedef struct {
-    // --- Configuração da Máquina (definida na inicialização) ---
-    TransicaoEstado* transicoes;
+    // --- PARTE DE CONFIGURAÇÃO (definida estaticamente em identificadores_tokens.c) ---
+    const TransicaoEstado* transicoes;
     int num_transicoes;
     const char* estado_inicial;
     const char** estados_finais;
     int num_estados_finais;
     const char** estados_mortos;
     int num_estados_mortos;
-    const char** estados_retrocesso;
+    const char** estados_retrocesso; // Estados que indicam que o último char não foi consumido
     int num_estados_retrocesso;
 
-    // --- Estado Interno da Máquina (controlado em tempo de execução) ---
+    // --- PARTE DE ESTADO INTERNO (controlado em tempo de execução) ---
     const char* estado_atual;
     char* lexema;
     int tamanho_lexema;
     EstadoMaquina status;
-    bool retroceder_cursor;
 } MaquinaEstados;
 
 
-// Funções públicas (usando o nome padronizado MaquinaEstado)
-MaquinaEstados* criar_maquina_estados(TransicaoEstado* transicoes, int num_trans,
-                                      const char* estado_inicial, 
-                                      const char** estados_finais,
-                                      const char** estados_retrocesso);
+// --- Funções Públicas ---
 
+// Prepara a máquina para uma nova leitura de token
 void reiniciar_maquina(MaquinaEstados* maq);
-EstadoMaquina transicionar_maquina(MaquinaEstados* maq, char c, int is_eof);
-int deve_retroceder_cursor(MaquinaEstados* maq);
-void liberar_maquina_estados(MaquinaEstados* maq);
-EstadoMaquina obter_status_maquina(MaquinaEstados* maq);
-const char* obter_lexema_maquina(MaquinaEstados* maq);
 
-#endif // MAQUINA_ESTADOS_H
+// Processa um caractere e atualiza o estado interno da máquina
+void transicionar_maquina(MaquinaEstados* maq, char c, int eof);
+
+// Verifica se o estado final atual requer retrocesso do cursor de leitura
+bool deve_retroceder_cursor(MaquinaEstados* maq);
+
+// Funções para obter o estado e o lexema
+EstadoMaquina obter_status_maquina(MaquinaEstados* maq);
+char* obter_lexema_maquina(MaquinaEstados* maq);
+
+#endif

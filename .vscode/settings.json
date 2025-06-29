@@ -17,6 +17,15 @@
     "string.h": "c",
     "erros.h": "c",
     "maquina_estados.h": "c",
-    "tipo_enum.h": "c"
+    "tipo_enum.h": "c",
+    "compare": "c",
+    "concepts": "c",
+    "cstdlib": "c",
+    "tuple": "c",
+    "type_traits": "c",
+    "limits": "c",
+    "new": "c",
+    "utility": "c",
+    "list": "c"
   }
 }

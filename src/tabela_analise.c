@@ -134,8 +134,8 @@ const EntradaTabelaAnalise tabela_analise[] = {
         {"STRC", "NUMEXPR->TERM"}, {"NULL", "NUMEXPR->TERM"} 
     }, 8 },
     {"NUMEXPRESSIONAUX", (MapeamentoTerminal[]){ 
-        {"PLUS", "NUMEXPR_AUX->OP"}, // Chave unificada
-        {"MINUS", "NUMEXPR_AUX->OP"}, // Chave unificada
+        {"PLUS", "NUMEXPR_AUX->PLUS"}, // Aponta para a regra específica
+        {"MINUS", "NUMEXPR_AUX->MINUS"}, // Aponta para a regra específica
         {"CLOSE_PARENTHESIS", "NUMEXPR_AUX->EPSILON"}, {"SEMICOLON", "NUMEXPR_AUX->EPSILON"}, 
         {"CLOSE_BRACKET", "NUMEXPR_AUX->EPSILON"}, {"RELOP", "NUMEXPR_AUX->EPSILON"} 
     }, 6 },
@@ -145,9 +145,9 @@ const EntradaTabelaAnalise tabela_analise[] = {
         {"STRC", "TERM->UNARY"}, {"NULL", "TERM->UNARY"} 
     }, 8 },
     {"UNARYEXPRAUX", (MapeamentoTerminal[]){ 
-        {"MULTIPLICATION", "UNARY_AUX->OP"}, // Chave unificada
-        {"DIVISION", "UNARY_AUX->OP"}, // Chave unificada
-        {"MODULUS", "UNARY_AUX->OP"}, // Chave unificada
+        {"MULTIPLICATION", "UNARY_AUX->MULT"}, // Aponta para a regra específica
+        {"DIVISION", "UNARY_AUX->DIV"}, // Aponta para a regra específica
+        {"MODULUS", "UNARY_AUX->MOD"}, // Aponta para a regra específica
         {"CLOSE_PARENTHESIS", "UNARY_AUX->EPSILON"}, {"SEMICOLON", "UNARY_AUX->EPSILON"}, 
         {"CLOSE_BRACKET", "UNARY_AUX->EPSILON"}, {"RELOP", "UNARY_AUX->EPSILON"}, 
         {"PLUS", "UNARY_AUX->EPSILON"}, {"MINUS", "UNARY_AUX->EPSILON"} 
@@ -159,9 +159,9 @@ const EntradaTabelaAnalise tabela_analise[] = {
     }, 8 },
     {"FACTOR", (MapeamentoTerminal[]){ 
         {"IDENT", "FACTOR->LVALUE"}, {"OPEN_PARENTHESIS", "FACTOR->PARENTHESIS"}, 
-        {"NI", "FACTOR->CONST"}, // Chave unificada
-        {"NPF", "FACTOR->CONST"}, // Chave unificada
-        {"STRC", "FACTOR->CONST"}, // Chave unificada
+        {"NI", "FACTOR->CONST_NI"}, // <-- Aponta para a regra específica de NI
+        {"NPF", "FACTOR->CONST_NPF"}, // <-- Aponta para a regra específica de NPF
+        {"STRC", "FACTOR->CONST_STRC"}, // <-- Aponta para a regra específica de STRC
         {"NULL", "FACTOR->CONST_NULL"} 
     }, 6 },
     {"LVALUE", (MapeamentoTerminal[]){ {"IDENT", "LVALUE->IDENT"} }, 1 }

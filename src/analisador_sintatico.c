@@ -8,7 +8,6 @@
 #include "analisador_sintatico.h"
 #include "erros.h"
 
-// A função buscar_producao_sdt não mexe com ItemPilha, então está OK.
 const EntradaTabelaSDT* buscar_producao_sdt(
     const EntradaTabelaAnalise* tabela, 
     size_t num_entradas,
@@ -23,7 +22,6 @@ const EntradaTabelaSDT* buscar_producao_sdt(
             for (size_t j = 0; j < tabela[i].num_mapeamentos; j++) {
                 if (tabela[i].mapeamentos[j].terminal && strcmp(tabela[i].mapeamentos[j].terminal, terminal) == 0) {
                     printf("[DEBUG-BUSCA] -> SUCESSO! Produção encontrada.\n");
-                    // buscar_entrada_sdt é uma função de outro arquivo, assumindo que esteja correta.
                     return buscar_entrada_sdt(tabela[i].mapeamentos[j].chave_sdt);
                 }
             }
@@ -86,7 +84,6 @@ void analisar_token(AnalisadorSintatico* analisador, Token* token) {
         
         ItemPilha* topo = topo_pilha(analisador->pilha);
 
-        // CORREÇÃO: Linha de debug segura para a union
         printf("[DEBUG] Topo da pilha: Tipo=%d", topo->tipo);
         if (topo->tipo == SIMBOLO) {
             printf(", Símbolo='%s'\n", topo->simbolo);
@@ -104,7 +101,6 @@ void analisar_token(AnalisadorSintatico* analisador, Token* token) {
         }
         
         // 2. Caso terminal coincida
-        // CORREÇÃO: Acessar 'topo->simbolo'
         if (strcmp(topo->simbolo, token->id) == 0) {
             printf("[DEBUG] Terminal '%s' coincide com token ID '%s'.\n", topo->simbolo, token->id);
             if (strcmp(token->lexema, "$") != 0) {
@@ -117,7 +113,6 @@ void analisar_token(AnalisadorSintatico* analisador, Token* token) {
         }
         
         // 3. Buscar produção na tabela
-        // CORREÇÃO: Acessar 'topo->simbolo'
         printf("[DEBUG] Buscando produção para T['%s', '%s']...\n", topo->simbolo, token->id);
         const EntradaTabelaSDT* producao = buscar_producao_sdt(
             analisador->tabela_analise,
@@ -137,7 +132,6 @@ void analisar_token(AnalisadorSintatico* analisador, Token* token) {
         printf("[DEBUG] Produção encontrada. Expandindo '%s'.\n", topo->simbolo);
 
         NoAST* no_pai_da_regra = topo->no_ast;
-        // CORREÇÃO: Salvar 'topo->simbolo'
         char topo_simbolo_salvo[100];
         strncpy(topo_simbolo_salvo, topo->simbolo, 99);
         topo_simbolo_salvo[99] = '\0';
@@ -155,7 +149,6 @@ void analisar_token(AnalisadorSintatico* analisador, Token* token) {
         int num_itens_validos = 0;
         
         for (size_t i = 0; i < producao->tamanho; i++) {
-            // CORREÇÃO: Acessar membros da union corretamente
             const ItemPilha* item_da_regra = &producao->producao[i];
             
             if (item_da_regra->tipo == SIMBOLO && strcmp(item_da_regra->simbolo, "ε") == 0) {

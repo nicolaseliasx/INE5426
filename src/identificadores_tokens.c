@@ -16,9 +16,12 @@ static const char* estado_ident_0(char c, int eof) {
 }
 
 static const char* estado_ident_1(char c, int eof) {
-    if (eof) return "final_consumido";
+    if (eof) return "final_consumido"; // Fim de arquivo, consome tudo
     if (eh_letra(c) || eh_digito(c) || c == '_') return "1";
-    return "final_retrocede"; 
+    
+    // Se o caractere não for válido, o token terminou.
+    // Retornamos um estado que significa "sucesso, mas retroceda o cursor".
+    return "final_retrocede";
 }
 
 // Identificador de números inteiros (NI)
@@ -29,10 +32,10 @@ static const char* estado_inteiro_0(char c, int eof) {
 }
 
 static const char* estado_inteiro_1(char c, int eof) {
-    if (eof) return "final";
+    if (eof) return "final_consumido";
     if (eh_digito(c)) return "1";
     if (c == 'e') return "2";
-    return "final";
+    return "final_retrocede";
 }
 
 static const char* estado_inteiro_2(char c, int eof) {
@@ -43,9 +46,9 @@ static const char* estado_inteiro_2(char c, int eof) {
 }
 
 static const char* estado_inteiro_3(char c, int eof) {
-    if (eof) return "final";
+    if (eof) return "final_consumido";
     if (eh_digito(c)) return "3";
-    return "final";
+    return "final_retrocede";
 }
 
 static const char* estado_inteiro_4(char c, int eof) {
@@ -69,10 +72,10 @@ static const char* estado_float_1(char c, int eof) {
 }
 
 static const char* estado_float_2(char c, int eof) {
-    if (eof) return "final";
+    if (eof) return "final_consumido";
     if (eh_digito(c)) return "2";
     if (c == 'e') return "3";
-    return "final";
+    return "final_retrocede";
 }
 
 static const char* estado_float_3(char c, int eof) {
@@ -83,9 +86,9 @@ static const char* estado_float_3(char c, int eof) {
 }
 
 static const char* estado_float_4(char c, int eof) {
-    if (eof) return "final";
+    if (eof) return "final_consumido";
     if (eh_digito(c)) return "4";
-    return "final";
+    return "final_retrocede";
 }
 
 static const char* estado_float_5(char c, int eof) {
@@ -172,15 +175,15 @@ static const char* estados_mortos_ident[] = {"morto"};
 static const char* estados_retrocesso_ident[] = {"final_retrocede"};
 
 static MaquinaEstados maquina_ident = {
-    transicoes_ident,
-    sizeof(transicoes_ident) / sizeof(TransicaoEstado),
-    "0",
-    estados_finais_ident,
-    sizeof(estados_finais_ident) / sizeof(const char*),
-    estados_mortos_ident,
-    sizeof(estados_mortos_ident) / sizeof(const char*),
-    estados_retrocesso_ident,
-    sizeof(estados_retrocesso_ident) / sizeof(const char*)
+    .transicoes = transicoes_ident,
+    .num_transicoes = sizeof(transicoes_ident) / sizeof(TransicaoEstado),
+    .estado_inicial = "0",
+    .estados_finais = estados_finais_ident,
+    .num_estados_finais = sizeof(estados_finais_ident) / sizeof(const char*),
+    .estados_mortos = estados_mortos_ident,
+    .num_estados_mortos = sizeof(estados_mortos_ident) / sizeof(const char*),
+    .estados_retrocesso = estados_retrocesso_ident,
+    .num_estados_retrocesso = sizeof(estados_retrocesso_ident) / sizeof(const char*)
 };
 
 // FSM para números inteiros (NI)
@@ -192,17 +195,20 @@ static TransicaoEstado transicoes_inteiro[] = {
     {"4", estado_inteiro_4}
 };
 
-static const char* estados_finais_inteiro[] = {"final"};
+static const char* estados_finais_inteiro[] = {"final_consumido", "final_retrocede"};
 static const char* estados_mortos_inteiro[] = {"morto"};
+static const char* estados_retrocesso_inteiro[] = {"final_retrocede"};
 
 static MaquinaEstados maquina_inteiro = {
-    transicoes_inteiro,
-    sizeof(transicoes_inteiro) / sizeof(TransicaoEstado),
-    "0",
-    estados_finais_inteiro,
-    sizeof(estados_finais_inteiro) / sizeof(const char*),
-    estados_mortos_inteiro,
-    sizeof(estados_mortos_inteiro) / sizeof(const char*)
+    .transicoes = transicoes_inteiro,
+    .num_transicoes = sizeof(transicoes_inteiro) / sizeof(TransicaoEstado),
+    .estado_inicial = "0",
+    .estados_finais = estados_finais_inteiro,
+    .num_estados_finais = sizeof(estados_finais_inteiro) / sizeof(const char*),
+    .estados_mortos = estados_mortos_inteiro,
+    .num_estados_mortos = sizeof(estados_mortos_inteiro) / sizeof(const char*),
+    .estados_retrocesso = estados_retrocesso_inteiro,
+    .num_estados_retrocesso = sizeof(estados_retrocesso_inteiro) / sizeof(const char*)
 };
 
 // FSM para números de ponto flutuante (NPF)
@@ -217,17 +223,20 @@ static TransicaoEstado transicoes_float[] = {
     {"7", estado_float_7}
 };
 
-static const char* estados_finais_float[] = {"final"};
+static const char* estados_finais_float[] = {"final_consumido", "final_retrocede"};
 static const char* estados_mortos_float[] = {"morto"};
+static const char* estados_retrocesso_float[] = {"final_retrocede"};
 
 static MaquinaEstados maquina_float = {
-    transicoes_float,
-    sizeof(transicoes_float) / sizeof(TransicaoEstado),
-    "0",
-    estados_finais_float,
-    sizeof(estados_finais_float) / sizeof(const char*),
-    estados_mortos_float,
-    sizeof(estados_mortos_float) / sizeof(const char*)
+    .transicoes = transicoes_float,
+    .num_transicoes = sizeof(transicoes_float) / sizeof(TransicaoEstado),
+    .estado_inicial = "0",
+    .estados_finais = estados_finais_float,
+    .num_estados_finais = sizeof(estados_finais_float) / sizeof(const char*),
+    .estados_mortos = estados_mortos_float,
+    .num_estados_mortos = sizeof(estados_mortos_float) / sizeof(const char*),
+    .estados_retrocesso = estados_retrocesso_float,
+    .num_estados_retrocesso = sizeof(estados_retrocesso_float) / sizeof(const char*)
 };
 
 // FSM para operadores matemáticos (MATHOP)

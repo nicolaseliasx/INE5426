@@ -15,12 +15,12 @@ static const MapeamentoInicial dados_mapa_inicial[] = {
     {"/", "DIVISION"},
     {"%", "MODULUS"},
     {"=", "ASSIGN"},
-    {"(", "OPEN_PARENTHESIS"},
-    {")", "CLOSE_PARENTHESIS"},
-    {"{", "OPEN_BRACE"},
-    {"}", "CLOSE_BRACE"},
-    {"[", "OPEN_BRACKET"},
-    {"]", "CLOSE_BRACKET"},
+    {"(", "ONECHAR"},
+    {")", "ONECHAR"},
+    {"{", "ONECHAR"},
+    {"}", "ONECHAR"},
+    {"[", "ONECHAR"},
+    {"]", "ONECHAR"},
     {";", "SEMICOLON"},
     {",", "COMMA"}
 };
