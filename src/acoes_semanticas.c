@@ -24,6 +24,23 @@ void inicializar_resolvedor_global() {
     }
 }
 
+static char* obter_var_operando(NoExpressao* no, const char* var_pre_calculado, ListaString* codigo) {
+    if (var_pre_calculado && strlen(var_pre_calculado) > 0) {
+        return strdup(var_pre_calculado);
+    }
+
+    const char* valor = no->valor;
+    if (isalpha(valor[0]) || valor[0] == '$') {
+        return strdup(valor);
+    }
+
+    char* nova_var = gerar_variavel_temporaria(resolvedor_global);
+    char buffer[256];
+    snprintf(buffer, sizeof(buffer), "%s = %s", nova_var, valor);
+    adicionar_string(codigo, buffer);
+    return nova_var;
+}
+
 // =================================================================
 // Implementações do namespace CODIGO (Geração de código)
 // =================================================================
@@ -571,6 +588,8 @@ void DECLARAR_VERIFICAR_acao2(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
                  ident->token->lexema, ident->token->linha, ident->token->coluna);
         criar_erro_semantico(msg_error);
     }
+
+    gerenciador_registrar_uso_simbolo(gerenciador, ident->token);
 }
 
 // =================================================================
@@ -793,67 +812,65 @@ void EXPA_valor_segundo_filho_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenc
     NoAST* symbol_node = no_pai->filhos[0]; // PLUS or MINUS
     NoAST* factor_node = no_pai->filhos[1];
 
+    char* var_operando = obter_var_operando(factor_node->sdt_mat.no, factor_node->res_var_codigo.var, unaryexpr_node->codigo);
+
     unaryexpr_node->res_var_codigo.var = gerar_variavel_temporaria(resolvedor_global);
 
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "%s = %c%s",
              unaryexpr_node->res_var_codigo.var,
              symbol_node->token->lexema[0],
-             factor_node->sdt_mat.no->valor);
+             var_operando);
     adicionar_string(unaryexpr_node->codigo, buffer);
 
     // Create a new node representing the unary operation
     unaryexpr_node->sdt_mat.no = criar_no_expressao_unario(symbol_node->token->lexema[0], "N", factor_node->sdt_mat.no);
+    free(var_operando);
 }
 
 void EXPA_gerar_no(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
-    // NUMEXPRESSION -> TERM NUMEXPRESSIONAUX
-    NoAST* numexpression_node = no_pai;
-    NoAST* term_node = no_pai->filhos[0];
-    NoAST* numexpression_aux_node = no_pai->filhos[1];
+    NoAST* numexpr_node = no_pai;
+    NoAST* term_node = numexpr_node->filhos[0];
+    NoAST* aux_node = numexpr_node->filhos[1];
 
-    if (numexpression_aux_node->sdt_mat.no != NULL) {
-        char* term_type = AUXILIAR_obter_tipo(term_node->sdt_mat.no->tipo, term_node->sdt_mat.contador_vetor);
-        char* aux_type = AUXILIAR_obter_tipo(numexpression_aux_node->sdt_mat.no->tipo, numexpression_aux_node->sdt_mat.contador_vetor);
+    ListaString* codigo_operacoes = criar_lista_string();
 
-        // Type checking (simplified, you might want a more robust system)
-        if (strcmp(term_type, aux_type) != 0 &&
-            !( (strcmp(term_type, "int") == 0 && strcmp(aux_type, "float") == 0) ||
-               (strcmp(term_type, "float") == 0 && strcmp(aux_type, "int") == 0) ) ) {
-            criar_erro_semantico("Incompatibilidade de tipos em operacao aritmetica/logica.");
-        }
-        free(term_type);
-        free(aux_type);
+    // Processa o primeiro operando (TERM)
+    lista_codigo_adicionar_lista(numexpr_node->codigo, term_node->codigo);
+    char* var_resultado_esq = obter_var_operando(term_node->sdt_mat.no, term_node->res_var_codigo.var, numexpr_node->codigo);
+    NoExpressao* no_resultado_esq = term_node->sdt_mat.no;
+    term_node->sdt_mat.no = NULL;
 
-        char* varA = (term_node->res_var_codigo.var != NULL && strlen(term_node->res_var_codigo.var) > 0) ? strdup(term_node->res_var_codigo.var) : strdup(term_node->sdt_mat.no->valor);
-        char* varB = (numexpression_aux_node->res_var_codigo.var != NULL && strlen(numexpression_aux_node->res_var_codigo.var) > 0) ? strdup(numexpression_aux_node->res_var_codigo.var) : strdup(numexpression_aux_node->sdt_mat.no->valor);
+    // Itera pela cadeia de operações (+, -)
+    while(aux_node && aux_node->quantidade_filhos > 0) {
+        NoAST* op_node = aux_node->filhos[0];
+        NoAST* proximo_term_node = aux_node->filhos[1];
+        
+        lista_codigo_adicionar_lista(numexpr_node->codigo, proximo_term_node->codigo);
+        char* var_operando_dir = obter_var_operando(proximo_term_node->sdt_mat.no, proximo_term_node->res_var_codigo.var, numexpr_node->codigo);
 
-        lista_codigo_adicionar_lista(numexpression_node->codigo, term_node->codigo);
-        lista_codigo_adicionar_lista(numexpression_node->codigo, numexpression_aux_node->codigo);
-
-        numexpression_node->res_var_codigo.var = gerar_variavel_temporaria(resolvedor_global);
+        char* var_novo_resultado = gerar_variavel_temporaria(resolvedor_global);
         char buffer[256];
-        snprintf(buffer, sizeof(buffer), "%s = %s %c %s",
-                 numexpression_node->res_var_codigo.var,
-                 varA,
-                 numexpression_aux_node->sdt_mat.operacao,
-                 varB);
-        adicionar_string(numexpression_node->codigo, buffer);
-        free(varA);
-        free(varB);
+        snprintf(buffer, sizeof(buffer), "%s = %s %s %s",
+                 var_novo_resultado, var_resultado_esq, op_node->token->lexema, var_operando_dir);
+        adicionar_string(codigo_operacoes, buffer);
 
-        numexpression_node->sdt_mat.no = criar_no_expressao_binario(
-            numexpression_aux_node->sdt_mat.operacao,
-            "N",
-            term_node->sdt_mat.no,
-            numexpression_aux_node->sdt_mat.no
-        );
-    } else {
-        numexpression_node->sdt_mat.no = term_node->sdt_mat.no;
-        numexpression_node->sdt_mat.contador_vetor = term_node->sdt_mat.contador_vetor;
-        numexpression_node->res_var_codigo = term_node->res_var_codigo;
-        lista_codigo_adicionar_lista(numexpression_node->codigo, term_node->codigo);
+        no_resultado_esq = criar_no_expressao_binario(op_node->token->lexema[0], "N", no_resultado_esq, proximo_term_node->sdt_mat.no);
+        proximo_term_node->sdt_mat.no = NULL;
+
+        free(var_resultado_esq);
+        var_resultado_esq = var_novo_resultado;
+        free(var_operando_dir);
+
+        aux_node = aux_node->filhos[2];
     }
+
+    lista_codigo_adicionar_lista(numexpr_node->codigo, codigo_operacoes);
+    liberar_lista_string(codigo_operacoes);
+
+    numexpr_node->sdt_mat.no = no_resultado_esq;
+    if (numexpr_node->res_var_codigo.var) free(numexpr_node->res_var_codigo.var);
+    numexpr_node->res_var_codigo.var = var_resultado_esq;
 }
 
 void EXPA_definir_operacao2(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -870,75 +887,57 @@ void EXPA_definir_operacao2(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 }
 
 void EXPA_termo(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
-    if (no_pai->quantidade_filhos < 2) {
-        fprintf(stderr, "ERRO FATAL em EXPA_termo: Nó pai com menos de 2 filhos\n");
-        return;
-    }
+    NoAST* term_node = no_pai; // O nó TERM que está sendo processado
+    NoAST* unary_node = term_node->filhos[0];
+    NoAST* aux_node = term_node->filhos[1];
 
-    NoAST* term_node = no_pai;
-    NoAST* unaryexpr_node = no_pai->filhos[0];
-    NoAST* unaryexpr_aux_node = no_pai->filhos[1];
+    ListaString* codigo_operacoes = criar_lista_string();
 
-    if (!unaryexpr_aux_node || !unaryexpr_node) {
-        fprintf(stderr, "ERRO FATAL em EXPA_termo: Nós filhos nulos\n");
-        return;
-    }
+    // Processa o primeiro operando (UNARYEXPR)
+    lista_codigo_adicionar_lista(term_node->codigo, unary_node->codigo);
+    char* var_resultado_esq = obter_var_operando(unary_node->sdt_mat.no, unary_node->res_var_codigo.var, term_node->codigo);
+    NoExpressao* no_resultado_esq = unary_node->sdt_mat.no;
+    unary_node->sdt_mat.no = NULL;
 
-    if (unaryexpr_aux_node->sdt_mat.no == NULL) {
-        // Herda o nó da expressão
-        term_node->sdt_mat.no = unaryexpr_node->sdt_mat.no;
-        term_node->sdt_mat.contador_vetor = unaryexpr_node->sdt_mat.contador_vetor;
+    // Itera pela cadeia de operações (*, /, %)
+    while(aux_node && aux_node->quantidade_filhos > 0) {
+        NoAST* op_node = aux_node->filhos[0];
+        NoAST* proximo_unary_node = aux_node->filhos[1];
+        
+        lista_codigo_adicionar_lista(term_node->codigo, proximo_unary_node->codigo);
+        char* var_operando_dir = obter_var_operando(proximo_unary_node->sdt_mat.no, proximo_unary_node->res_var_codigo.var, term_node->codigo);
 
-        // Anexa o código do filho
-        lista_codigo_adicionar_lista(term_node->codigo, unaryexpr_node->codigo);
-
-        // Herda a variável de resultado diretamente, sem gerar novo código
-        if(term_node->res_var_codigo.var) free(term_node->res_var_codigo.var);
-        term_node->res_var_codigo.var = (unaryexpr_node->res_var_codigo.var) ? strdup(unaryexpr_node->res_var_codigo.var) : NULL;
-    } else {
-        char* unary_type = AUXILIAR_obter_tipo(unaryexpr_node->sdt_mat.no->tipo, unaryexpr_node->sdt_mat.contador_vetor);
-        char* aux_type = AUXILIAR_obter_tipo(unaryexpr_aux_node->sdt_mat.no->tipo, unaryexpr_aux_node->sdt_mat.contador_vetor);
-
-        // Type checking
-        if (strcmp(unary_type, aux_type) != 0 &&
-            !( (strcmp(unary_type, "int") == 0 && strcmp(aux_type, "float") == 0) ||
-               (strcmp(unary_type, "float") == 0 && strcmp(aux_type, "int") == 0) ) ) {
-            criar_erro_semantico("Incompatibilidade de tipos em operacao aritmetica/logica.");
-        }
-        free(unary_type);
-        free(aux_type);
-
-        char* varA = (unaryexpr_node->res_var_codigo.var != NULL && strlen(unaryexpr_node->res_var_codigo.var) > 0) ? strdup(unaryexpr_node->res_var_codigo.var) : strdup(unaryexpr_node->sdt_mat.no->valor);
-        char* varB = (unaryexpr_aux_node->res_var_codigo.var != NULL && strlen(unaryexpr_aux_node->res_var_codigo.var) > 0) ? strdup(unaryexpr_aux_node->res_var_codigo.var) : strdup(unaryexpr_aux_node->sdt_mat.no->valor);
-
-        lista_codigo_adicionar_lista(term_node->codigo, unaryexpr_node->codigo);
-        lista_codigo_adicionar_lista(term_node->codigo, unaryexpr_aux_node->codigo);
-
-        term_node->res_var_codigo.var = gerar_variavel_temporaria(resolvedor_global);
+        char* var_novo_resultado = gerar_variavel_temporaria(resolvedor_global);
         char buffer[256];
-        snprintf(buffer, sizeof(buffer), "%s = %s %c %s",
-                 term_node->res_var_codigo.var,
-                 varA,
-                 unaryexpr_aux_node->sdt_mat.operacao,
-                 varB);
-        adicionar_string(term_node->codigo, buffer);
-        free(varA);
-        free(varB);
+        snprintf(buffer, sizeof(buffer), "%s = %s %s %s",
+                 var_novo_resultado, var_resultado_esq, op_node->token->lexema, var_operando_dir);
+        adicionar_string(codigo_operacoes, buffer);
 
-        term_node->sdt_mat.no = criar_no_expressao_binario(
-            unaryexpr_aux_node->sdt_mat.operacao,
-            "N",
-            unaryexpr_node->sdt_mat.no,
-            unaryexpr_aux_node->sdt_mat.no
-        );
+        no_resultado_esq = criar_no_expressao_binario(op_node->token->lexema[0], "N", no_resultado_esq, proximo_unary_node->sdt_mat.no);
+        proximo_unary_node->sdt_mat.no = NULL;
+
+        free(var_resultado_esq);
+        var_resultado_esq = var_novo_resultado;
+        free(var_operando_dir);
+
+        aux_node = aux_node->filhos[2];
     }
+
+    lista_codigo_adicionar_lista(term_node->codigo, codigo_operacoes);
+    liberar_lista_string(codigo_operacoes);
+
+    term_node->sdt_mat.no = no_resultado_esq;
+    if (term_node->res_var_codigo.var) free(term_node->res_var_codigo.var);
+    term_node->res_var_codigo.var = var_resultado_esq;
 }
 
 void EXPA_imprimir_expressao0_h(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     // EXPRESSION -> NUMEXPRESSION EXPRESSION'
     NoAST* numexpression_node = no_pai->filhos[0];
     NoAST* expression_linha_node = no_pai->filhos[1];
-    expression_linha_node->res_var_codigo.var = strdup(numexpression_node->res_var_codigo.var);
+    if (numexpression_node->res_var_codigo.var) {
+        expression_linha_node->res_var_codigo.var = strdup(numexpression_node->res_var_codigo.var);
+    }
 }
 
 void EXPA_imprimir_expressao0(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -947,12 +946,14 @@ void EXPA_imprimir_expressao0(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     NoAST* numexpression_node = no_pai->filhos[0];
     NoAST* expression_linha_node = no_pai->filhos[1];
 
-    expression_node->res_var_codigo = numexpression_node->res_var_codigo; // Copy struct
+    if (numexpression_node->res_var_codigo.var) {
+        if(expression_node->res_var_codigo.var) free(expression_node->res_var_codigo.var);
+        expression_node->res_var_codigo.var = strdup(numexpression_node->res_var_codigo.var);
+    }
 
     lista_codigo_adicionar_lista(expression_node->codigo, numexpression_node->codigo);
     lista_codigo_adicionar_lista(expression_node->codigo, expression_linha_node->codigo);
 
-    // This calls a C function `imprimir_arvore`
     imprimir_arvore(numexpression_node->sdt_mat.no);
 }
 
@@ -961,9 +962,13 @@ void EXPA_passar_numero(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     NoAST* factor_node = no_pai;
     NoAST* numexpression_node = no_pai->filhos[1];
 
-    factor_node->res_var_codigo = numexpression_node->res_var_codigo; // Copy struct
+    if (factor_node->res_var_codigo.var) free(factor_node->res_var_codigo.var);
+    factor_node->res_var_codigo.var = strdup(numexpression_node->res_var_codigo.var);
+    
     lista_codigo_adicionar_lista(factor_node->codigo, numexpression_node->codigo);
-    factor_node->sdt_mat.no = numexpression_node->sdt_mat.no; // Transfer ownership
+    
+    factor_node->sdt_mat.no = numexpression_node->sdt_mat.no;
+    numexpression_node->sdt_mat.no = NULL;
 }
 
 void EXPA_imprimir_expressao1(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -984,17 +989,13 @@ void EXPA_contador_vetor(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     NoAST* numexpression_node = no_pai->filhos[1];
     NoAST* allocaux1_node = no_pai->filhos[3];
 
-    // Ensure vetor_array_var is initialized
     if (allocaux_node->sdt_mat.vetor_array_var == NULL) {
-        // CORREÇÃO: Usando a função que realmente existe
         allocaux_node->sdt_mat.vetor_array_var = criar_lista_string();
     }
     
-    // CORREÇÃO: Usando a função que realmente existe
     adicionar_string(allocaux_node->sdt_mat.vetor_array_var, strdup(numexpression_node->res_var_codigo.var));
     
-    // CORREÇÃO: Usando a função que realmente existe para juntar as listas
-    lista_codigo_adicionar_lista(allocaux_node->sdt_mat.vetor_array_var, allocaux1_node->sdt_mat.vetor_array_var); // Splice the vector
+    lista_codigo_adicionar_lista(allocaux_node->sdt_mat.vetor_array_var, allocaux1_node->sdt_mat.vetor_array_var);
 
     allocaux_node->sdt_mat.contador_vetor = allocaux1_node->sdt_mat.contador_vetor + 1;
 

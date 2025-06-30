@@ -53,4 +53,7 @@ void imprimir_tabelas_gerenciador(GerenciadorEscopo* gerenciador, FILE* saida);
 // Libera a memória do gerenciador de escopos
 void liberar_gerenciador_escopo(GerenciadorEscopo* gerenciador);
 
+// Registra o uso de um símbolo
+void gerenciador_registrar_uso_simbolo(GerenciadorEscopo* gerenciador, Token* token);
+
 #endif

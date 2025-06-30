@@ -189,3 +189,14 @@ void liberar_gerenciador_escopo(GerenciadorEscopo* gerenciador) {
     free(pilha);
     free(gerenciador);
 }
+
+void gerenciador_registrar_uso_simbolo(GerenciadorEscopo* gerenciador, Token* token) {
+    ItemEscopo* escopo = gerenciador->escopo_atual;
+    while (escopo) {
+        if (simbolo_existe(escopo->tabela_simbolos, token->lexema)) {
+            tabela_simbolos_adicionar(escopo->tabela_simbolos, token);
+            return;
+        }
+        escopo = escopo->escopo_ancestral;
+    }
+}
