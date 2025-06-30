@@ -24,12 +24,13 @@ void inicializar_resolvedor_global() {
     }
 }
 
-static char* obter_var_operando(NoExpressao* no, const char* var_pre_calculado, ListaString* codigo) {
-    if (var_pre_calculado && strlen(var_pre_calculado) > 0) {
-        return strdup(var_pre_calculado);
+// Garante que o primeiro operando de uma expressão esteja em uma variável.
+static char* garantir_primeiro_operando_em_var(NoAST* node, ListaString* codigo) {
+    if (node->res_var_codigo.var && strlen(node->res_var_codigo.var) > 0) {
+        return strdup(node->res_var_codigo.var);
     }
 
-    const char* valor = no->valor;
+    const char* valor = node->sdt_mat.no->valor;
     if (isalpha(valor[0]) || valor[0] == '$') {
         return strdup(valor);
     }
@@ -39,6 +40,14 @@ static char* obter_var_operando(NoExpressao* no, const char* var_pre_calculado, 
     snprintf(buffer, sizeof(buffer), "%s = %s", nova_var, valor);
     adicionar_string(codigo, buffer);
     return nova_var;
+}
+
+// Obtém o valor de um operando à direita, que pode ser um literal ou variável.
+static char* obter_valor_rhs(NoAST* node) {
+    if (node->res_var_codigo.var && strlen(node->res_var_codigo.var) > 0) {
+        return strdup(node->res_var_codigo.var);
+    }
+    return strdup(node->sdt_mat.no->valor);
 }
 
 // =================================================================
@@ -720,7 +729,6 @@ void EXPA_avaliar_identificador(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 
             for (int j = 0; j < counter; ++j) {
                 if (j < num_elements) {
-                    // LINHA CORRIGIDA: Usa %c para tratar a dimensão como caractere.
                     snprintf(buffer, sizeof(buffer), "%s = %s * %c", current_temp_var, current_temp_var, max_dims[j] + '0');
                     adicionar_string(lvalue_node->codigo, buffer);
                 }
@@ -751,7 +759,6 @@ void EXPA_lexema_para_valor(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     NoAST* constant_node = no_pai->filhos[0];
     char* type_str = NULL;
 
-    // CORREÇÃO: Trocar 'id' por 'identificador' para corresponder à definição da struct.
     if (strcmp(constant_node->identificador, "NI") == 0) {
         type_str = strdup("int");
     } else if (strcmp(constant_node->identificador, "NPF") == 0) {
@@ -759,11 +766,9 @@ void EXPA_lexema_para_valor(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     } else if (strcmp(constant_node->identificador, "STRC") == 0) {
         type_str = strdup("string");
     }
-    
-    // Libera a memória de type_str se ela foi alocada antes de uma nova atribuição
-    // (embora neste caso seja seguro, é uma boa prática).
+
     if (factor_node->sdt_mat.no && factor_node->sdt_mat.no->tipo) {
-        free(type_str);
+        free(factor_node->sdt_mat.no->tipo);
     }
 
     factor_node->sdt_mat.no = criar_no_expressao_simples('n', type_str, constant_node->token->lexema);
@@ -791,7 +796,8 @@ void EXPA_ident_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     // FACTOR -> LVALUE
     NoAST* factor_node = no_pai;
     NoAST* lvalue_node = no_pai->filhos[0];
-    factor_node->sdt_mat.no = lvalue_node->sdt_mat.no; // Transfer ownership of Node*
+    factor_node->sdt_mat.no = lvalue_node->sdt_mat.no;
+    lvalue_node->sdt_mat.no = NULL;
     factor_node->sdt_mat.contador_vetor = lvalue_node->sdt_mat.contador_vetor;
     lista_codigo_adicionar_lista(factor_node->codigo, lvalue_node->codigo);
 }
@@ -801,7 +807,8 @@ void EXPA_valor_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     NoAST* unaryexpr_node = no_pai;
     NoAST* factor_node = no_pai->filhos[0];
     unaryexpr_node->sdt_mat.contador_vetor = factor_node->sdt_mat.contador_vetor;
-    unaryexpr_node->sdt_mat.no = factor_node->sdt_mat.no; // Transfer ownership of Node*
+    unaryexpr_node->sdt_mat.no = factor_node->sdt_mat.no;
+    factor_node->sdt_mat.no = NULL;
     unaryexpr_node->res_var_codigo = factor_node->res_var_codigo;
     lista_codigo_adicionar_lista(unaryexpr_node->codigo, factor_node->codigo);
 }
@@ -812,8 +819,7 @@ void EXPA_valor_segundo_filho_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenc
     NoAST* symbol_node = no_pai->filhos[0]; // PLUS or MINUS
     NoAST* factor_node = no_pai->filhos[1];
 
-    char* var_operando = obter_var_operando(factor_node->sdt_mat.no, factor_node->res_var_codigo.var, unaryexpr_node->codigo);
-
+    char* var_operando = obter_valor_rhs(factor_node);
     unaryexpr_node->res_var_codigo.var = gerar_variavel_temporaria(resolvedor_global);
 
     char buffer[256];
@@ -837,7 +843,7 @@ void EXPA_gerar_no(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 
     // Processa o primeiro operando (TERM)
     lista_codigo_adicionar_lista(numexpr_node->codigo, term_node->codigo);
-    char* var_resultado_esq = obter_var_operando(term_node->sdt_mat.no, term_node->res_var_codigo.var, numexpr_node->codigo);
+    char* var_resultado_esq = garantir_primeiro_operando_em_var(term_node, numexpr_node->codigo);
     NoExpressao* no_resultado_esq = term_node->sdt_mat.no;
     term_node->sdt_mat.no = NULL;
 
@@ -847,7 +853,7 @@ void EXPA_gerar_no(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
         NoAST* proximo_term_node = aux_node->filhos[1];
         
         lista_codigo_adicionar_lista(numexpr_node->codigo, proximo_term_node->codigo);
-        char* var_operando_dir = obter_var_operando(proximo_term_node->sdt_mat.no, proximo_term_node->res_var_codigo.var, numexpr_node->codigo);
+        char* var_operando_dir = obter_valor_rhs(proximo_term_node);
 
         char* var_novo_resultado = gerar_variavel_temporaria(resolvedor_global);
         char buffer[256];
@@ -895,7 +901,7 @@ void EXPA_termo(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 
     // Processa o primeiro operando (UNARYEXPR)
     lista_codigo_adicionar_lista(term_node->codigo, unary_node->codigo);
-    char* var_resultado_esq = obter_var_operando(unary_node->sdt_mat.no, unary_node->res_var_codigo.var, term_node->codigo);
+    char* var_resultado_esq = garantir_primeiro_operando_em_var(unary_node, term_node->codigo);
     NoExpressao* no_resultado_esq = unary_node->sdt_mat.no;
     unary_node->sdt_mat.no = NULL;
 
@@ -905,7 +911,7 @@ void EXPA_termo(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
         NoAST* proximo_unary_node = aux_node->filhos[1];
         
         lista_codigo_adicionar_lista(term_node->codigo, proximo_unary_node->codigo);
-        char* var_operando_dir = obter_var_operando(proximo_unary_node->sdt_mat.no, proximo_unary_node->res_var_codigo.var, term_node->codigo);
+        char* var_operando_dir = obter_valor_rhs(proximo_unary_node);
 
         char* var_novo_resultado = gerar_variavel_temporaria(resolvedor_global);
         char buffer[256];
