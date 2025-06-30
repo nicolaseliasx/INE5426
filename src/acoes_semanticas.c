@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 // Cria uma instância única do resolvedor para este arquivo.
 static ResolvedorExpressao* resolvedor_global = NULL;
