@@ -1,0 +1,11 @@
+{
+    int c_1;
+    int d;
+    for (c_1 = 0; c_1 < 10; c_1 = c_1+1) {
+        for (d = 2; d > 0; d = d - 1) {
+            print d;
+            if (d) {break;}
+            print "Não";
+        }
+    }
+}

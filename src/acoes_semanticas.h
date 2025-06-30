@@ -6,6 +6,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+void inicializar_resolvedor_global(); 
+
 // --- Ações de Geração de Código ---
 void CODIGO_relop_action(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void CODIGO_lidar_break(NoAST* no_pai, GerenciadorEscopo* gerenciador);

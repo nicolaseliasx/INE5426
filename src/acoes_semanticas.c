@@ -870,9 +870,19 @@ void EXPA_definir_operacao2(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 }
 
 void EXPA_termo(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
+    if (no_pai->quantidade_filhos < 2) {
+        fprintf(stderr, "ERRO FATAL em EXPA_termo: Nó pai com menos de 2 filhos\n");
+        return;
+    }
+
     NoAST* term_node = no_pai;
     NoAST* unaryexpr_node = no_pai->filhos[0];
     NoAST* unaryexpr_aux_node = no_pai->filhos[1];
+
+    if (!unaryexpr_aux_node || !unaryexpr_node) {
+        fprintf(stderr, "ERRO FATAL em EXPA_termo: Nós filhos nulos\n");
+        return;
+    }
 
     if (unaryexpr_aux_node->sdt_mat.no == NULL) {
         // Herda o nó da expressão

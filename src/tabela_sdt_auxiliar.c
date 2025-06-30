@@ -50,9 +50,11 @@ const EntradaTabelaSDT tabela_sdt_entries[] = {
     {"IFSTAT'->ELSE",      { {ACAO, .acao = CODIGO_acao_else_h}, {SIMBOLO, .simbolo = "ELSE"}, {SIMBOLO, .simbolo = "ONECHAR"}, {ACAO, .acao = ESCOPO_acao6}, {SIMBOLO, .simbolo = "STATEMENT"}, {SIMBOLO, .simbolo = "CLOSE_BRACE"}, {ACAO, .acao = ESCOPO_acao2}, {ACAO, .acao = CODIGO_acao_else_s}} , 8},
     {"IFSTAT'->EPSILON",   { {ACAO, .acao = CODIGO_acao_else_vazio}, {SIMBOLO, .simbolo = "ε"}} , 2},
     {"FORSTAT->FOR",       { {ACAO, .acao = CODIGO_herdar_proximo}, {ACAO, .acao = CODIGO_herdar_proximo_for}, {SIMBOLO, .simbolo = "FOR"}, {SIMBOLO, .simbolo = "OPEN_PARENTHESIS"}, {SIMBOLO, .simbolo = "ATRIBSTAT"}, {SIMBOLO, .simbolo = "SEMICOLON"}, {SIMBOLO, .simbolo = "EXPRESSION"}, {SIMBOLO, .simbolo = "SEMICOLON"}, {SIMBOLO, .simbolo = "ATRIBSTAT"}, {SIMBOLO, .simbolo = "CLOSE_PARENTHESIS"}, {ACAO, .acao = ESCOPO_acao7}, {SIMBOLO, .simbolo = "STATEMENT"}, {ACAO, .acao = ESCOPO_acao2}, {ACAO, .acao = CODIGO_acao_for}} , 14},
-    {"STATELIST->STMT",     { {ACAO, .acao = CODIGO_herdar_proximo}, {ACAO, .acao = CODIGO_definir_rotulo}, {SIMBOLO, .simbolo = "STATEMENT"}, {SIMBOLO, .simbolo = "STATELIST'"}, {ACAO, .acao = CODIGO_obter_codigo_filhos_2}} , 5},
-    {"STATELIST'->STMT",    { {ACAO, .acao = CODIGO_herdar_proximo}, {SIMBOLO, .simbolo = "STATELIST"}, {ACAO, .acao = CODIGO_obter_codigo_filhos}} , 3},
+    {"STATELIST->STMT",    { {ACAO, .acao = CODIGO_herdar_proximo}, {ACAO, .acao = CODIGO_definir_rotulo}, {SIMBOLO, .simbolo = "STATEMENT"}, {SIMBOLO, .simbolo = "STATELIST'"}, {ACAO, .acao = CODIGO_obter_codigo_filhos_2}} , 5},
+    {"STATELIST'->STMT",   { {ACAO, .acao = CODIGO_herdar_proximo}, {ACAO, .acao = CODIGO_definir_rotulo}, {SIMBOLO, .simbolo = "STATEMENT"}, {SIMBOLO, .simbolo = "STATELIST'"}, {ACAO, .acao = CODIGO_obter_codigo_filhos_2}}, 5},
     {"STATELIST'->EPSILON", { {SIMBOLO, .simbolo = "ε"}} , 1},
+    {"STATELIST->EPSILON",  { {ACAO, .acao = ESCOPO_acao2}, {SIMBOLO, .simbolo = "ε"}} , 2},
+    {"CLOSE_BRACE->EPSILON", { {ACAO, .acao = ESCOPO_acao2}, {SIMBOLO, .simbolo = "ε"}}, 2},
     {"ALLOCEXPR->NEW",      { {SIMBOLO, .simbolo = "NEW"}, {SIMBOLO, .simbolo = "ALLOCEXPRESSION'"}} , 2},
     {"ALLOCEXPR'->TYPE",    { {SIMBOLO, .simbolo = "VARDECL"}, {SIMBOLO, .simbolo = "OPEN_BRACKET"}, {SIMBOLO, .simbolo = "NUMEXPRESSION"}, {SIMBOLO, .simbolo = "CLOSE_BRACKET"}, {SIMBOLO, .simbolo = "ALLOCAUX"}, {ACAO, .acao = EXPA_imprimir_expressao2}} , 6},
     {"ALLOCAUX->BRACKET",   { {SIMBOLO, .simbolo = "OPEN_BRACKET"}, {SIMBOLO, .simbolo = "NUMEXPRESSION"}, {SIMBOLO, .simbolo = "CLOSE_BRACKET"}, {SIMBOLO, .simbolo = "ALLOCAUX"}, {ACAO, .acao = EXPA_contador_vetor}} , 5},
@@ -77,7 +79,7 @@ const EntradaTabelaSDT tabela_sdt_entries[] = {
     {"FACTOR->CONST_NPF",   { {SIMBOLO, .simbolo = "NPF"}, {ACAO, .acao = EXPA_lexema_para_valor}} , 2},
     {"FACTOR->CONST_STRC",  { {SIMBOLO, .simbolo = "STRC"}, {ACAO, .acao = EXPA_lexema_para_valor}} , 2},
     {"FACTOR->CONST_NULL",  { {SIMBOLO, .simbolo = "NULL"}} , 1},
-    {"LVALUE->IDENT",       { {SIMBOLO, .simbolo = "IDENT"}, {ACAO, .acao = DECLARAR_VERIFICAR_acao2}, {ACAO, .acao = CODIGO_obter_variavel_lvalue}, {ACAO, .acao = EXPA_avaliar_identificador}, {SIMBOLO, .simbolo = "ALLOCAUX"}, {ACAO, .acao = EXPA_avaliar_identificador}} , 6}
+    {"LVALUE->IDENT",       { {SIMBOLO, .simbolo = "IDENT"}, {ACAO, .acao = DECLARAR_VERIFICAR_acao2}, {ACAO, .acao = CODIGO_obter_variavel_lvalue}, {ACAO, .acao = EXPA_avaliar_identificador}, {SIMBOLO, .simbolo = "ALLOCAUX"}, {ACAO, .acao = EXPA_avaliar_identificador}} , 6},
 };
 
 const size_t num_entradas_sdt = sizeof(tabela_sdt_entries) / sizeof(EntradaTabelaSDT);

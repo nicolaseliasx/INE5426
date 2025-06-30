@@ -65,6 +65,8 @@ void print_fire() {
 int main(int argc, char *argv[]) {
     printf("[DEBUG] Iniciando o compilador...\n");
     print_fire();
+    inicializar_resolvedor_global();
+    printf("[DEBUG] Componentes inicializados com sucesso.\n\n");
 
     if (argc < 2) {
         fprintf(stderr, "Uso: %s <arquivo>\n", argv[0]);

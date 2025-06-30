@@ -98,6 +98,11 @@ NoExpressao* criar_no_expressao_unario(char operacao, const char* valor, NoExpre
 
 // Em no_ast.c
 NoExpressao* criar_no_expressao_binario(char operacao, const char* valor, NoExpressao* filhoA, NoExpressao* filhoB) {
+    if (!filhoA || !filhoB) {
+        fprintf(stderr, "ERRO: Tentativa de criar nó binário com filhos nulos\n");
+        return NULL;
+    }
+
     NoExpressao* no = (NoExpressao*)malloc(sizeof(NoExpressao));
     if (!no) exit(EXIT_FAILURE);
 

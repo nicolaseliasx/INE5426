@@ -61,11 +61,21 @@ void inicializar_pilha(AnalisadorSintatico* analisador) {
 }
 
 void executar_acao(ItemPilha* item_acao, AnalisadorSintatico* analisador) {
-    if (!item_acao || item_acao->tipo != ACAO || !item_acao->acao) exit(1);
-    if (!item_acao->ancestral) {
-        printf("[DEBUG-CRASH] ERRO FATAL: Ação semântica com ancestral NULO!\n");
-        exit(1);
+    printf("[DEBUG-ACAO] Executando %p no nó %s\n", 
+       item_acao->acao, 
+       item_acao->ancestral ? item_acao->ancestral->identificador : "NULO");
+    if (!item_acao || item_acao->tipo != ACAO || !item_acao->acao) {
+        return;
     }
+    
+    if (!item_acao->ancestral) {
+        printf("[DEBUG] AVISO: Ação semântica '%p' sem ancestral, criando nó temporário\n", 
+               (void*)item_acao->acao);
+        
+        NoAST* temp_node = criar_no_ast("TEMP_ACTION", &analisador->contador_rotulos);
+        item_acao->ancestral = temp_node;
+    }
+    
     item_acao->acao(item_acao->ancestral, analisador->gerenciador_escopo);
 }
 
@@ -123,8 +133,9 @@ void analisar_token(AnalisadorSintatico* analisador, Token* token) {
         
         if (!producao) {
             char erro_msg[100];
-            snprintf(erro_msg, sizeof(erro_msg), "Token inválido '%s' para o estado '%s' em %d:%d", 
-                     token->lexema, topo->simbolo, token->linha, token->coluna);
+            snprintf(erro_msg, sizeof(erro_msg), 
+            "Bloco não fechado. Adicione '}' antes do fim do arquivo (linha %d)", 
+            token->linha);
             criar_erro_sintatico(erro_msg);
             return;
         }
@@ -160,6 +171,7 @@ void analisar_token(AnalisadorSintatico* analisador, Token* token) {
             if (item_da_regra->tipo == ACAO) {
                 novo_item_para_pilha = criar_item_acao(item_da_regra->acao);
                 definir_ancestralidade(novo_item_para_pilha, NULL, no_pai_da_regra);
+                printf("[DEBUG] Inicializado item pilha para PROGRAM\n");
             } else { // É um SÍMBOLO
                 novo_item_para_pilha = criar_item_simbolo(item_da_regra->simbolo);
                 NoAST* novo_no_ast = criar_no_ast(item_da_regra->simbolo, &analisador->contador_rotulos);
