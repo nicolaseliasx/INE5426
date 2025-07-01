@@ -79,7 +79,7 @@ const EntradaTabelaSDT tabela_sdt_entries[] = {
     {"FACTOR->CONST_NPF",   { {SIMBOLO, .simbolo = "NPF"}, {ACAO, .acao = EXPA_lexema_para_valor}} , 2},
     {"FACTOR->CONST_STRC",  { {SIMBOLO, .simbolo = "STRC"}, {ACAO, .acao = EXPA_lexema_para_valor}} , 2},
     {"FACTOR->CONST_NULL",  { {SIMBOLO, .simbolo = "NULL"}} , 1},
-    {"LVALUE->IDENT", { {SIMBOLO, .simbolo = "IDENT"}, {SIMBOLO, .simbolo = "ALLOCAUX"}, {ACAO, .acao = DECLARAR_VERIFICAR_acao2}, {ACAO, .acao = CODIGO_obter_variavel_lvalue}, {ACAO, .acao = EXPA_avaliar_identificador}}, 5},
+    {"LVALUE->IDENT",       { {SIMBOLO, .simbolo = "IDENT"}, {SIMBOLO, .simbolo = "ALLOCAUX"} }, 2},
 };
 
 const size_t num_entradas_sdt = sizeof(tabela_sdt_entries) / sizeof(EntradaTabelaSDT);

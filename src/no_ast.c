@@ -189,6 +189,27 @@ void lista_codigo_adicionar_lista(ListaString* destino, ListaString* fonte) {
     fonte->capacidade = 0;
 }
 
+void copiar_res_var_codigo(Codigo* destino, const Codigo* fonte) {
+    if (!destino || !fonte) {
+        return;
+    }
+
+    // Libera a memória antiga do destino para evitar memory leaks
+    free(destino->var);
+    free(destino->inicio);
+    free(destino->ret);
+    free(destino->valor_retorno);
+
+    // Copia os ponteiros usando strdup para criar novas alocações
+    destino->var = fonte->var ? strdup(fonte->var) : NULL;
+    destino->inicio = fonte->inicio ? strdup(fonte->inicio) : NULL;
+    destino->ret = fonte->ret ? strdup(fonte->ret) : NULL;
+    destino->valor_retorno = fonte->valor_retorno ? strdup(fonte->valor_retorno) : NULL;
+    
+    // Copia o valor inteiro
+    destino->contador_param = fonte->contador_param;
+}
+
 void lista_codigo_imprimir_tudo(ListaString* lista) {
     if (!lista) return;
     for (int i = 0; i < lista->tamanho; ++i) {

@@ -79,6 +79,7 @@ void definir_filhos(NoAST* self, NoAST** novos_filhos, int quantidade);
 void definir_token(NoAST* self, Token* token);
 char* no_ast_gerar_novo_rotulo(NoAST* self);
 void liberar_no_ast(NoAST* no);
+void copiar_res_var_codigo(Codigo* destino, const Codigo* fonte);
 
 // Funções para nós de expressão
 NoExpressao* criar_no_expressao_unario(char operacao, const char* valor, NoExpressao* filhoA);

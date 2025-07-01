@@ -78,7 +78,6 @@ void EXPA_imprimir_expressao0_h(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void EXPA_imprimir_expressao0(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void EXPA_imprimir_expressao1(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void EXPA_imprimir_expressao2(NoAST* no_pai, GerenciadorEscopo* gerenciador);
-void EXPA_avaliar_identificador(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void EXPA_lexema_para_valor(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void EXPA_definir_operacao(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void EXPA_ident_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador);

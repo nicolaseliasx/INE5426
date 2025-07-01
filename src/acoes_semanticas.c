@@ -359,7 +359,6 @@ void CODIGO_definir_valor_expressao(NoAST* no_pai, GerenciadorEscopo* gerenciado
     }
     
     no_pai->codigo = expressao->codigo;
-    // Adicione esta linha para evitar liberação dupla
     expressao->codigo = NULL;
 }
 
@@ -680,81 +679,6 @@ int* AUXILIAR_obter_tamanhos_vetor(const char* tipo_str, int* num_elementos) {
 // =================================================================
 // Implementações do namespace EXPA (Ações para expressões)
 // =================================================================
-
-void EXPA_avaliar_identificador(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
-    NoAST* lvalue_node = no_pai;
-    NoAST* ident_node = no_pai->filhos[0];
-    NoAST* allocaux_node = no_pai->filhos[1];
-
-    char* type_str = gerenciador_obter_tipo_simbolo(gerenciador, ident_node->token);
-    if (!type_str) { // Adicionar verificação de segurança
-        LANCAR_ERRO_SEMANTICO("Símbolo não encontrado ou sem tipo definido.");
-        return;
-    }
-
-    int num_elements;
-    int* max_dims = AUXILIAR_obter_tamanhos_vetor(type_str, &num_elements);
-
-    lvalue_node->sdt_mat.contador_vetor = allocaux_node->sdt_mat.contador_vetor;
-
-    lista_codigo_adicionar_lista(lvalue_node->codigo, allocaux_node->codigo);
-
-    if (lvalue_node->sdt_mat.contador_vetor > 0) {
-        // --- INÍCIO DA CORREÇÃO ---
-        // 1. Obter o tipo final do elemento acessado (ex: "int")
-        char* final_type = AUXILIAR_obter_tipo(type_str, lvalue_node->sdt_mat.contador_vetor);
-        if (!final_type) {
-            LANCAR_ERRO_SEMANTICO("Falha ao determinar o tipo base do array.");
-            free(type_str);
-            free(max_dims);
-            return;
-        }
-        // --- FIM DA CORREÇÃO ---
-
-        ListaString* array_indexation_vars = allocaux_node->sdt_mat.vetor_array_var;
-        char* somador_temp_var = gerar_variavel_temporaria(resolvedor_global);
-        char buffer[256];
-        
-        snprintf(buffer, sizeof(buffer), "%s = 0", somador_temp_var);
-        adicionar_string(lvalue_node->codigo, buffer);
-
-        int counter = 0;
-        for (int i = 0; i < array_indexation_vars->tamanho; i++) {
-            char* k_var = array_indexation_vars->itens[i];
-            char* current_temp_var = gerar_variavel_temporaria(resolvedor_global);
-
-            snprintf(buffer, sizeof(buffer), "%s = %s", current_temp_var, k_var);
-            adicionar_string(lvalue_node->codigo, buffer);
-
-            for (int j = 0; j < counter; ++j) {
-                if (j < num_elements) {
-                    snprintf(buffer, sizeof(buffer), "%s = %s * %d", current_temp_var, current_temp_var, max_dims[j]);
-                    adicionar_string(lvalue_node->codigo, buffer);
-                }
-            }
-            snprintf(buffer, sizeof(buffer), "%s = %s + %s", somador_temp_var, somador_temp_var, current_temp_var);
-            adicionar_string(lvalue_node->codigo, buffer);
-            
-            free(current_temp_var);
-            counter++;
-        }
-
-        snprintf(buffer, sizeof(buffer), "%s[%s]", ident_node->token->lexema, somador_temp_var);
-
-        // 2. Use o `final_type` ao invés do `type_str` original
-        lvalue_node->sdt_mat.no = criar_no_expressao_simples('n', final_type, buffer);
-        free(final_type); // Libera a memória alocada por AUXILIAR_obter_tipo
-        
-        free(somador_temp_var);
-
-    } else { // Se não for acesso a vetor
-        lvalue_node->sdt_mat.no = criar_no_expressao_simples('n', type_str, ident_node->token->lexema);
-    }
-
-    free(type_str);
-    free(max_dims);
-}
-
 void EXPA_lexema_para_valor(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     // FACTOR -> int_constant | float_constant | string_constant
     // Factor.Node = new Node(value)
@@ -792,17 +716,95 @@ void EXPA_definir_operacao(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 
     numexpr_aux_node->sdt_mat.contador_vetor = numexpression_node->sdt_mat.contador_vetor;
     lista_codigo_adicionar_lista(numexpr_aux_node->codigo, numexpression_node->codigo);
-    numexpr_aux_node->res_var_codigo = numexpression_node->res_var_codigo;
+    copiar_res_var_codigo(&numexpr_aux_node->res_var_codigo, &numexpression_node->res_var_codigo);
 }
 
 void EXPA_ident_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
-    // FACTOR -> LVALUE
+    // Nó pai é FACTOR, filho [0] é LVALUE
     NoAST* factor_node = no_pai;
-    NoAST* lvalue_node = no_pai->filhos[0];
-    factor_node->sdt_mat.no = lvalue_node->sdt_mat.no;
-    lvalue_node->sdt_mat.no = NULL;
-    factor_node->sdt_mat.contador_vetor = lvalue_node->sdt_mat.contador_vetor;
+    NoAST* lvalue_node = factor_node->filhos[0];
+    
+    // Filhos do LVALUE são IDENT e ALLOCAUX
+    NoAST* ident_node = lvalue_node->filhos[0];
+    NoAST* allocaux_node = lvalue_node->filhos[1];
+
+    // ==========================================================
+    // 1. VERIFICAR SE O SÍMBOLO FOI DECLARADO (lógica de DECLARAR_VERIFICAR_acao2)
+    // ==========================================================
+    if (!gerenciador_simbolo_declarado(gerenciador, ident_node->token)) {
+        char msg_error[512];
+        snprintf(msg_error, sizeof(msg_error), "%s usado antes da declaracao na linha %d:%d",
+                 ident_node->token->lexema, ident_node->token->linha, ident_node->token->coluna);
+        LANCAR_ERRO_SEMANTICO(msg_error);
+    }
+    gerenciador_registrar_uso_simbolo(gerenciador, ident_node->token);
+
+
+    // ==========================================================
+    // 2. AVALIAR O TIPO E GERAR CÓDIGO (lógica de EXPA_avaliar_identificador)
+    // ==========================================================
+    char* type_str = gerenciador_obter_tipo_simbolo(gerenciador, ident_node->token);
+    if (!type_str) {
+        LANCAR_ERRO_SEMANTICO("Símbolo não encontrado ou sem tipo definido na expressão.");
+        return;
+    }
+
+    int num_elements;
+    int* max_dims = AUXILIAR_obter_tamanhos_vetor(type_str, &num_elements);
+
+    factor_node->sdt_mat.contador_vetor = allocaux_node->sdt_mat.contador_vetor;
     lista_codigo_adicionar_lista(factor_node->codigo, lvalue_node->codigo);
+
+    if (factor_node->sdt_mat.contador_vetor > 0) {
+        // Lógica para acesso a array
+        char* final_type = AUXILIAR_obter_tipo(type_str, factor_node->sdt_mat.contador_vetor);
+        
+        ListaString* array_indexation_vars = allocaux_node->sdt_mat.vetor_array_var;
+        char* somador_temp_var = gerar_variavel_temporaria(resolvedor_global);
+        char buffer[256];
+        
+        snprintf(buffer, sizeof(buffer), "%s = 0", somador_temp_var);
+        adicionar_string(factor_node->codigo, buffer);
+
+        int counter = 0;
+        for (int i = 0; i < array_indexation_vars->tamanho; i++) {
+            char* k_var = array_indexation_vars->itens[i];
+            char* current_temp_var = gerar_variavel_temporaria(resolvedor_global);
+            snprintf(buffer, sizeof(buffer), "%s = %s", current_temp_var, k_var);
+            adicionar_string(factor_node->codigo, buffer);
+
+            for (int j = 0; j < counter; ++j) {
+                if (j < num_elements) {
+                    snprintf(buffer, sizeof(buffer), "%s = %s * %d", current_temp_var, current_temp_var, max_dims[j]);
+                    adicionar_string(factor_node->codigo, buffer);
+                }
+            }
+            snprintf(buffer, sizeof(buffer), "%s = %s + %s", somador_temp_var, somador_temp_var, current_temp_var);
+            adicionar_string(factor_node->codigo, buffer);
+            
+            free(current_temp_var);
+            counter++;
+        }
+
+        char nome_final_valor[256];
+        snprintf(nome_final_valor, sizeof(nome_final_valor), "%s[%s]", ident_node->token->lexema, somador_temp_var);
+        factor_node->sdt_mat.no = criar_no_expressao_simples('n', final_type, nome_final_valor);
+        
+        if(factor_node->res_var_codigo.var) free(factor_node->res_var_codigo.var);
+        factor_node->res_var_codigo.var = strdup(nome_final_valor);
+
+        free(final_type);
+        free(somador_temp_var);
+
+    } else { 
+        // Lógica para variável simples
+        factor_node->sdt_mat.no = criar_no_expressao_simples('n', type_str, ident_node->token->lexema);
+        if(factor_node->res_var_codigo.var) free(factor_node->res_var_codigo.var);
+        factor_node->res_var_codigo.var = strdup(ident_node->token->lexema);
+    }
+
+    free(type_str);
+    free(max_dims);
 }
 
 void EXPA_valor_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
@@ -812,7 +814,7 @@ void EXPA_valor_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     unaryexpr_node->sdt_mat.contador_vetor = factor_node->sdt_mat.contador_vetor;
     unaryexpr_node->sdt_mat.no = factor_node->sdt_mat.no;
     factor_node->sdt_mat.no = NULL;
-    unaryexpr_node->res_var_codigo = factor_node->res_var_codigo;
+    copiar_res_var_codigo(&unaryexpr_node->res_var_codigo, &factor_node->res_var_codigo);
     lista_codigo_adicionar_lista(unaryexpr_node->codigo, factor_node->codigo);
 }
 
@@ -894,7 +896,7 @@ void EXPA_definir_operacao2(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 
     unaryexpr_aux_node->sdt_mat.contador_vetor = term_node->sdt_mat.contador_vetor;
     lista_codigo_adicionar_lista(unaryexpr_aux_node->codigo, term_node->codigo);
-    unaryexpr_aux_node->res_var_codigo = term_node->res_var_codigo;
+    copiar_res_var_codigo(&unaryexpr_aux_node->res_var_codigo, &term_node->res_var_codigo);
 }
 
 void EXPA_termo(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
