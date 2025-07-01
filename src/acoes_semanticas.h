@@ -32,10 +32,9 @@ void CODIGO_herdar_proximo_for(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void CODIGO_atribuicao(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void CODIGO_definir_valor_expressao(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void CODIGO_obter_codigo_filhos(NoAST* no_pai, GerenciadorEscopo* gerenciador);
-void CODIGO_obter_codigo_filhos_2(NoAST* no_pai, GerenciadorEscopo* gerenciador);
+void CODIGO_montar_lista_de_statements(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void CODIGO_herdar_proximo(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void CODIGO_definir_rotulo_final(NoAST* no_pai, GerenciadorEscopo* gerenciador);
-void CODIGO_definir_rotulo(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void CODIGO_gerar_codigo_final(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void CODIGO_imprimir_codigo(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 

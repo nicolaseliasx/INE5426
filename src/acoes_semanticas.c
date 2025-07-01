@@ -363,12 +363,6 @@ void CODIGO_definir_valor_expressao(NoAST* no_pai, GerenciadorEscopo* gerenciado
     expressao->codigo = NULL;
 }
 
-void CODIGO_definir_rotulo(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
-    // STATELIST -> STATEMENT STATELIST'
-    NoAST* statement = no_pai->filhos[0];
-    statement->proximo = no_ast_gerar_novo_rotulo(no_pai); // Generates a new label for STATEMENT.nxt
-}
-
 void CODIGO_obter_codigo_filhos(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     // Generic action to splice code from all children to the father
     for (size_t i = 0; i < no_pai->quantidade_filhos; i++) {
@@ -376,18 +370,30 @@ void CODIGO_obter_codigo_filhos(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     }
 }
 
-void CODIGO_obter_codigo_filhos_2(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
-    // STATELIST -> STATEMENT STATELIST'
-    NoAST* statement = no_pai->filhos[0];
-    NoAST* statelist_linha = no_pai->filhos[1];
+void CODIGO_montar_lista_de_statements(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
+    // O nó pai (no_pai) é STATELIST ou STATELIST'
+    NoAST* statement_node = no_pai->filhos[0];
+    NoAST* statelist_linha_node = no_pai->filhos[1];
 
-    lista_codigo_adicionar_lista(no_pai->codigo, statement->codigo);
+    // 1. Adiciona o código do primeiro statement (que já foi processado)
+    lista_codigo_adicionar_lista(no_pai->codigo, statement_node->codigo);
 
-    char buffer[256];
-    snprintf(buffer, sizeof(buffer), "%s:", statement->proximo);
-    adicionar_string(no_pai->codigo, buffer);
+    // 2. Verifica se o statement que acabamos de adicionar E o resto da lista 
+    //    (que está prestes a ser adicionada) contêm código.
+    bool stmt_tem_codigo = statement_node->codigo && statement_node->codigo->tamanho > 0;
+    bool resto_tem_codigo = statelist_linha_node->codigo && statelist_linha_node->codigo->tamanho > 0;
 
-    lista_codigo_adicionar_lista(no_pai->codigo, statelist_linha->codigo);
+    // 3. SÓ gere um rótulo se houver uma transição entre dois blocos de código real.
+    if (stmt_tem_codigo && resto_tem_codigo) {
+        char* proximo_rotulo = no_ast_gerar_novo_rotulo(no_pai);
+        char buffer[256];
+        snprintf(buffer, sizeof(buffer), "%s:", proximo_rotulo);
+        adicionar_string(no_pai->codigo, buffer); // Adiciona o rótulo à lista de código
+        free(proximo_rotulo); // Libera a memória do nome do rótulo
+    }
+    
+    // 4. Adiciona o código do resto da lista, que virá depois do rótulo (se ele foi criado).
+    lista_codigo_adicionar_lista(no_pai->codigo, statelist_linha_node->codigo);
 }
 
 void CODIGO_herdar_proximo(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
