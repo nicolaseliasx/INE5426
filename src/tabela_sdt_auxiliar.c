@@ -58,7 +58,7 @@ const EntradaTabelaSDT tabela_sdt_entries[] = {
     {"ALLOCEXPR->NEW",      { {SIMBOLO, .simbolo = "NEW"}, {SIMBOLO, .simbolo = "ALLOCEXPRESSION'"}} , 2},
     {"ALLOCEXPR'->TYPE",    { {SIMBOLO, .simbolo = "VARDECL"}, {SIMBOLO, .simbolo = "OPEN_BRACKET"}, {SIMBOLO, .simbolo = "NUMEXPRESSION"}, {SIMBOLO, .simbolo = "CLOSE_BRACKET"}, {SIMBOLO, .simbolo = "ALLOCAUX"}, {ACAO, .acao = EXPA_imprimir_expressao2}} , 6},
     {"ALLOCAUX->BRACKET",   { {SIMBOLO, .simbolo = "OPEN_BRACKET"}, {SIMBOLO, .simbolo = "NUMEXPRESSION"}, {SIMBOLO, .simbolo = "CLOSE_BRACKET"}, {SIMBOLO, .simbolo = "ALLOCAUX"}, {ACAO, .acao = EXPA_contador_vetor}} , 5},
-    {"ALLOCAUX->EPSILON",   { {SIMBOLO, .simbolo = "ε"}} , 1},
+    {"ALLOCAUX->EPSILON",   { {ACAO, .acao = EXPA_inicializar_contador_vetor}, {SIMBOLO, .simbolo = "ε"}} , 2},
     {"EXPR->NUMEXPR",       { {SIMBOLO, .simbolo = "NUMEXPRESSION"}, {ACAO, .acao = EXPA_imprimir_expressao0_h}, {SIMBOLO, .simbolo = "EXPRESSION'"}, {ACAO, .acao = EXPA_imprimir_expressao0}} , 4},
     {"EXPR'->RELOP",        { {SIMBOLO, .simbolo = "RELOP"}, {SIMBOLO, .simbolo = "NUMEXPRESSION"}, {ACAO, .acao = EXPA_imprimir_expressao1}, {ACAO, .acao = CODIGO_relop_action}} , 4},
     {"EXPR'->EPSILON",      { {SIMBOLO, .simbolo = "ε"}} , 1},
@@ -79,7 +79,7 @@ const EntradaTabelaSDT tabela_sdt_entries[] = {
     {"FACTOR->CONST_NPF",   { {SIMBOLO, .simbolo = "NPF"}, {ACAO, .acao = EXPA_lexema_para_valor}} , 2},
     {"FACTOR->CONST_STRC",  { {SIMBOLO, .simbolo = "STRC"}, {ACAO, .acao = EXPA_lexema_para_valor}} , 2},
     {"FACTOR->CONST_NULL",  { {SIMBOLO, .simbolo = "NULL"}} , 1},
-    {"LVALUE->IDENT",       { {SIMBOLO, .simbolo = "IDENT"}, {ACAO, .acao = DECLARAR_VERIFICAR_acao2}, {ACAO, .acao = CODIGO_obter_variavel_lvalue}, {ACAO, .acao = EXPA_avaliar_identificador}, {SIMBOLO, .simbolo = "ALLOCAUX"}, {ACAO, .acao = EXPA_avaliar_identificador}} , 6},
+    {"LVALUE->IDENT", { {SIMBOLO, .simbolo = "IDENT"}, {SIMBOLO, .simbolo = "ALLOCAUX"}, {ACAO, .acao = DECLARAR_VERIFICAR_acao2}, {ACAO, .acao = CODIGO_obter_variavel_lvalue}, {ACAO, .acao = EXPA_avaliar_identificador}}, 5},
 };
 
 const size_t num_entradas_sdt = sizeof(tabela_sdt_entries) / sizeof(EntradaTabelaSDT);

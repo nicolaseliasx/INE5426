@@ -622,47 +622,23 @@ void BREAK_acao1(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 // =================================================================
 
 char* AUXILIAR_obter_tipo(const char* tipo_str, int contador_vetor) {
-    // This C implementation requires careful memory management.
-    // The returned char* must be freed by the caller.
-    char f = tipo_str[0];
-    char* final_tipo = NULL;
-
-    if (f == 'i') {
-        return strdup("int");
-    } else if (f == 'f') {
-        return strdup("float");
-    } else if (f == 's') {
-        return strdup("string");
-    }
-
-    if (!(f == 'a')) {
-        char msg_error[256];
-        snprintf(msg_error, sizeof(msg_error), "TIPO INVALIDO: %s", tipo_str);
-        criar_erro_semantico(msg_error);
-        return NULL; // Should not reach here if error reporting exits
-    }
-
-    int counter = 0;
-    const char* ptr = tipo_str;
-    while (*ptr != '\0') {
-        if (*ptr == '(') {
-            counter++;
-        } else if (*ptr == 'i') {
-            final_tipo = strdup("int");
-        } else if (*ptr == 'f') {
-            final_tipo = strdup("float");
-        } else if (*ptr == 's') {
-            final_tipo = strdup("string");
+    const char* f = tipo_str;
+    const char* ultimo_tipo_encontrado = NULL;
+    while (*f != '\0') {
+        if (*f == 'i' && strncmp(f, "int", 3) == 0) {
+            ultimo_tipo_encontrado = "int";
+        } else if (*f == 'f' && strncmp(f, "float", 5) == 0) {
+            ultimo_tipo_encontrado = "float";
+        } else if (*f == 's' && strncmp(f, "string", 6) == 0) {
+            ultimo_tipo_encontrado = "string";
         }
-        ptr++;
+        f++;
     }
 
-    if (counter != contador_vetor) {
-        criar_erro_semantico("tentativa de operacoes com arrays com numero incorreto de dimensoes");
-        free(final_tipo); // Free if it was allocated
-        return NULL;
+    if (ultimo_tipo_encontrado) {
+        return strdup(ultimo_tipo_encontrado);
     }
-    return final_tipo; // Caller must free this
+    return strdup(tipo_str);
 }
 
 int* AUXILIAR_obter_tamanhos_vetor(const char* tipo_str, int* num_elementos) {
@@ -705,6 +681,11 @@ void EXPA_avaliar_identificador(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     NoAST* allocaux_node = no_pai->filhos[1];
 
     char* type_str = gerenciador_obter_tipo_simbolo(gerenciador, ident_node->token);
+    if (!type_str) { // Adicionar verificação de segurança
+        LANCAR_ERRO_SEMANTICO("Símbolo não encontrado ou sem tipo definido.");
+        return;
+    }
+
     int num_elements;
     int* max_dims = AUXILIAR_obter_tamanhos_vetor(type_str, &num_elements);
 
@@ -713,6 +694,17 @@ void EXPA_avaliar_identificador(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
     lista_codigo_adicionar_lista(lvalue_node->codigo, allocaux_node->codigo);
 
     if (lvalue_node->sdt_mat.contador_vetor > 0) {
+        // --- INÍCIO DA CORREÇÃO ---
+        // 1. Obter o tipo final do elemento acessado (ex: "int")
+        char* final_type = AUXILIAR_obter_tipo(type_str, lvalue_node->sdt_mat.contador_vetor);
+        if (!final_type) {
+            LANCAR_ERRO_SEMANTICO("Falha ao determinar o tipo base do array.");
+            free(type_str);
+            free(max_dims);
+            return;
+        }
+        // --- FIM DA CORREÇÃO ---
+
         ListaString* array_indexation_vars = allocaux_node->sdt_mat.vetor_array_var;
         char* somador_temp_var = gerar_variavel_temporaria(resolvedor_global);
         char buffer[256];
@@ -730,7 +722,7 @@ void EXPA_avaliar_identificador(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 
             for (int j = 0; j < counter; ++j) {
                 if (j < num_elements) {
-                    snprintf(buffer, sizeof(buffer), "%s = %s * %c", current_temp_var, current_temp_var, max_dims[j] + '0');
+                    snprintf(buffer, sizeof(buffer), "%s = %s * %d", current_temp_var, current_temp_var, max_dims[j]);
                     adicionar_string(lvalue_node->codigo, buffer);
                 }
             }
@@ -742,10 +734,14 @@ void EXPA_avaliar_identificador(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
         }
 
         snprintf(buffer, sizeof(buffer), "%s[%s]", ident_node->token->lexema, somador_temp_var);
-        lvalue_node->sdt_mat.no = criar_no_expressao_simples('n', type_str, buffer);
+
+        // 2. Use o `final_type` ao invés do `type_str` original
+        lvalue_node->sdt_mat.no = criar_no_expressao_simples('n', final_type, buffer);
+        free(final_type); // Libera a memória alocada por AUXILIAR_obter_tipo
         
         free(somador_temp_var);
-    } else {
+
+    } else { // Se não for acesso a vetor
         lvalue_node->sdt_mat.no = criar_no_expressao_simples('n', type_str, ident_node->token->lexema);
     }
 
@@ -779,16 +775,16 @@ void EXPA_lexema_para_valor(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 }
 
 void EXPA_definir_operacao(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
-    // NUMEXPRESSIONAUX -> op NUMEXPRESSION
     NoAST* numexpr_aux_node = no_pai;
     NoAST* operation_node = no_pai->filhos[0];
     NoAST* numexpression_node = no_pai->filhos[1];
 
     numexpr_aux_node->sdt_mat.operacao = operation_node->token->lexema[0];
-    numexpr_aux_node->sdt_mat.no = numexpression_node->sdt_mat.no; // Transfer ownership of Node*
-    numexpr_aux_node->sdt_mat.contador_vetor = numexpression_node->sdt_mat.contador_vetor;
+    numexpr_aux_node->sdt_mat.no = numexpression_node->sdt_mat.no;
+    
+    numexpression_node->sdt_mat.no = NULL;
 
-    // Splice code and result variable
+    numexpr_aux_node->sdt_mat.contador_vetor = numexpression_node->sdt_mat.contador_vetor;
     lista_codigo_adicionar_lista(numexpr_aux_node->codigo, numexpression_node->codigo);
     numexpr_aux_node->res_var_codigo = numexpression_node->res_var_codigo;
 }
@@ -881,13 +877,15 @@ void EXPA_gerar_no(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 }
 
 void EXPA_definir_operacao2(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
-    // UNARYEXPRAUX -> * TERM | / TERM | % TERM
     NoAST* unaryexpr_aux_node = no_pai;
     NoAST* op_node = no_pai->filhos[0];
     NoAST* term_node = no_pai->filhos[1];
 
     unaryexpr_aux_node->sdt_mat.operacao = op_node->token->lexema[0];
-    unaryexpr_aux_node->sdt_mat.no = term_node->sdt_mat.no; // Transfer ownership of Node*
+    unaryexpr_aux_node->sdt_mat.no = term_node->sdt_mat.no;
+
+    term_node->sdt_mat.no = NULL;
+
     unaryexpr_aux_node->sdt_mat.contador_vetor = term_node->sdt_mat.contador_vetor;
     lista_codigo_adicionar_lista(unaryexpr_aux_node->codigo, term_node->codigo);
     unaryexpr_aux_node->res_var_codigo = term_node->res_var_codigo;
@@ -1008,4 +1006,10 @@ void EXPA_contador_vetor(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
 
     lista_codigo_adicionar_lista(allocaux_node->codigo, numexpression_node->codigo);
     lista_codigo_adicionar_lista(allocaux_node->codigo, allocaux1_node->codigo);
+}
+
+void EXPA_inicializar_contador_vetor(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
+    // Ação para a regra ALLOCAUX -> ε
+    // Garante que o contador de dimensões de acesso é inicializado como 0.
+    no_pai->sdt_mat.contador_vetor = 0;
 }

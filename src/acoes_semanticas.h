@@ -88,5 +88,6 @@ void EXPA_valor_segundo_filho_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenc
 void EXPA_gerar_no(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void EXPA_definir_operacao2(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void EXPA_termo(NoAST* no_pai, GerenciadorEscopo* gerenciador);
+void EXPA_inicializar_contador_vetor(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 
 #endif // ACOES_SEMANTICAS_H
