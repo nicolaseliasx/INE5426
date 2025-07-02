@@ -2,7 +2,7 @@
 #include "acoes_semanticas.h"
 #include <stddef.h>
 
-const EntradaTabelaSDT tabela_sdt_entries[] = {
+const EntradaTabelaSDT tabela_sdt_entradas[] = {
     {"ALLOCAUX->BRACKET",   { {SIMBOLO, .simbolo = "OPEN_BRACKET"}, {SIMBOLO, .simbolo = "NUMEXPRESSION"}, {SIMBOLO, .simbolo = "CLOSE_BRACKET"}, {SIMBOLO, .simbolo = "ALLOCAUX"}, {ACAO, .acao = EXPA_contador_vetor}} , 5},
     {"ALLOCAUX->EPSILON",   { {ACAO, .acao = EXPA_inicializar_contador_vetor}, {SIMBOLO, .simbolo = "ε"}} , 2},
     {"ALLOCEXPR'->TYPE",    { {SIMBOLO, .simbolo = "VARDECL"}, {SIMBOLO, .simbolo = "OPEN_BRACKET"}, {SIMBOLO, .simbolo = "NUMEXPRESSION"}, {SIMBOLO, .simbolo = "CLOSE_BRACKET"}, {SIMBOLO, .simbolo = "ALLOCAUX"}, {ACAO, .acao = EXPA_imprimir_expressao2}} , 6},
@@ -82,4 +82,4 @@ const EntradaTabelaSDT tabela_sdt_entries[] = {
     {"VARDECL->STRING",     { {SIMBOLO, .simbolo = "STRING"}, {SIMBOLO, .simbolo = "IDENT"}, {ACAO, .acao = ESCOPO_acao3}, {ACAO, .acao = DEC_acao10}, {SIMBOLO, .simbolo = "INDEX"}, {ACAO, .acao = DEC_acao11}} , 6}
 };
 
-const size_t num_entradas_sdt = sizeof(tabela_sdt_entries) / sizeof(EntradaTabelaSDT);
+const size_t num_entradas_sdt = sizeof(tabela_sdt_entradas) / sizeof(EntradaTabelaSDT);

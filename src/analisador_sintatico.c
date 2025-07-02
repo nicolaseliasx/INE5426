@@ -1,5 +1,6 @@
 #define _DEFAULT_SOURCE
 #include <string.h>
+#include <stdlib.h> 
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -7,28 +8,43 @@
 
 #include "analisador_sintatico.h"
 #include "erros.h"
+#include "debug.h"
 
-const EntradaTabelaSDT* buscar_producao_sdt(
-    const EntradaTabelaAnalise* tabela, 
-    size_t num_entradas,
-    const char* nao_terminal, 
-    const char* terminal) {
-    
-    printf("[DEBUG-BUSCA] Buscando na tabela por T['%s', '%s']\n", nao_terminal, terminal);
-    if (!tabela || !nao_terminal || !terminal) return NULL;
+// Função de comparação para bsearch. Compara primeiro por não-terminal, depois por terminal.
+static int comparar_entradas_tabela(const void* a, const void* b) {
+    const EntradaTabelaAnalise* entradaA = (const EntradaTabelaAnalise*)a;
+    const EntradaTabelaAnalise* entradaB = (const EntradaTabelaAnalise*)b;
 
-    for (size_t i = 0; i < num_entradas; i++) {
-        if (tabela[i].nao_terminal && strcmp(tabela[i].nao_terminal, nao_terminal) == 0) {
-            for (size_t j = 0; j < tabela[i].num_mapeamentos; j++) {
-                if (tabela[i].mapeamentos[j].terminal && strcmp(tabela[i].mapeamentos[j].terminal, terminal) == 0) {
-                    printf("[DEBUG-BUSCA] -> SUCESSO! Produção encontrada.\n");
-                    return buscar_entrada_sdt(tabela[i].mapeamentos[j].chave_sdt);
-                }
-            }
-        }
+    // 1. Compara o não-terminal (chave primária)
+    int cmp_nao_terminal = strcmp(entradaA->nao_terminal, entradaB->nao_terminal);
+    if (cmp_nao_terminal != 0) {
+        return cmp_nao_terminal;
     }
-    
-    printf("[DEBUG-BUSCA] -> FALHA. Nenhuma produção encontrada para T['%s', '%s'].\n", nao_terminal, terminal);
+
+    // 2. Se não-terminais são iguais, compara o terminal (chave secundária)
+    return strcmp(entradaA->terminal, entradaB->terminal);
+}
+
+// Nova função de busca otimizada que encapsula a chamada bsearch.
+const EntradaTabelaSDT* buscar_producao_na_tabela(const char* nao_terminal, const char* terminal) {
+    // Cria uma "chave" de busca com os dados que queremos encontrar.
+    EntradaTabelaAnalise chave_busca = {nao_terminal, terminal, NULL};
+
+    // Executa a busca binária
+    EntradaTabelaAnalise* resultado = (EntradaTabelaAnalise*) bsearch(
+        &chave_busca,
+        tabela_analise,          // Usa a nova tabela plana
+        num_entradas_tabela,     // Usa a contagem da nova tabela
+        sizeof(EntradaTabelaAnalise), // Usa o tamanho da nova struct
+        comparar_entradas_tabela
+    );
+
+    if (resultado) {
+        // Encontrou! Usa a chave_sdt para buscar a produção real na outra tabela.
+        return buscar_entrada_sdt(resultado->chave_sdt);
+    }
+
+    // Se bsearch retornou NULL, a regra não existe.
     return NULL;
 }
 
@@ -69,7 +85,7 @@ void executar_acao(ItemPilha* item_acao, AnalisadorSintatico* analisador) {
     }
     
     if (!item_acao->ancestral) {
-        printf("[DEBUG] AVISO: Ação semântica '%p' sem ancestral, criando nó temporário\n", 
+        DEBUG_PRINT("[DEBUG] AVISO: Ação semântica '%p' sem ancestral, criando nó temporário\n", 
                (void*)item_acao->acao);
         
         NoAST* temp_node = criar_no_ast("TEMP_ACTION", &analisador->contador_rotulos);
@@ -94,7 +110,7 @@ void analisar_token(AnalisadorSintatico* analisador, Token* token) {
         
         ItemPilha* topo = topo_pilha(analisador->pilha);
 
-        printf("[DEBUG] Topo da pilha: Tipo=%d", topo->tipo);
+        DEBUG_PRINT("[DEBUG] Topo da pilha: Tipo=%d", topo->tipo);
         if (topo->tipo == SIMBOLO) {
             printf(", Símbolo='%s'\n", topo->simbolo);
         } else {
@@ -103,33 +119,28 @@ void analisar_token(AnalisadorSintatico* analisador, Token* token) {
 
         // 1. Tratar ação semântica
         if (topo->tipo == ACAO) {
-            printf("[DEBUG] Encontrada AÇÃO SEMÂNTICA. Executando e desempilhando...\n");
+            DEBUG_PRINT("[DEBUG] Encontrada AÇÃO SEMÂNTICA. Executando e desempilhando...\n");
             executar_acao(topo, analisador); // Usando a função auxiliar segura
             liberar_item_pilha(desempilhar(analisador->pilha));
-            printf("[DEBUG] Ação executada. Continuando loop...\n");
+            DEBUG_PRINT("[DEBUG] Ação executada. Continuando loop...\n");
             continue;
         }
         
         // 2. Caso terminal coincida
         if (strcmp(topo->simbolo, token->id) == 0) {
-            printf("[DEBUG] Terminal '%s' coincide com token ID '%s'.\n", topo->simbolo, token->id);
+            DEBUG_PRINT("[DEBUG] Terminal '%s' coincide com token ID '%s'.\n", topo->simbolo, token->id);
             if (strcmp(token->lexema, "$") != 0) {
                 definir_token(topo->no_ast, token);
-                printf("[DEBUG] Token associado ao nó AST '%s'.\n", topo->no_ast->identificador);
+                DEBUG_PRINT("[DEBUG] Token associado ao nó AST '%s'.\n", topo->no_ast->identificador);
             }
             liberar_item_pilha(desempilhar(analisador->pilha));
-            printf("[DEBUG] Terminal desempilhado. Saindo de analisar_token.\n");
+            DEBUG_PRINT("[DEBUG] Terminal desempilhado. Saindo de analisar_token.\n");
             return;
         }
         
         // 3. Buscar produção na tabela
-        printf("[DEBUG] Buscando produção para T['%s', '%s']...\n", topo->simbolo, token->id);
-        const EntradaTabelaSDT* producao = buscar_producao_sdt(
-            analisador->tabela_analise,
-            analisador->num_entradas_tabela,
-            topo->simbolo,
-            token->id
-        );
+        DEBUG_PRINT("[DEBUG] Buscando produção para T['%s', '%s']...\n", topo->simbolo, token->id);
+        const EntradaTabelaSDT* producao = buscar_producao_na_tabela(topo->simbolo, token->id);
         
         if (!producao) {
             char erro_msg[100];
@@ -140,7 +151,7 @@ void analisar_token(AnalisadorSintatico* analisador, Token* token) {
             return;
         }
         
-        printf("[DEBUG] Produção encontrada. Expandindo '%s'.\n", topo->simbolo);
+        DEBUG_PRINT("[DEBUG] Produção encontrada. Expandindo '%s'.\n", topo->simbolo);
 
         NoAST* no_pai_da_regra = topo->no_ast;
         char topo_simbolo_salvo[100];
@@ -150,7 +161,7 @@ void analisar_token(AnalisadorSintatico* analisador, Token* token) {
         if (!no_pai_da_regra) exit(1);
         
         liberar_item_pilha(desempilhar(analisador->pilha));
-        printf("[DEBUG] Item '%s' desempilhado.\n", topo_simbolo_salvo);
+        DEBUG_PRINT("[DEBUG] Item '%s' desempilhado.\n", topo_simbolo_salvo);
         
         ItemPilha** itens_para_empilhar = malloc(producao->tamanho * sizeof(ItemPilha*));
         if (!itens_para_empilhar) {
@@ -171,7 +182,7 @@ void analisar_token(AnalisadorSintatico* analisador, Token* token) {
             if (item_da_regra->tipo == ACAO) {
                 novo_item_para_pilha = criar_item_acao(item_da_regra->acao);
                 definir_ancestralidade(novo_item_para_pilha, NULL, no_pai_da_regra);
-                printf("[DEBUG] Inicializado item pilha para PROGRAM\n");
+                DEBUG_PRINT("[DEBUG] Inicializado item pilha para PROGRAM\n");
             } else { // É um SÍMBOLO
                 novo_item_para_pilha = criar_item_simbolo(item_da_regra->simbolo);
                 NoAST* novo_no_ast = criar_no_ast(item_da_regra->simbolo, &analisador->contador_rotulos);

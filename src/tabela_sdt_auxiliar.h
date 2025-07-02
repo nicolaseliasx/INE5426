@@ -17,9 +17,7 @@ typedef struct {
     int quantidade;
 } EntradaTabelaAuxSDT;
 
-extern EntradaTabelaAuxSDT tabela_sdt_entries[];
+extern EntradaTabelaAuxSDT tabela_sdt_entradas[];
 extern const size_t num_entradas_sdt;
-
-void inicializar_tabela_sdt_entries();
 
 #endif // TABELA_SDT_AUXILIAR_H

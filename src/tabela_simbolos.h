@@ -46,5 +46,7 @@ char* tabela_obter_tipo_simbolo(TabelaSimbolos* tabela, Token* token);
 void imprimir_tabela_simbolos(TabelaSimbolos* tabela, FILE* saida);
 // Libera a memória da tabela
 void liberar_tabela_simbolos(TabelaSimbolos* tabela);
+// Redimensiona a tabela para aumentar a capacidade
+void tabela_redimensionar(TabelaSimbolos* tabela);
 
 #endif // TABELA_SIMBOLOS_H

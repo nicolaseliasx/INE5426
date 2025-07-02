@@ -4,10 +4,7 @@
 #include <string.h>
 #include <stdio.h>
 
-// implementar redimensionamento pra mais performance ou deixar isso fixo?
-
-// Capacidade inicial da tabela hash. Um número primo é uma boa escolha para
-// ajudar a distribuir as chaves de maneira mais uniforme.
+// Capacidade inicial da tabela hash.
 #define HASH_TABLE_CAPACIDADE_INICIAL 53
 
 // FUNÇÃO DE HASH
@@ -36,6 +33,44 @@ static ItemTabela* criar_item_tabela(const char* chave, Token* token) {
 
     item->entrada = entrada;
     return item;
+}
+
+void tabela_redimensionar(TabelaSimbolos* tabela) {
+    // 1. Calcula a nova capacidade (dobro da antiga é um bom começo)
+    int capacidade_antiga = tabela->capacidade;
+    int nova_capacidade = capacidade_antiga * 2;
+
+    // Salva um ponteiro para a lista de buckets antiga
+    ItemTabela** buckets_antigos = tabela->buckets;
+
+    // 2. Cria a nova lista de buckets, maior e zerada
+    tabela->capacidade = nova_capacidade;
+    tabela->tamanho = 0; // Será re-incrementado
+    tabela->buckets = (ItemTabela**)calloc(nova_capacidade, sizeof(ItemTabela*));
+
+    // 3. Re-hash: Percorre a tabela antiga e insere cada item na nova
+    for (int i = 0; i < capacidade_antiga; i++) {
+        ItemTabela* item_atual = buckets_antigos[i];
+        while (item_atual != NULL) {
+            // Guarda o próximo item antes de modificar os ponteiros
+            ItemTabela* proximo_item = item_atual->proximo;
+
+            // Recalcula o índice para a nova capacidade
+            unsigned long hash = hash_djb2(item_atual->chave);
+            unsigned long novo_index = hash % nova_capacidade;
+
+            // Insere o item na frente da lista do novo bucket
+            item_atual->proximo = tabela->buckets[novo_index];
+            tabela->buckets[novo_index] = item_atual;
+            tabela->tamanho++;
+
+            // Passa para o próximo item na lista ligada antiga
+            item_atual = proximo_item;
+        }
+    }
+
+    // 4. Libera a memória da lista de buckets antiga (NÃO dos itens, pois eles foram movidos)
+    free(buckets_antigos);
 }
 
 TabelaSimbolos* criar_tabela_simbolos() {
@@ -92,7 +127,12 @@ void tabela_simbolos_adicionar(TabelaSimbolos* tabela, Token* token) {
         // Otimização: dobra a capacidade do array de linhas se estiver cheio
         if (entrada->num_linhas >= entrada->capacidade_linhas) {
             entrada->capacidade_linhas *= 2;
-            entrada->linhas = (int*)realloc(entrada->linhas, entrada->capacidade_linhas * sizeof(int));
+            int* novas_linhas = realloc(entrada->linhas, entrada->capacidade_linhas * sizeof(int));
+            if (!novas_linhas) { // Verificação de segurança para realloc
+                fprintf(stderr, "Falha ao realocar memória para as linhas do símbolo.\n");
+                return;
+            }
+            entrada->linhas = novas_linhas;
         }
         entrada->linhas[entrada->num_linhas] = token->linha;
         entrada->num_linhas++;
@@ -105,6 +145,11 @@ void tabela_simbolos_adicionar(TabelaSimbolos* tabela, Token* token) {
         novo_item->proximo = tabela->buckets[index]; // O antigo "primeiro" se torna o segundo
         tabela->buckets[index] = novo_item;       // O novo item se torna o primeiro
         tabela->tamanho++;
+
+        // Verifica se o fator de carga (tamanho/capacidade) ultrapassou o limite de 75%.
+        if ((float)tabela->tamanho / (float)tabela->capacidade > 0.75f) {
+            tabela_redimensionar(tabela);
+        }
     }
 }
 

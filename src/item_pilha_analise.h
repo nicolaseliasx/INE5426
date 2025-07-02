@@ -1,4 +1,3 @@
-// Arquivo: item_pilha_analise.h (VERSÃO "OURO" - USE ESTA E NENHUMA OUTRA)
 #ifndef ITEM_PILHA_ANALISE_H
 #define ITEM_PILHA_ANALISE_H
 

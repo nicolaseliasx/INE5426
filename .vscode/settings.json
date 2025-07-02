@@ -26,6 +26,7 @@
     "limits": "c",
     "new": "c",
     "utility": "c",
-    "list": "c"
+    "list": "c",
+    "debug.h": "c"
   }
 }
