@@ -1,175 +1,249 @@
-// Arquivo: tabela_analise.c (VERSÃO REATORADA E EFICIENTE)
-
 #include "tabela_analise.h"
 
 //
 // TABELA DE ANÁLISE PREDITIVA (LL) APONTANDO PARA AS REGRAS UNIFICADAS
 //
 const EntradaTabelaAnalise tabela_analise[] = {
-{"PROGRAM", (MapeamentoTerminal[]){ 
-    {"DEF", "PROG->FUNCLIST"}, 
-    {"ONECHAR", "PROG->STATEMENT"}, {"IDENT", "PROG->STATEMENT"}, {"INT", "PROG->STATEMENT"}, 
-    {"FLOAT", "PROG->STATEMENT"}, {"STRING", "PROG->STATEMENT"}, {"SEMICOLON", "PROG->STATEMENT"}, 
-    {"BREAK", "PROG->STATEMENT"}, {"PRINT", "PROG->STATEMENT"}, {"READ", "PROG->STATEMENT"}, 
-    {"RETURN", "PROG->STATEMENT"}, {"IF", "PROG->STATEMENT"}, {"FOR", "PROG->STATEMENT"}, 
-    {"$", "PROG->EPSILON"} 
-}, 14 },
-{"PROGRAM'", (MapeamentoTerminal[]){ 
-    {"DEF", "PROG'->FUNCLIST"}, 
-    {"ONECHAR", "PROG'->STATEMENT"}, {"IDENT", "PROG'->STATEMENT"}, {"INT", "PROG'->STATEMENT"}, 
-    {"FLOAT", "PROG'->STATEMENT"}, {"STRING", "PROG'->STATEMENT"}, {"SEMICOLON", "PROG'->STATEMENT"}, 
-    {"BREAK", "PROG'->STATEMENT"}, {"PRINT", "PROG'->STATEMENT"}, {"READ", "PROG'->STATEMENT"}, 
-    {"RETURN", "PROG'->STATEMENT"}, {"IF", "PROG'->STATEMENT"}, {"FOR", "PROG'->STATEMENT"}, 
-    {"$", "PROG'->EPSILON"} 
-}, 14 },
-{"FUNCLIST", (MapeamentoTerminal[]){ {"DEF", "FUNCLIST->DEF"} }, 1 },
-{"FUNCLIST'", (MapeamentoTerminal[]){ 
-    {"DEF", "FUNCLIST'->DEF"}, 
-    {"ONECHAR", "FUNCLIST'->EPSILON"}, {"IDENT", "FUNCLIST'->EPSILON"}, {"INT", "FUNCLIST'->EPSILON"}, 
-    {"FLOAT", "FUNCLIST'->EPSILON"}, {"STRING", "FUNCLIST'->EPSILON"}, {"SEMICOLON", "FUNCLIST'->EPSILON"}, 
-    {"BREAK", "FUNCLIST'->EPSILON"}, {"PRINT", "FUNCLIST'->EPSILON"}, {"READ", "FUNCLIST'->EPSILON"}, 
-    {"RETURN", "FUNCLIST'->EPSILON"}, {"IF", "FUNCLIST'->EPSILON"}, {"FOR", "FUNCLIST'->EPSILON"}, 
-    {"$", "FUNCLIST'->EPSILON"} 
-}, 14 },
-{"FUNCDEF", (MapeamentoTerminal[]){ {"DEF", "FUNCDEF->DEF"} }, 1 },
-{"PARAMLIST", (MapeamentoTerminal[]){ 
-    {"CLOSE_PARENTHESIS", "PARAMLIST->EPSILON"}, 
-    {"INT", "PARAMLIST->TYPE"}, // Chave unificada
-    {"FLOAT", "PARAMLIST->TYPE"}, // Chave unificada
-    {"STRING", "PARAMLIST->TYPE"} // Chave unificada
-}, 4 },
-{"PARAMLIST'", (MapeamentoTerminal[]){ 
-    {"CLOSE_PARENTHESIS", "PARAMLIST'->EPSILON"}, 
-    {"COMMA", "PARAMLIST'->COMMA"} 
-}, 2 },
-{"STATEMENT", (MapeamentoTerminal[]){ 
-    {"IDENT", "STMT->ATRIBSTAT"}, {"ONECHAR", "STMT->BLOCK"}, 
-    {"INT", "STMT->VARDECL"}, // Chave unificada
-    {"FLOAT", "STMT->VARDECL"}, // Chave unificada
-    {"STRING", "STMT->VARDECL"}, // Chave unificada
-    {"SEMICOLON", "STMT->EMPTY"}, {"BREAK", "STMT->BREAK"}, {"PRINT", "STMT->PRINT"}, 
-    {"READ", "STMT->READ"}, {"RETURN", "STMT->RETURN"}, {"IF", "STMT->IF"}, {"FOR", "STMT->FOR"} 
-}, 12 },
-{"VARDECL", (MapeamentoTerminal[]){ 
-    {"INT", "VARDECL->INT"}, 
-    {"FLOAT", "VARDECL->FLOAT"}, 
-    {"STRING", "VARDECL->STRING"} 
-}, 3 },
-{"INDEX", (MapeamentoTerminal[]){ 
-    {"SEMICOLON", "INDEX->EPSILON"}, 
-    {"OPEN_BRACKET", "INDEX->BRACKET"} 
-}, 2 },
-{"ATRIBSTAT", (MapeamentoTerminal[]){ {"IDENT", "ATRIBSTAT->IDENT"} }, 1 },
-{"ATRIBSTAT'", (MapeamentoTerminal[]){ 
-    {"IDENT", "ATRIB'->EXPRESSION"}, {"OPEN_PARENTHESIS", "ATRIB'->EXPRESSION"}, 
-    {"NI", "ATRIB'->EXPRESSION"}, {"PLUS", "ATRIB'->EXPRESSION"}, {"MINUS", "ATRIB'->EXPRESSION"}, 
-    {"NPF", "ATRIB'->EXPRESSION"}, {"STRC", "ATRIB'->EXPRESSION"}, {"NULL", "ATRIB'->EXPRESSION"}, 
-    {"CALL", "ATRIB'->FUNCCALL"}, {"NEW", "ATRIB'->ALLOCEXPR"} 
-}, 10 },
-{"FUNCCALL", (MapeamentoTerminal[]){ {"CALL", "FUNCCALL->CALL"} }, 1 },
-{"PARAMLISTCALL", (MapeamentoTerminal[]){ 
-    {"IDENT", "PARAMLISTCALL->IDENT"}, 
-    {"CLOSE_PARENTHESIS", "PARAMLISTCALL->EPSILON"} 
-}, 2 },
-{"PARAMLISTCALL'", (MapeamentoTerminal[]){ 
-    {"CLOSE_PARENTHESIS", "PARAMLISTCALL'->EPSILON"}, 
-    {"COMMA", "PARAMLISTCALL'->COMMA"} 
-}, 2 },
-{"PRINTSTAT", (MapeamentoTerminal[]){ {"PRINT", "PRINTSTAT->PRINT"} }, 1 },
-{"READSTAT", (MapeamentoTerminal[]){ {"READ", "READSTAT->READ"} }, 1 },
-{"RETURNSTAT", (MapeamentoTerminal[]){ {"RETURN", "RETURNSTAT->RETURN"} }, 1 },
-{"RETURNSTAT'", (MapeamentoTerminal[]){ 
-    {"IDENT", "RETURN'->LVALUE"}, 
-    {"SEMICOLON", "RETURN'->EPSILON"} 
-}, 2 },
-{"IFSTAT", (MapeamentoTerminal[]){ {"IF", "IFSTAT->IF"} }, 1 },
-{"IFSTAT'", (MapeamentoTerminal[]){ 
-    {"ELSE", "IFSTAT'->ELSE"}, 
-    {"ONECHAR", "IFSTAT'->EPSILON"}, {"IDENT", "IFSTAT'->EPSILON"}, {"CLOSE_BRACE", "IFSTAT'->EPSILON"}, 
-    {"INT", "IFSTAT'->EPSILON"}, {"FLOAT", "IFSTAT'->EPSILON"}, {"STRING", "IFSTAT'->EPSILON"}, 
-    {"SEMICOLON", "IFSTAT'->EPSILON"}, {"BREAK", "IFSTAT'->EPSILON"}, {"PRINT", "IFSTAT'->EPSILON"}, 
-    {"READ", "IFSTAT'->EPSILON"}, {"RETURN", "IFSTAT'->EPSILON"}, {"IF", "IFSTAT'->EPSILON"}, 
-    {"FOR", "IFSTAT'->EPSILON"}, {"$", "IFSTAT'->EPSILON"} 
-}, 15 },
-{"FORSTAT", (MapeamentoTerminal[]){ {"FOR", "FORSTAT->FOR"} }, 1 },
-{"STATELIST", (MapeamentoTerminal[]){ 
-    {"ONECHAR", "STATELIST->STMT"}, {"IDENT", "STATELIST->STMT"}, {"INT", "STATELIST->STMT"},
-    {"FLOAT", "STATELIST->STMT"}, {"STRING", "STATELIST->STMT"}, {"SEMICOLON", "STATELIST->STMT"},
-    {"BREAK", "STATELIST->STMT"}, {"PRINT", "STATELIST->STMT"}, {"READ", "STATELIST->STMT"},
-    {"RETURN", "STATELIST->STMT"}, {"IF", "STATELIST->STMT"}, {"FOR", "STATELIST->STMT"},
-    {"$", "STATELIST->EPSILON"}
-}, 13 },
-{"STATELIST'", (MapeamentoTerminal[]){ 
-    {"CLOSE_BRACE", "STATELIST'->EPSILON"}, 
-    {"ONECHAR", "STATELIST'->STMT"}, {"IDENT", "STATELIST'->STMT"}, {"INT", "STATELIST'->STMT"}, 
-    {"FLOAT", "STATELIST'->STMT"}, {"STRING", "STATELIST'->STMT"}, {"SEMICOLON", "STATELIST'->STMT"}, 
-    {"BREAK", "STATELIST'->STMT"}, {"PRINT", "STATELIST'->STMT"}, {"READ", "STATELIST'->STMT"}, 
-    {"RETURN", "STATELIST'->STMT"}, {"IF", "STATELIST'->STMT"}, {"FOR", "STATELIST'->STMT"},
-    {"$", "STATELIST'->EPSILON"}
-}, 14 },
-{"ALLOCEXPRESSION", (MapeamentoTerminal[]){ {"NEW", "ALLOCEXPR->NEW"} }, 1 },
-{"ALLOCEXPRESSION'", (MapeamentoTerminal[]){ 
-    {"INT", "ALLOCEXPR'->TYPE"},
+{"ALLOCAUX", (MapeamentoTerminal[]){
+    {"ASSIGN", "ALLOCAUX->EPSILON"},
+    {"CLOSE_BRACKET", "ALLOCAUX->EPSILON"},
+    {"CLOSE_PARENTHESIS", "ALLOCAUX->EPSILON"},
+    {"DIVISION", "ALLOCAUX->EPSILON"},
+    {"MINUS", "ALLOCAUX->EPSILON"},
+    {"MODULUS", "ALLOCAUX->EPSILON"},
+    {"MULTIPLICATION", "ALLOCAUX->EPSILON"},
+    {"OPEN_BRACKET", "ALLOCAUX->BRACKET"},
+    {"PLUS", "ALLOCAUX->EPSILON"},
+    {"RELOP", "ALLOCAUX->EPSILON"},
+    {"SEMICOLON", "ALLOCAUX->EPSILON"}
+}, 11},
+{"ALLOCEXPRESSION", (MapeamentoTerminal[]){ {"NEW", "ALLOCEXPR->NEW"} }, 1},
+{"ALLOCEXPRESSION'", (MapeamentoTerminal[]){
     {"FLOAT", "ALLOCEXPR'->TYPE"},
+    {"INT", "ALLOCEXPR'->TYPE"},
     {"STRING", "ALLOCEXPR'->TYPE"}
-}, 3 },
-{"ALLOCAUX", (MapeamentoTerminal[]){ 
-    {"OPEN_BRACKET", "ALLOCAUX->BRACKET"}, 
-    {"CLOSE_PARENTHESIS", "ALLOCAUX->EPSILON"}, {"SEMICOLON", "ALLOCAUX->EPSILON"}, 
-    {"CLOSE_BRACKET", "ALLOCAUX->EPSILON"}, {"ASSIGN", "ALLOCAUX->EPSILON"}, {"RELOP", "ALLOCAUX->EPSILON"}, 
-    {"PLUS", "ALLOCAUX->EPSILON"}, {"MINUS", "ALLOCAUX->EPSILON"}, {"MULTIPLICATION", "ALLOCAUX->EPSILON"}, 
-    {"DIVISION", "ALLOCAUX->EPSILON"}, {"MODULUS", "ALLOCAUX->EPSILON"} 
-}, 11 },
-{"EXPRESSION", (MapeamentoTerminal[]){ 
-    {"IDENT", "EXPR->NUMEXPR"}, {"OPEN_PARENTHESIS", "EXPR->NUMEXPR"}, {"NI", "EXPR->NUMEXPR"}, 
-    {"PLUS", "EXPR->NUMEXPR"}, {"MINUS", "EXPR->NUMEXPR"}, {"NPF", "EXPR->NUMEXPR"}, 
-    {"STRC", "EXPR->NUMEXPR"}, {"NULL", "EXPR->NUMEXPR"} 
-}, 8 },
-{"EXPRESSION'", (MapeamentoTerminal[]){ 
-    {"CLOSE_PARENTHESIS", "EXPR'->EPSILON"}, 
-    {"SEMICOLON", "EXPR'->EPSILON"}, 
-    {"RELOP", "EXPR'->RELOP"} 
-}, 3 },
-{"NUMEXPRESSION", (MapeamentoTerminal[]){ 
-    {"IDENT", "NUMEXPR->TERM"}, {"OPEN_PARENTHESIS", "NUMEXPR->TERM"}, {"NI", "NUMEXPR->TERM"}, 
-    {"PLUS", "NUMEXPR->TERM"}, {"MINUS", "NUMEXPR->TERM"}, {"NPF", "NUMEXPR->TERM"}, 
-    {"STRC", "NUMEXPR->TERM"}, {"NULL", "NUMEXPR->TERM"} 
-}, 8 },
-{"NUMEXPRESSIONAUX", (MapeamentoTerminal[]){ 
-    {"PLUS", "NUMEXPR_AUX->PLUS"}, // Aponta para a regra específica
-    {"MINUS", "NUMEXPR_AUX->MINUS"}, // Aponta para a regra específica
-    {"CLOSE_PARENTHESIS", "NUMEXPR_AUX->EPSILON"}, {"SEMICOLON", "NUMEXPR_AUX->EPSILON"}, 
-    {"CLOSE_BRACKET", "NUMEXPR_AUX->EPSILON"}, {"RELOP", "NUMEXPR_AUX->EPSILON"} 
-}, 6 },
-{"TERM", (MapeamentoTerminal[]){ 
-    {"IDENT", "TERM->UNARY"}, {"OPEN_PARENTHESIS", "TERM->UNARY"}, {"NI", "TERM->UNARY"}, 
-    {"PLUS", "TERM->UNARY"}, {"MINUS", "TERM->UNARY"}, {"NPF", "TERM->UNARY"}, 
-    {"STRC", "TERM->UNARY"}, {"NULL", "TERM->UNARY"} 
-}, 8 },
-{"UNARYEXPRAUX", (MapeamentoTerminal[]){ 
-    {"MULTIPLICATION", "UNARY_AUX->MULT"}, // Aponta para a regra específica
-    {"DIVISION", "UNARY_AUX->DIV"}, // Aponta para a regra específica
-    {"MODULUS", "UNARY_AUX->MOD"}, // Aponta para a regra específica
-    {"CLOSE_PARENTHESIS", "UNARY_AUX->EPSILON"}, {"SEMICOLON", "UNARY_AUX->EPSILON"}, 
-    {"CLOSE_BRACKET", "UNARY_AUX->EPSILON"}, {"RELOP", "UNARY_AUX->EPSILON"}, 
-    {"PLUS", "UNARY_AUX->EPSILON"}, {"MINUS", "UNARY_AUX->EPSILON"} 
-}, 9 },
-{"UNARYEXPR", (MapeamentoTerminal[]){ 
-    {"PLUS", "UNARY->PLUS_MINUS"}, {"MINUS", "UNARY->PLUS_MINUS"}, 
-    {"IDENT", "UNARY->FACTOR"}, {"OPEN_PARENTHESIS", "UNARY->FACTOR"}, {"NI", "UNARY->FACTOR"}, 
-    {"NPF", "UNARY->FACTOR"}, {"STRC", "UNARY->FACTOR"}, {"NULL", "UNARY->FACTOR"} 
-}, 8 },
-{"FACTOR", (MapeamentoTerminal[]){ 
-    {"IDENT", "FACTOR->LVALUE"}, {"OPEN_PARENTHESIS", "FACTOR->PARENTHESIS"}, 
-    {"NI", "FACTOR->CONST_NI"}, // <-- Aponta para a regra específica de NI
-    {"NPF", "FACTOR->CONST_NPF"}, // <-- Aponta para a regra específica de NPF
-    {"STRC", "FACTOR->CONST_STRC"}, // <-- Aponta para a regra específica de STRC
-    {"NULL", "FACTOR->CONST_NULL"} 
-}, 6 },
-{"LVALUE", (MapeamentoTerminal[]){ {"IDENT", "LVALUE->IDENT"} }, 1 },
-{"CLOSE_BRACE", (MapeamentoTerminal[]){
-    {"$", "CLOSE_BRACE->EPSILON"}  // Permite fechar bloco no EOF
-}, 1}
+}, 3},
+{"ATRIBSTAT", (MapeamentoTerminal[]){ {"IDENT", "ATRIBSTAT->IDENT"} }, 1},
+{"ATRIBSTAT'", (MapeamentoTerminal[]){
+    {"CALL", "ATRIB'->FUNCCALL"},
+    {"IDENT", "ATRIB'->EXPRESSION"},
+    {"MINUS", "ATRIB'->EXPRESSION"},
+    {"NEW", "ATRIB'->ALLOCEXPR"},
+    {"NI", "ATRIB'->EXPRESSION"},
+    {"NPF", "ATRIB'->EXPRESSION"},
+    {"NULL", "ATRIB'->EXPRESSION"},
+    {"OPEN_PARENTHESIS", "ATRIB'->EXPRESSION"},
+    {"PLUS", "ATRIB'->EXPRESSION"},
+    {"STRC", "ATRIB'->EXPRESSION"}
+}, 10},
+{"CLOSE_BRACE", (MapeamentoTerminal[]){ {"$", "CLOSE_BRACE->EPSILON"} }, 1},
+{"EXPRESSION", (MapeamentoTerminal[]){
+    {"IDENT", "EXPR->NUMEXPR"},
+    {"MINUS", "EXPR->NUMEXPR"},
+    {"NI", "EXPR->NUMEXPR"},
+    {"NPF", "EXPR->NUMEXPR"},
+    {"NULL", "EXPR->NUMEXPR"},
+    {"OPEN_PARENTHESIS", "EXPR->NUMEXPR"},
+    {"PLUS", "EXPR->NUMEXPR"},
+    {"STRC", "EXPR->NUMEXPR"}
+}, 8},
+{"EXPRESSION'", (MapeamentoTerminal[]){
+    {"CLOSE_PARENTHESIS", "EXPR'->EPSILON"},
+    {"RELOP", "EXPR'->RELOP"},
+    {"SEMICOLON", "EXPR'->EPSILON"}
+}, 3},
+{"FACTOR", (MapeamentoTerminal[]){
+    {"IDENT", "FACTOR->LVALUE"},
+    {"NI", "FACTOR->CONST_NI"},
+    {"NPF", "FACTOR->CONST_NPF"},
+    {"NULL", "FACTOR->CONST_NULL"},
+    {"OPEN_PARENTHESIS", "FACTOR->PARENTHESIS"},
+    {"STRC", "FACTOR->CONST_STRC"}
+}, 6},
+{"FORSTAT", (MapeamentoTerminal[]){ {"FOR", "FORSTAT->FOR"} }, 1},
+{"FUNCCALL", (MapeamentoTerminal[]){ {"CALL", "FUNCCALL->CALL"} }, 1},
+{"FUNCDEF", (MapeamentoTerminal[]){ {"DEF", "FUNCDEF->DEF"} }, 1},
+{"FUNCLIST", (MapeamentoTerminal[]){ {"DEF", "FUNCLIST->DEF"} }, 1},
+{"FUNCLIST'", (MapeamentoTerminal[]){
+    {"$", "FUNCLIST'->EPSILON"},
+    {"BREAK", "FUNCLIST'->EPSILON"},
+    {"DEF", "FUNCLIST'->DEF"},
+    {"FLOAT", "FUNCLIST'->EPSILON"},
+    {"FOR", "FUNCLIST'->EPSILON"},
+    {"IDENT", "FUNCLIST'->EPSILON"},
+    {"IF", "FUNCLIST'->EPSILON"},
+    {"INT", "FUNCLIST'->EPSILON"},
+    {"ONECHAR", "FUNCLIST'->EPSILON"},
+    {"PRINT", "FUNCLIST'->EPSILON"},
+    {"READ", "FUNCLIST'->EPSILON"},
+    {"RETURN", "FUNCLIST'->EPSILON"},
+    {"SEMICOLON", "FUNCLIST'->EPSILON"},
+    {"STRING", "FUNCLIST'->EPSILON"}
+}, 14},
+{"IFSTAT", (MapeamentoTerminal[]){ {"IF", "IFSTAT->IF"} }, 1},
+{"IFSTAT'", (MapeamentoTerminal[]){
+    {"$", "IFSTAT'->EPSILON"},
+    {"BREAK", "IFSTAT'->EPSILON"},
+    {"CLOSE_BRACE", "IFSTAT'->EPSILON"},
+    {"ELSE", "IFSTAT'->ELSE"},
+    {"FLOAT", "IFSTAT'->EPSILON"},
+    {"FOR", "IFSTAT'->EPSILON"},
+    {"IDENT", "IFSTAT'->EPSILON"},
+    {"IF", "IFSTAT'->EPSILON"},
+    {"INT", "IFSTAT'->EPSILON"},
+    {"ONECHAR", "IFSTAT'->EPSILON"},
+    {"PRINT", "IFSTAT'->EPSILON"},
+    {"READ", "IFSTAT'->EPSILON"},
+    {"RETURN", "IFSTAT'->EPSILON"},
+    {"SEMICOLON", "IFSTAT'->EPSILON"},
+    {"STRING", "IFSTAT'->EPSILON"}
+}, 15},
+{"INDEX", (MapeamentoTerminal[]){ {"OPEN_BRACKET", "INDEX->BRACKET"}, {"SEMICOLON", "INDEX->EPSILON"} }, 2},
+{"LVALUE", (MapeamentoTerminal[]){ {"IDENT", "LVALUE->IDENT"} }, 1},
+{"NUMEXPRESSION", (MapeamentoTerminal[]){
+    {"IDENT", "NUMEXPR->TERM"},
+    {"MINUS", "NUMEXPR->TERM"},
+    {"NI", "NUMEXPR->TERM"},
+    {"NPF", "NUMEXPR->TERM"},
+    {"NULL", "NUMEXPR->TERM"},
+    {"OPEN_PARENTHESIS", "NUMEXPR->TERM"},
+    {"PLUS", "NUMEXPR->TERM"},
+    {"STRC", "NUMEXPR->TERM"}
+}, 8},
+{"NUMEXPRESSIONAUX", (MapeamentoTerminal[]){
+    {"CLOSE_BRACKET", "NUMEXPR_AUX->EPSILON"},
+    {"CLOSE_PARENTHESIS", "NUMEXPR_AUX->EPSILON"},
+    {"MINUS", "NUMEXPR_AUX->MINUS"},
+    {"PLUS", "NUMEXPR_AUX->PLUS"},
+    {"RELOP", "NUMEXPR_AUX->EPSILON"},
+    {"SEMICOLON", "NUMEXPR_AUX->EPSILON"}
+}, 6},
+{"PARAMLIST", (MapeamentoTerminal[]){
+    {"CLOSE_PARENTHESIS", "PARAMLIST->EPSILON"},
+    {"FLOAT", "PARAMLIST->TYPE"},
+    {"INT", "PARAMLIST->TYPE"},
+    {"STRING", "PARAMLIST->TYPE"}
+}, 4},
+{"PARAMLIST'", (MapeamentoTerminal[]){ {"CLOSE_PARENTHESIS", "PARAMLIST'->EPSILON"}, {"COMMA", "PARAMLIST'->COMMA"} }, 2},
+{"PARAMLISTCALL", (MapeamentoTerminal[]){ {"CLOSE_PARENTHESIS", "PARAMLISTCALL->EPSILON"}, {"IDENT", "PARAMLISTCALL->IDENT"} }, 2},
+{"PARAMLISTCALL'", (MapeamentoTerminal[]){ {"CLOSE_PARENTHESIS", "PARAMLISTCALL'->EPSILON"}, {"COMMA", "PARAMLISTCALL'->COMMA"} }, 2},
+{"PRINTSTAT", (MapeamentoTerminal[]){ {"PRINT", "PRINTSTAT->PRINT"} }, 1},
+{"PROGRAM", (MapeamentoTerminal[]){
+    {"$", "PROG->EPSILON"},
+    {"BREAK", "PROG->STATEMENT"},
+    {"DEF", "PROG->FUNCLIST"},
+    {"FLOAT", "PROG->STATEMENT"},
+    {"FOR", "PROG->STATEMENT"},
+    {"IDENT", "PROG->STATEMENT"},
+    {"IF", "PROG->STATEMENT"},
+    {"INT", "PROG->STATEMENT"},
+    {"ONECHAR", "PROG->STATEMENT"},
+    {"PRINT", "PROG->STATEMENT"},
+    {"READ", "PROG->STATEMENT"},
+    {"RETURN", "PROG->STATEMENT"},
+    {"SEMICOLON", "PROG->STATEMENT"},
+    {"STRING", "PROG->STATEMENT"}
+}, 14},
+{"PROGRAM'", (MapeamentoTerminal[]){
+    {"$", "PROG'->EPSILON"},
+    {"BREAK", "PROG'->STATEMENT"},
+    {"DEF", "PROG'->FUNCLIST"},
+    {"FLOAT", "PROG'->STATEMENT"},
+    {"FOR", "PROG'->STATEMENT"},
+    {"IDENT", "PROG'->STATEMENT"},
+    {"IF", "PROG'->STATEMENT"},
+    {"INT", "PROG'->STATEMENT"},
+    {"ONECHAR", "PROG'->STATEMENT"},
+    {"PRINT", "PROG'->STATEMENT"},
+    {"READ", "PROG'->STATEMENT"},
+    {"RETURN", "PROG'->STATEMENT"},
+    {"SEMICOLON", "PROG'->STATEMENT"},
+    {"STRING", "PROG'->STATEMENT"}
+}, 14},
+{"READSTAT", (MapeamentoTerminal[]){ {"READ", "READSTAT->READ"} }, 1},
+{"RETURNSTAT", (MapeamentoTerminal[]){ {"RETURN", "RETURNSTAT->RETURN"} }, 1},
+{"RETURNSTAT'", (MapeamentoTerminal[]){ {"IDENT", "RETURN'->LVALUE"}, {"SEMICOLON", "RETURN'->EPSILON"} }, 2},
+{"STATELIST", (MapeamentoTerminal[]){
+    {"$", "STATELIST->EPSILON"},
+    {"BREAK", "STATELIST->STMT"},
+    {"FLOAT", "STATELIST->STMT"},
+    {"FOR", "STATELIST->STMT"},
+    {"IDENT", "STATELIST->STMT"},
+    {"IF", "STATELIST->STMT"},
+    {"INT", "STATELIST->STMT"},
+    {"ONECHAR", "STATELIST->STMT"},
+    {"PRINT", "STATELIST->STMT"},
+    {"READ", "STATELIST->STMT"},
+    {"RETURN", "STATELIST->STMT"},
+    {"SEMICOLON", "STATELIST->STMT"},
+    {"STRING", "STATELIST->STMT"}
+}, 13},
+{"STATELIST'", (MapeamentoTerminal[]){
+    {"$", "STATELIST'->EPSILON"},
+    {"BREAK", "STATELIST'->STMT"},
+    {"CLOSE_BRACE", "STATELIST'->EPSILON"},
+    {"FLOAT", "STATELIST'->STMT"},
+    {"FOR", "STATELIST'->STMT"},
+    {"IDENT", "STATELIST'->STMT"},
+    {"IF", "STATELIST'->STMT"},
+    {"INT", "STATELIST'->STMT"},
+    {"ONECHAR", "STATELIST'->STMT"},
+    {"PRINT", "STATELIST'->STMT"},
+    {"READ", "STATELIST'->STMT"},
+    {"RETURN", "STATELIST'->STMT"},
+    {"SEMICOLON", "STATELIST'->STMT"},
+    {"STRING", "STATELIST'->STMT"}
+}, 14},
+{"STATEMENT", (MapeamentoTerminal[]){
+    {"BREAK", "STMT->BREAK"},
+    {"FLOAT", "STMT->VARDECL"},
+    {"FOR", "STMT->FOR"},
+    {"IDENT", "STMT->ATRIBSTAT"},
+    {"IF", "STMT->IF"},
+    {"INT", "STMT->VARDECL"},
+    {"ONECHAR", "STMT->BLOCK"},
+    {"PRINT", "STMT->PRINT"},
+    {"READ", "STMT->READ"},
+    {"RETURN", "STMT->RETURN"},
+    {"SEMICOLON", "STMT->EMPTY"},
+    {"STRING", "STMT->VARDECL"}
+}, 12},
+{"TERM", (MapeamentoTerminal[]){
+    {"IDENT", "TERM->UNARY"},
+    {"MINUS", "TERM->UNARY"},
+    {"NI", "TERM->UNARY"},
+    {"NPF", "TERM->UNARY"},
+    {"NULL", "TERM->UNARY"},
+    {"OPEN_PARENTHESIS", "TERM->UNARY"},
+    {"PLUS", "TERM->UNARY"},
+    {"STRC", "TERM->UNARY"}
+}, 8},
+{"UNARYEXPR", (MapeamentoTerminal[]){
+    {"IDENT", "UNARY->FACTOR"},
+    {"MINUS", "UNARY->PLUS_MINUS"},
+    {"NI", "UNARY->FACTOR"},
+    {"NPF", "UNARY->FACTOR"},
+    {"NULL", "UNARY->FACTOR"},
+    {"OPEN_PARENTHESIS", "UNARY->FACTOR"},
+    {"PLUS", "UNARY->PLUS_MINUS"},
+    {"STRC", "UNARY->FACTOR"}
+}, 8},
+{"UNARYEXPRAUX", (MapeamentoTerminal[]){
+    {"CLOSE_BRACKET", "UNARY_AUX->EPSILON"},
+    {"CLOSE_PARENTHESIS", "UNARY_AUX->EPSILON"},
+    {"DIVISION", "UNARY_AUX->DIV"},
+    {"MINUS", "UNARY_AUX->EPSILON"},
+    {"MODULUS", "UNARY_AUX->MOD"},
+    {"MULTIPLICATION", "UNARY_AUX->MULT"},
+    {"PLUS", "UNARY_AUX->EPSILON"},
+    {"RELOP", "UNARY_AUX->EPSILON"},
+    {"SEMICOLON", "UNARY_AUX->EPSILON"}
+}, 9},
+{"VARDECL", (MapeamentoTerminal[]){
+    {"FLOAT", "VARDECL->FLOAT"},
+    {"INT", "VARDECL->INT"},
+    {"STRING", "VARDECL->STRING"}
+}, 3}
 };
 
 const size_t num_entradas_tabela = sizeof(tabela_analise) / sizeof(EntradaTabelaAnalise);

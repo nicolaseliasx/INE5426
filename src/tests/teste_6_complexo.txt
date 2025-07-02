@@ -13,7 +13,7 @@
     a = 3 * a + 12 - 3 % 10;
     b = 5.5;
     b = (b + 4.0) / 2.0;
-    c = "Grande compilador em c++";
+    c = "Neymar Jr joga muito";
     c = c + " do GJTV.";
 
     a1[0] = 3;
