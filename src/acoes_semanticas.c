@@ -581,14 +581,14 @@ void DECLARAR_VERIFICAR_acao1(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
         char msg_error[512];
         snprintf(msg_error, sizeof(msg_error), "%s usado antes da declaracao na linha %d:%d",
                  ident->token->lexema, ident->token->linha, ident->token->coluna);
-        // Assuming your 'erros.h' has a function like `criar_erro_semantico`
-        criar_erro_semantico(msg_error);
+        // Assuming your 'erros.h' has a function like `LANCAR_ERRO_SEMANTICO`
+        LANCAR_ERRO_SEMANTICO(msg_error);
     }
     if (!gerenciador_simbolo_e_tipo(gerenciador, ident->token, "function")) {
         char msg_error[512];
         snprintf(msg_error, sizeof(msg_error), "%s na linha %d:%d nao e uma funcao",
                  ident->token->lexema, ident->token->linha, ident->token->coluna);
-        criar_erro_semantico(msg_error);
+        LANCAR_ERRO_SEMANTICO(msg_error);
     }
 }
 
@@ -601,7 +601,7 @@ void DECLARAR_VERIFICAR_acao2(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
         char msg_error[512];
         snprintf(msg_error, sizeof(msg_error), "%s usado antes da declaracao na linha %d:%d",
                  ident->token->lexema, ident->token->linha, ident->token->coluna);
-        criar_erro_semantico(msg_error);
+        LANCAR_ERRO_SEMANTICO(msg_error);
     }
 
     gerenciador_registrar_uso_simbolo(gerenciador, ident->token);
@@ -618,7 +618,7 @@ void BREAK_acao1(NoAST* no_pai, GerenciadorEscopo* gerenciador) {
         char msg_error[512];
         snprintf(msg_error, sizeof(msg_error), "break usado fora de um comando for na linha %d:%d",
                  break_t->token->linha, break_t->token->coluna);
-        criar_erro_semantico(msg_error);
+        LANCAR_ERRO_SEMANTICO(msg_error);
     }
 }
 

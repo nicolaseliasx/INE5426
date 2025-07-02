@@ -26,24 +26,12 @@ void imprimir_arvore_prefixo(const char* prefixo, NoExpressao* no, int eh_esquer
 
         // Calcular novo prefixo
         char novo_prefixo[300];
-        // CORREÇÃO: Removido um espaço de "│    " para "│   "
         snprintf(novo_prefixo, sizeof(novo_prefixo), "%s%s", prefixo, eh_esquerda ? "│   " : "     ");
         
         // Chamar recursivamente para filhos
         imprimir_arvore_prefixo(novo_prefixo, no->filhoA, 1);
         imprimir_arvore_prefixo(novo_prefixo, no->filhoB, 0);
     }
-}
-
-void imprimir_erro_expressao(char operacao, NoExpressao* noA, NoExpressao* noB) {
-    printf("====================================================\n");
-    printf("error %c\n", operacao);
-    
-    printf("\nSubárvore esquerda:\n");
-    imprimir_arvore_prefixo("      ", noA, 1);
-    
-    printf("\nSubárvore direita:\n");
-    imprimir_arvore_prefixo("      ", noB, 0);
 }
 
 void imprimir_arvore(NoExpressao* no) {

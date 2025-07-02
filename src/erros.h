@@ -12,23 +12,16 @@ typedef enum {
     ERRO_SEMANTICO
 } TipoErro;
 
-// Estrutura base para erros
 typedef struct {
     TipoErro tipo;
     char mensagem[512];
 } Erro;
-
-// --- DECLARAÇÕES DAS FUNÇÕES (O "CARDÁPIO") ---
-// A implementação delas vai para o .c
 
 Erro criar_erro_lexico(const char* mensagem);
 Erro criar_erro_sintatico(const char* mensagem);
 Erro criar_erro_semantico(const char* mensagem);
 void tratar_erro(const Erro* erro);
 void imprimir_erro(const Erro* erro);
-
-
-// --- MACROS PARA LANÇAR ERROS (Macros ficam no .h) ---
 
 #define LANCAR_ERRO_LEXICO(msg) do { \
     Erro _erro = criar_erro_lexico(msg); \

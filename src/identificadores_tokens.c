@@ -304,6 +304,8 @@ static TransicaoEstado transicoes_relop[] = {
 static const char* estados_finais_relop[] = {"final_1", "final_2"};
 static const char* estados_mortos_relop[] = {"morto"};
 
+static const char* estados_retrocesso_relop[] = {"final_1"};
+
 static MaquinaEstados maquina_relop = {
     transicoes_relop,
     sizeof(transicoes_relop) / sizeof(TransicaoEstado),
@@ -311,7 +313,9 @@ static MaquinaEstados maquina_relop = {
     estados_finais_relop,
     sizeof(estados_finais_relop) / sizeof(const char*),
     estados_mortos_relop,
-    sizeof(estados_mortos_relop) / sizeof(const char*)
+    sizeof(estados_mortos_relop) / sizeof(const char*),
+    estados_retrocesso_relop,
+    sizeof(estados_retrocesso_relop) / sizeof(const char*)
 };
 
 // =================================================================

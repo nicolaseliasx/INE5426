@@ -87,7 +87,6 @@ NoExpressao* criar_no_expressao_binario(char operacao, const char* valor, NoExpr
 NoExpressao* criar_no_expressao_simples(char operacao, const char* tipo, const char* valor);
 NoExpressao* criar_no_expressao_basico(char operacao, const char* valor);
 void liberar_no_expressao(NoExpressao* no);
-void imprimir_erro_tipo(char operacao, NoExpressao* filhoA, NoExpressao* filhoB);
 
 // Funções auxiliares para lista de strings
 ListaString* criar_lista_string();

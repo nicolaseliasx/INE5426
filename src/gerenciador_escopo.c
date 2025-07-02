@@ -60,7 +60,7 @@ void gerenciador_escopo_adicionar_simbolo(GerenciadorEscopo* gerenciador, Token*
         char erro_msg[100];
         snprintf(erro_msg, sizeof(erro_msg), "%s redeclarado em %d:%d",
                  token->lexema, token->linha, token->coluna);
-        criar_erro_semantico(erro_msg);
+        LANCAR_ERRO_SEMANTICO(erro_msg);
         return;
     }
     
@@ -82,7 +82,7 @@ void gerenciador_definir_tipo_simbolo(GerenciadorEscopo* gerenciador, Token* tok
     snprintf(erro_msg, sizeof(erro_msg), 
              "Impossível atribuir tipo a %s em %d:%d",
              token->lexema, token->linha, token->coluna);
-    criar_erro_semantico(erro_msg);
+    LANCAR_ERRO_SEMANTICO(erro_msg);
 }
 
 bool gerenciador_simbolo_declarado(GerenciadorEscopo* gerenciador, Token* token) {

@@ -201,7 +201,7 @@ Token* proximo_token(AnalisadorLexico* analisador) {
         c = fgetc(analisador->arquivo);
         char erro_msg[100];
         snprintf(erro_msg, sizeof(erro_msg), "Caractere inesperado '%c' na linha %d:%d", c, linha_inicio, coluna_inicio);
-        criar_erro_lexico(erro_msg);
+        LANCAR_ERRO_LEXICO(erro_msg);
         return NULL;
     }
 }

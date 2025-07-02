@@ -108,9 +108,13 @@ NoExpressao* criar_no_expressao_binario(char operacao, const char* valor, NoExpr
 
     if (filhoA && filhoB && strcmp(filhoA->tipo, filhoB->tipo) != 0) {
         // Tipos são diferentes, reporta o erro e encerra.
-        imprimir_erro_tipo(operacao, filhoA, filhoB);
-        // Em C, usamos exit() para simular o comportamento de 'throw' que para a execução.
-        exit(EXIT_FAILURE);
+        char erro_msg[512];
+        snprintf(erro_msg, sizeof(erro_msg), 
+                "Operação '%c' inválida entre tipos '%s' e '%s'", 
+                operacao, 
+                filhoA ? filhoA->tipo : "nulo", 
+                filhoB ? filhoB->tipo : "nulo");
+        LANCAR_ERRO_SEMANTICO(erro_msg);
     }
 
     no->operacao = operacao;
@@ -265,10 +269,4 @@ void liberar_no_ast(NoAST* no) {
         
         free(no);
     }
-}
-
-void imprimir_erro_tipo(char operacao, NoExpressao* filhoA, NoExpressao* filhoB) {
-    fprintf(stderr, "====================================================\n");
-    fprintf(stderr, "Erro de tipo: Operação '%c' inválida entre os tipos '%s' e '%s'.\n", 
-            operacao, filhoA ? filhoA->tipo : "nulo", filhoB ? filhoB->tipo : "nulo");
 }

@@ -77,7 +77,7 @@ void inicializar_pilha(AnalisadorSintatico* analisador) {
 }
 
 void executar_acao(ItemPilha* item_acao, AnalisadorSintatico* analisador) {
-    printf("[DEBUG-ACAO] Executando %p no nó %s\n", 
+    DEBUG_PRINT("[DEBUG-ACAO] Executando %p no nó %s\n", 
        item_acao->acao, 
        item_acao->ancestral ? item_acao->ancestral->identificador : "NULO");
     if (!item_acao || item_acao->tipo != ACAO || !item_acao->acao) {
@@ -96,25 +96,26 @@ void executar_acao(ItemPilha* item_acao, AnalisadorSintatico* analisador) {
 }
 
 void analisar_token(AnalisadorSintatico* analisador, Token* token) {
-    printf("\n--- Nova chamada de analisar_token com Token: ID='%s', Lexema='%s' ---\n", token->id, token->lexema);
+    DEBUG_PRINT("\n[DEBUG] --- Nova chamada de analisar_token com Token: ID='%s', Lexema='%s' ---\n", token->id, token->lexema);
 
     while (1) {
-        printf("--- Início do loop de análise ---\n");
+        DEBUG_PRINT("[DEBUG] --- Início do loop de análise ---\n");
 
         if (pilha_vazia(analisador->pilha)) {
             char erro_msg[100];
             snprintf(erro_msg, sizeof(erro_msg), "Token inesperado '%s' em %d:%d", token->lexema, token->linha, token->coluna);
-            criar_erro_sintatico(erro_msg);
+            LANCAR_ERRO_SINTATICO(erro_msg);
             return;
         }
         
         ItemPilha* topo = topo_pilha(analisador->pilha);
 
         DEBUG_PRINT("[DEBUG] Topo da pilha: Tipo=%d", topo->tipo);
+        
         if (topo->tipo == SIMBOLO) {
-            printf(", Símbolo='%s'\n", topo->simbolo);
+           DEBUG_PRINT("[DEBUG] Símbolo='%s'\n", topo->simbolo);
         } else {
-            printf(", Ação em %p\n", (void*)topo->acao);
+            DEBUG_PRINT("[DEBUG] Ação em %p\n", (void*)topo->acao);
         }
 
         // 1. Tratar ação semântica
@@ -147,7 +148,7 @@ void analisar_token(AnalisadorSintatico* analisador, Token* token) {
             snprintf(erro_msg, sizeof(erro_msg), 
             "Bloco não fechado. Adicione '}' antes do fim do arquivo (linha %d)", 
             token->linha);
-            criar_erro_sintatico(erro_msg);
+            LANCAR_ERRO_SINTATICO(erro_msg);
             return;
         }
         
@@ -165,7 +166,7 @@ void analisar_token(AnalisadorSintatico* analisador, Token* token) {
         
         ItemPilha** itens_para_empilhar = malloc(producao->tamanho * sizeof(ItemPilha*));
         if (!itens_para_empilhar) {
-             criar_erro_sintatico("Falha de alocacao de memoria no analisador.");
+             LANCAR_ERRO_SINTATICO("Falha de alocacao de memoria no analisador.");
              return;
         }
         int num_itens_validos = 0;

@@ -80,6 +80,8 @@ const EntradaTabelaAnalise tabela_analise[] = {
     {"IFSTAT'",          "RETURN",            "IFSTAT'->EPSILON"},
     {"IFSTAT'",          "SEMICOLON",         "IFSTAT'->EPSILON"},
     {"IFSTAT'",          "STRING",            "IFSTAT'->EPSILON"},
+    {"INDEX",            "CLOSE_PARENTHESIS", "INDEX->EPSILON"}, 
+    {"INDEX",            "COMMA",             "INDEX->EPSILON"},
     {"INDEX",            "OPEN_BRACKET",      "INDEX->BRACKET"},
     {"INDEX",            "SEMICOLON",         "INDEX->EPSILON"},
     {"LVALUE",           "IDENT",             "LVALUE->IDENT"},

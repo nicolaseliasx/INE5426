@@ -10,7 +10,7 @@ def int calcular_fatorial(int n) {
     return resultado;
 }
 
-def void processar_vetor(int v[10]) {
+def processar_vetor(int v[10]) {
     int k;
     int soma_par;
     soma_par = 0;
@@ -107,15 +107,5 @@ def void processar_vetor(int v[10]) {
     }
     
     print("Contador externo chegou a: ", contador_externo);
-
-    {
-        int var_escopo_local;
-        var_escopo_local = 123;
-        print("Variavel de escopo local: ", var_escopo_local);
-        var_int_15 = var_escopo_local;
-    }
-    
-    print("Variavel global acessada apos escopo local: ", var_int_15);
-    
     print("Fim do programa.");
 }
