@@ -12,6 +12,8 @@
 #include "tabela_analise.h"
 #include "token.h"
 
+bool DEBUG = true; // Variável global para controle de depuração
+
 // Função auxiliar para imprimir o código intermediário com mais depuração
 void print_intermediate_code(ListaString* code_list) {
     printf("[DEBUG] Tentando imprimir código intermediário...\n");
@@ -82,9 +84,10 @@ int main(int argc, char *argv[]) {
     }
     printf("[DEBUG] Arquivo aberto com sucesso.\n");
 
+    // KEYWORDS - ORDENADAS
     char* keywords_c_arr[] = {
-        "def", "if", "else", "for", "int", "float", "string",
-        "return", "new", "read", "print", "break", "call"
+        "break", "call", "def", "else", "float", "for", "if",
+        "int", "new", "print", "read", "return", "string"
     };
     int num_keywords = sizeof(keywords_c_arr) / sizeof(keywords_c_arr[0]);
 

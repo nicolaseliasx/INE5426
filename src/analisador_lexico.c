@@ -24,28 +24,41 @@ static const MapeamentoInicial dados_mapa_inicial[] = {
     {";", "SEMICOLON"},
     {",", "COMMA"}
 };
+
 static const int num_mapeamentos_inicial = sizeof(dados_mapa_inicial) / sizeof(MapeamentoInicial);
 
+static int comparar_strings(const void* a, const void* b) {
+    // A função recebe ponteiros genéricos (void*).
+    // Nós os convertemos de volta para o nosso tipo de dado (char**),
+    // e então pegamos o valor (char*) para usar com strcmp.
+    return strcmp(*(const char**)a, *(const char**)b);
+}
+
 static char* obter_id_token_final(AnalisadorLexico* analisador, const char* id, const char* lexema) {
-    // 1. Checa por palavras-chave
+    // 1. Checa por palavras-chave de forma otimizada
     if (strcmp(id, "IDENT") == 0) {
-        for (int i = 0; i < analisador->num_palavras_chave; i++) {
-            if (strcmp(lexema, analisador->palavras_chave[i]) == 0) {
-                char* kw_id = strdup(lexema);
-                for (char* p = kw_id; *p; p++) *p = toupper(*p);
-                return kw_id;
-            }
+        // Usa busca binária (O(log N)) em vez de busca linear (O(N)).
+        // Isso é muito mais rápido para listas maiores.
+        char** resultado = bsearch(&lexema, analisador->palavras_chave,
+                                 analisador->num_palavras_chave,
+                                 sizeof(char*), comparar_strings);
+
+        if (resultado != NULL) {
+            // Se bsearch encontrou, 'resultado' não é nulo. É uma palavra-chave.
+            char* kw_id = strdup(lexema);
+            for (char* p = kw_id; *p; p++) *p = toupper(*p); // Converte para maiúsculas (ex: "if" -> "IF")
+            return kw_id;
         }
     }
 
-    // 2. Checa por operadores e símbolos no mapa do analisador
+    // 2. Checa por operadores e símbolos (esta parte pode ser mantida como está)
     for (int i = 0; i < analisador->num_mapeamentos; i++) {
         if (strcmp(lexema, analisador->mapeamento_tokens[i].lexema) == 0) {
             return strdup(analisador->mapeamento_tokens[i].id);
         }
     }
 
-    // 3. Se não for nenhum, retorna o ID genérico da máquina de estados
+    // 3. Se não for nenhum dos anteriores, retorna o ID genérico da máquina de estados (ex: "IDENT")
     return strdup(id);
 }
 
