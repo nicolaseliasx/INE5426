@@ -86,7 +86,7 @@ def nested_scope_example() {
     int j;
     for (j = 0; j < 4; j = j + 1) {
         string temp;
-        temp = t + "Anthon";
+        temp = t + "Nicolas";
     }
 
     int p;
