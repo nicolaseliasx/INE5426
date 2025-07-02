@@ -68,5 +68,3 @@ Corrigindo esses pontos, seu código intermediário deve se alinhar ao da versã
 TESTE 6:
 
 TESTE 7:
-
-TESTE 8:

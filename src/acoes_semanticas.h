@@ -74,7 +74,6 @@ char* AUXILIAR_obter_tipo(const char* tipo, int contador_vetor);
 int* AUXILIAR_obter_tamanhos_vetor(const char* tipo, int* num_elementos);
 
 // --- Ações para Expressões ---
-void EXPA_contador_vetor(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void EXPA_passar_numero(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void EXPA_imprimir_expressao0_h(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void EXPA_imprimir_expressao0(NoAST* no_pai, GerenciadorEscopo* gerenciador);
@@ -89,5 +88,6 @@ void EXPA_gerar_no(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void EXPA_definir_operacao2(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void EXPA_termo(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void EXPA_inicializar_contador_vetor(NoAST* no_pai, GerenciadorEscopo* gerenciador);
+void EXPA_calculo_indice(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 
 #endif  // ACOES_SEMANTICAS_H

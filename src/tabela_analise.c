@@ -1,5 +1,21 @@
 #include "tabela_analise.h"
 
+/*
+ * IMPORTANTE — ORDEM LEXICOGRÁFICA OBRIGATÓRIA
+ *
+ * Esta tabela **precisa** permanecer estritamente ordenada
+ * em ordem lexicográfica. Qualquer entrada fora de ordem
+ * faz com que as buscas binárias (bsearch) falhem e o
+ * compilador passe a produzir resultados incorretos.
+ *
+ * ➜ Ao adicionar ou remover regras:
+ *     1. Insira‑as já na posição correta.
+ *     2. Verifique a ordem com um script ou diff.
+ *
+ * Não ignore este aviso: desordenar a lista quebra o
+ * compilador.
+ */
+
 // TABELA DE ANÁLISE PREDITIVA (LL)
 const EntradaTabelaAnalise tabela_analise[] = {
     {"ALLOCAUX", "ASSIGN", "ALLOCAUX->EPSILON"},
@@ -139,9 +155,17 @@ const EntradaTabelaAnalise tabela_analise[] = {
     {"PROGRAM'", "SEMICOLON", "PROG'->STATEMENT"},
     {"PROGRAM'", "STRING", "PROG'->STATEMENT"},
     {"READSTAT", "READ", "READSTAT->READ"},
+    {"READSTAT", "READ", "READSTAT->READ"},
     {"RETURNSTAT", "RETURN", "RETURNSTAT->RETURN"},
-    {"RETURNSTAT'", "IDENT", "RETURN'->LVALUE"},
+    {"RETURNSTAT'", "IDENT", "RETURN'->EXPRESSION"},
+    {"RETURNSTAT'", "MINUS", "RETURN'->EXPRESSION"},
+    {"RETURNSTAT'", "NI", "RETURN'->EXPRESSION"},
+    {"RETURNSTAT'", "NPF", "RETURN'->EXPRESSION"},
+    {"RETURNSTAT'", "NULL", "RETURN'->EXPRESSION"},
+    {"RETURNSTAT'", "OPEN_PARENTHESIS", "RETURN'->EXPRESSION"},
+    {"RETURNSTAT'", "PLUS", "RETURN'->EXPRESSION"},
     {"RETURNSTAT'", "SEMICOLON", "RETURN'->EPSILON"},
+    {"RETURNSTAT'", "STRC", "RETURN'->EXPRESSION"},
     {"STATELIST", "$", "STATELIST->EPSILON"},
     {"STATELIST", "BREAK", "STATELIST->STMT"},
     {"STATELIST", "FLOAT", "STATELIST->STMT"},

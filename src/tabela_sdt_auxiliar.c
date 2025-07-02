@@ -3,13 +3,29 @@
 #include "acoes_semanticas.h"
 #include "tabela_analise.h"
 
+/*
+ * IMPORTANTE — ORDEM LEXICOGRÁFICA OBRIGATÓRIA
+ *
+ * Esta tabela **precisa** permanecer estritamente ordenada
+ * em ordem lexicográfica. Qualquer entrada fora de ordem
+ * faz com que as buscas binárias (bsearch) falhem e o
+ * compilador passe a produzir resultados incorretos.
+ *
+ * ➜ Ao adicionar ou remover regras:
+ *     1. Insira‑as já na posição correta.
+ *     2. Verifique a ordem com um script ou diff.
+ *
+ * Não ignore este aviso: desordenar a lista quebra o
+ * compilador.
+ */
+
 const EntradaTabelaSDT tabela_sdt_entradas[] = {
     {"ALLOCAUX->BRACKET",
      {{SIMBOLO, .simbolo = "OPEN_BRACKET"},
       {SIMBOLO, .simbolo = "NUMEXPRESSION"},
       {SIMBOLO, .simbolo = "CLOSE_BRACKET"},
       {SIMBOLO, .simbolo = "ALLOCAUX"},
-      {ACAO, .acao = EXPA_contador_vetor}},
+      {ACAO, .acao = EXPA_calculo_indice}},
      5},
     {"ALLOCAUX->EPSILON",
      {{ACAO, .acao = EXPA_inicializar_contador_vetor}, {SIMBOLO, .simbolo = "ε"}},
@@ -226,8 +242,11 @@ const EntradaTabelaSDT tabela_sdt_entradas[] = {
       {SIMBOLO, .simbolo = "LVALUE"},
       {ACAO, .acao = CODIGO_lidar_leitura}},
      3},
+
     {"RETURN'->EPSILON", {{SIMBOLO, .simbolo = "ε"}}, 1},
-    {"RETURN'->LVALUE", {{SIMBOLO, .simbolo = "LVALUE"}, {ACAO, .acao = CODIGO_lidar_retorno2}}, 2},
+    {"RETURN'->EXPRESSION",
+     {{SIMBOLO, .simbolo = "EXPRESSION"}, {ACAO, .acao = CODIGO_lidar_retorno2}},
+     2},
     {"RETURNSTAT->RETURN",
      {{SIMBOLO, .simbolo = "RETURN"},
       {SIMBOLO, .simbolo = "RETURNSTAT'"},
@@ -241,7 +260,6 @@ const EntradaTabelaSDT tabela_sdt_entradas[] = {
       {SIMBOLO, .simbolo = "STATELIST'"},
       {ACAO, .acao = CODIGO_combinar_codigo_para_lista}},
      5},
-
     {"STATELIST->EPSILON", {{ACAO, .acao = ESCOPO_acao2}, {SIMBOLO, .simbolo = "ε"}}, 2},
     {"STATELIST->STMT",
      {{ACAO, .acao = CODIGO_herdar_proximo},

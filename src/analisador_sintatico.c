@@ -34,17 +34,18 @@ const EntradaTabelaSDT* buscar_producao_na_tabela(const char* nao_terminal, cons
     EntradaTabelaAnalise chave_busca = {nao_terminal, terminal, NULL};
 
     // Executa a busca binária
-    EntradaTabelaAnalise* resultado = (EntradaTabelaAnalise*)bsearch(
-        &chave_busca,
-        tabela_analise,                // Usa a nova tabela plana
-        num_entradas_tabela,           // Usa a contagem da nova tabela
-        sizeof(EntradaTabelaAnalise),  // Usa o tamanho da nova struct
-        comparar_entradas_tabela);
+    EntradaTabelaAnalise* resultado =
+        (EntradaTabelaAnalise*)bsearch(&chave_busca, tabela_analise, num_entradas_tabela,
+                                       sizeof(EntradaTabelaAnalise), comparar_entradas_tabela);
 
     if (resultado)
     {
         // Encontrou! Usa a chave_sdt para buscar a produção real na outra tabela.
         return buscar_entrada_sdt(resultado->chave_sdt);
+    }
+    else
+    {
+        DEBUG_PRINT("[DEBUG] Produção não encontrada para '%s' e '%s'\n", nao_terminal, terminal);
     }
 
     // Se bsearch retornou NULL, a regra não existe.
@@ -163,8 +164,7 @@ void analisar_token(AnalisadorSintatico* analisador, Token* token)
         if (!producao)
         {
             char erro_msg[100];
-            snprintf(erro_msg, sizeof(erro_msg),
-                     "Bloco não fechado. Adicione '}' antes do fim do arquivo (linha %d)",
+            snprintf(erro_msg, sizeof(erro_msg), "Produção não encontrada (linha %d)",
                      token->linha);
             LANCAR_ERRO_SINTATICO(erro_msg);
             return;
