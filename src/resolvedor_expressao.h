@@ -1,11 +1,13 @@
 #ifndef RESOLVEDOR_EXPRESSAO_H
 #define RESOLVEDOR_EXPRESSAO_H
 
-#include "no_ast.h"
 #include <stdio.h>
 
+#include "no_ast.h"
+
 // Estrutura para resolver árvores de expressão
-typedef struct {
+typedef struct
+{
     int contador_temp;
 } ResolvedorExpressao;
 

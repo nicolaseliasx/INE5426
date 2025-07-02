@@ -5,9 +5,9 @@
 #define DEBUG 1
 
 #if DEBUG
-    #define DEBUG_PRINT(...) printf(__VA_ARGS__)
+#define DEBUG_PRINT(...) printf(__VA_ARGS__)
 #else
-    #define DEBUG_PRINT(...) // nada
+#define DEBUG_PRINT(...)  // nada
 #endif
 
-#endif // DEBUG_H
+#endif  // DEBUG_H

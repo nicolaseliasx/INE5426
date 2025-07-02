@@ -4,7 +4,8 @@
 #include <stdbool.h>
 
 // Estrutura para representar um token
-typedef struct {
+typedef struct
+{
     char* lexema;
     char* id;
     int linha;
@@ -18,4 +19,4 @@ bool eh_letra(char c);
 bool eh_digito(char c);
 bool eh_espaco_branco(char c);
 
-#endif // TOKEN_H
+#endif  // TOKEN_H

@@ -1,33 +1,38 @@
 #ifndef TABELA_SIMBOLOS_H
 #define TABELA_SIMBOLOS_H
 
-#include "token.h"
 #include <stdbool.h>
 #include <stdio.h>
 
+#include "token.h"
+
 // A "entrada" da tabela, contendo os dados do símbolo.
 // Esta estrutura permanece a mesma.
-typedef struct {
+typedef struct
+{
     char* tipo;
     int* linhas;
     int num_linhas;
-    int capacidade_linhas; // Adicionado para otimizar realocações
+    int capacidade_linhas;  // Adicionado para otimizar realocações
 } EntradaTabela;
 
 // O "item" da tabela hash. Contém a chave (nome do símbolo),
 // o valor (dados do símbolo) e um ponteiro para o próximo item
 // em caso de colisão de hash (lista ligada).
-typedef struct ItemTabela {
+typedef struct ItemTabela
+{
     char* chave;
     EntradaTabela* entrada;
     struct ItemTabela* proximo;
 } ItemTabela;
 
 // A estrutura principal da Tabela de Símbolos, agora como Tabela Hash.
-typedef struct {
-    ItemTabela** buckets; // O array de "buckets". Cada bucket é um ponteiro para o início de uma lista ligada.
-    int capacidade;     // O número de buckets no array.
-    int tamanho;          // O número total de símbolos na tabela.
+typedef struct
+{
+    ItemTabela** buckets;  // O array de "buckets". Cada bucket é um ponteiro para o início de uma
+                           // lista ligada.
+    int capacidade;        // O número de buckets no array.
+    int tamanho;           // O número total de símbolos na tabela.
 } TabelaSimbolos;
 
 // Cria uma nova tabela de símbolos
@@ -49,4 +54,4 @@ void liberar_tabela_simbolos(TabelaSimbolos* tabela);
 // Redimensiona a tabela para aumentar a capacidade
 void tabela_redimensionar(TabelaSimbolos* tabela);
 
-#endif // TABELA_SIMBOLOS_H
+#endif  // TABELA_SIMBOLOS_H

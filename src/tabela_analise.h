@@ -4,26 +4,29 @@
 #define TABELA_ANALISE_H
 
 #include <stddef.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "item_pilha_analise.h"
 
 // Estrutura para as REGRAS DE PRODUÇÃO
-typedef struct {
+typedef struct
+{
     const char* chave;
-    ItemPilha producao[15]; 
+    ItemPilha producao[15];
     size_t tamanho;
 } EntradaTabelaSDT;
 
 // Estrutura para o MAPA DA TABELA DE ANÁLISE
-typedef struct {
+typedef struct
+{
     const char* terminal;
     const char* chave_sdt;
 } MapeamentoTerminal;
 
 // Estrutura principal da TABELA DE ANÁLISE
-typedef struct {
+typedef struct
+{
     const char* nao_terminal;
     const char* terminal;
     const char* chave_sdt;

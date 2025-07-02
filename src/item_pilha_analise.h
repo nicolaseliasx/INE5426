@@ -1,19 +1,22 @@
 #ifndef ITEM_PILHA_ANALISE_H
 #define ITEM_PILHA_ANALISE_H
 
-#include "no_ast.h"
 #include "gerenciador_escopo.h"
+#include "no_ast.h"
 
-typedef enum {
+typedef enum
+{
     SIMBOLO,
     ACAO
 } TipoItemPilha;
 
 typedef void (*FuncaoAcaoSemantica)(NoAST* no_pai, GerenciadorEscopo* gerenciador_escopo);
 
-typedef struct {
+typedef struct
+{
     TipoItemPilha tipo;
-    union {
+    union
+    {
         char* simbolo;
         FuncaoAcaoSemantica acao;
     };

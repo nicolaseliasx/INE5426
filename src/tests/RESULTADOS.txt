@@ -1,13 +1,72 @@
 TESTE 1:
+OK.
+AVALIADO NA MAO GERA UMA EXPRESSAO VALIDA
 
 TESTE 2:
 
+
 TESTE 3:
+
 
 TESTE 4:
 
+
 TESTE 5:
+SAIDA INCORRETA CORRIGIR. PONTOS A SEREM CORRIGIDOS:
+
+
+* Você converteu **ambos** os ramos do `if` e o `break` em `goto END`, portanto o primeiro `break` encerra tudo.  
+* **Conserto:**  
+  * A condição deve testar um temporário que contém `d`, não `d` já sobrescrito.  
+  * O salto do `break` deve ir para o rótulo que marca o **fim apenas do laço interno**.
+
+---
+
+### 5  Trecho “else” (`print "Não"`)
+
+* No seu código ele vem **depois** de dois `goto END`; logo, é inatingível.  
+* **Conserto:** coloque‑o num rótulo próprio (equivalente ao L6) e certifique‑se de que o `if` roda para lá quando `d == 0`.
+
+---
+
+### 6  Atualização de `d`
+
+| Base | Seu |
+|------|-----|
+|```
+$9 = d
+$10 = 1
+$11 = $9 - $10
+d = $11
+```|```
+$6 = 1
+$7 = d - $6
+d = $7
+```|
+
+* A lógica aritmética está ok, **mas** como você já tinha transformado `d` em 0/1, o valor não bate mais (vira −1). Corrigindo o **Erro 3** isso some.
+
+---
+
+### 7  Atualização de `c_1`
+
+O incremento do laço externo vem **depois** de um `goto END`; se o programa chegou até ali, não haveria problema, mas o fluxo normal nunca alcança essa linha por causa dos saltos errados anteriores.
+
+---
+
+## Resumo dos ajustes
+
+1. Nunca grave o resultado de comparações no próprio contador/variável de loop; use temporários.  
+2. `if False … goto` deve saltar para **o rótulo certo** (fim do respectivo loop), não para `END`.  
+3. `break` salta para logo depois do laço interno, não encerra o programa.  
+4. O bloco “else” (`print "Não"`) precisa de um rótulo alcançável.  
+5. Remova `goto END` duplicados/inúteis.
+
+Corrigindo esses pontos, seu código intermediário deve se alinhar ao da versão‑base e produzir a mesma saída (`2 1` repetidos, sem nunca imprimir "Não").
+
 
 TESTE 6:
 
 TESTE 7:
+
+TESTE 8:

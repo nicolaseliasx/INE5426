@@ -3,15 +3,18 @@
 
 #include "item_pilha_analise.h"
 
-typedef struct {
+typedef struct
+{
     TipoItemPilha tipo;
-    union {
+    union
+    {
         void (*acao)(NoAST*, GerenciadorEscopo*);
         char* simbolo;
     } valor;
 } ItemTabelaSDT;
 
-typedef struct {
+typedef struct
+{
     char* chave;
     ItemTabelaSDT* itens;
     int quantidade;
@@ -20,4 +23,4 @@ typedef struct {
 extern EntradaTabelaAuxSDT tabela_sdt_entradas[];
 extern const size_t num_entradas_sdt;
 
-#endif // TABELA_SDT_AUXILIAR_H
+#endif  // TABELA_SDT_AUXILIAR_H

@@ -3,50 +3,54 @@
 
 #define _DEFAULT_SOURCE
 
-#include <string.h>
-#include "token.h"
-#include "tabela_simbolos.h"
-#include "identificadores_tokens.h"
-#include "maquina_estados.h"
-#include "erros.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
+
+#include "erros.h"
+#include "identificadores_tokens.h"
+#include "maquina_estados.h"
+#include "tabela_simbolos.h"
+#include "token.h"
 
 // Estrutura para token possível
-typedef struct {
+typedef struct
+{
     Token* token;
     int inicio;
 } PossivelToken;
 
-typedef struct {
+typedef struct
+{
     const char* lexema;
     const char* id;
 } MapeamentoInicial;
 
 // Estrutura principal do analisador léxico
-typedef struct {
+typedef struct
+{
     FILE* arquivo;
     char** palavras_chave;
     int num_palavras_chave;
-    
+
     IdentificadorToken** identificadores_token;
     int num_identificadores;
-    
+
     PossivelToken** possiveis_tokens;
     int num_possiveis_tokens;
-    
+
     Token** tokens;
     int num_tokens;
-    
+
     // Mapeamento de lexema para ID
-    struct {
+    struct
+    {
         char* lexema;
         char* id;
-    } *mapeamento_tokens;
+    }* mapeamento_tokens;
     int num_mapeamentos;
-    
+
     char caractere_atual;
     int linha;
     int coluna;

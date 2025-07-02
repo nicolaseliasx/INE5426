@@ -1,11 +1,12 @@
 #ifndef IDENTIFICADORES_TOKENS_H
 #define IDENTIFICADORES_TOKENS_H
 
-#include "token.h"
 #include "maquina_estados.h"
+#include "token.h"
 
 // Identificador de token
-typedef struct {
+typedef struct
+{
     const char* id_token;
     MaquinaEstados* maquina_estado;
 } IdentificadorToken;
@@ -22,4 +23,4 @@ extern IdentificadorToken relopTokenIdentifier;
 extern IdentificadorToken oneCharTokenIdentifier;
 extern IdentificadorToken stringConstCharTokenIdentifier;
 
-#endif // IDENTIFICADORES_TOKENS_H
+#endif  // IDENTIFICADORES_TOKENS_H

@@ -1,14 +1,16 @@
 #ifndef PILHA_H
 #define PILHA_H
 
-#include "item_pilha_analise.h" // A pilha precisa saber o que ela vai guardar
 #include <stdlib.h>
 
+#include "item_pilha_analise.h"  // A pilha precisa saber o que ela vai guardar
+
 // Definição da estrutura da Pilha
-typedef struct {
-    ItemPilha** itens;   // Um array de ponteiros para ItemPilha
-    int topo;            // Índice do elemento no topo (-1 para pilha vazia)
-    int capacidade;      // Tamanho atual do array 'itens'
+typedef struct
+{
+    ItemPilha** itens;  // Um array de ponteiros para ItemPilha
+    int topo;           // Índice do elemento no topo (-1 para pilha vazia)
+    int capacidade;     // Tamanho atual do array 'itens'
 } Pilha;
 
 /**
@@ -52,4 +54,4 @@ ItemPilha* topo_pilha(Pilha* p);
  */
 int pilha_vazia(Pilha* p);
 
-#endif // PILHA_H
+#endif  // PILHA_H

@@ -1,11 +1,13 @@
 #ifndef GERENCIADOR_ESCOPO_H
 #define GERENCIADOR_ESCOPO_H
 
-#include "tabela_simbolos.h"
 #include <stdbool.h>
 
+#include "tabela_simbolos.h"
+
 // Estrutura de um item de escopo
-typedef struct ItemEscopo {
+typedef struct ItemEscopo
+{
     char* nome;
     TabelaSimbolos* tabela_simbolos;
     struct ItemEscopo* escopo_ancestral;
@@ -15,7 +17,8 @@ typedef struct ItemEscopo {
 } ItemEscopo;
 
 // Gerenciador principal de escopos
-typedef struct {
+typedef struct
+{
     ItemEscopo* escopo_raiz;
     ItemEscopo* escopo_atual;
 } GerenciadorEscopo;
@@ -33,7 +36,8 @@ void gerenciador_fechar_escopo(GerenciadorEscopo* gerenciador);
 void gerenciador_escopo_adicionar_simbolo(GerenciadorEscopo* gerenciador, Token* token);
 
 // Define o tipo de um símbolo
-void gerenciador_definir_tipo_simbolo(GerenciadorEscopo* gerenciador, Token* token, const char* tipo);
+void gerenciador_definir_tipo_simbolo(GerenciadorEscopo* gerenciador, Token* token,
+                                      const char* tipo);
 
 // Verifica se um símbolo está declarado
 bool gerenciador_simbolo_declarado(GerenciadorEscopo* gerenciador, Token* token);

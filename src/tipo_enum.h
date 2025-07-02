@@ -3,7 +3,8 @@
 
 #include <stdio.h>
 
-typedef enum {
+typedef enum
+{
     TIPO_FUNCAO,
     TIPO_INTEIRO,
     TIPO_FLOAT,
@@ -16,4 +17,4 @@ const char* tipo_para_string(Tipo tipo);
 // Função para imprimir o tipo (equivalente ao operador <<)
 void imprimir_tipo(FILE* saida, Tipo tipo);
 
-#endif // TIPO_ENUM_H
+#endif  // TIPO_ENUM_H
