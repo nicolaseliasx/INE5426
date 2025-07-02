@@ -1,12 +1,13 @@
 #ifndef ACOES_SEMANTICAS_H
 #define ACOES_SEMANTICAS_H
 
-#include "no_ast.h"
-#include "gerenciador_escopo.h"
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
 
-void inicializar_resolvedor_global(); 
+#include "gerenciador_escopo.h"
+#include "no_ast.h"
+
+void inicializar_resolvedor_global();
 
 // --- Ações de Geração de Código ---
 void CODIGO_relop_action(NoAST* no_pai, GerenciadorEscopo* gerenciador);
@@ -89,4 +90,4 @@ void EXPA_definir_operacao2(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void EXPA_termo(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void EXPA_inicializar_contador_vetor(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 
-#endif // ACOES_SEMANTICAS_H
+#endif  // ACOES_SEMANTICAS_H
