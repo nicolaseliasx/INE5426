@@ -32,7 +32,7 @@ A especificação formal da gramática base, uma análise detalhada das melhoria
 
 O projeto é modularizado para separar as diferentes responsabilidades do compilador. Abaixo está uma visão geral dos principais arquivos e seus papéis:
 
-- main.c: Ponto de entrada do programa. Orquestra a inicialização dos analisadores e o processamento do arquivo de entrada.
+- `main.c`: Ponto de entrada do programa. Orquestra a inicialização dos analisadores e o processamento do arquivo de entrada.
 
 - `acoes_semanticas.(h|c)`: Módulo central que contém as rotinas semânticas acionadas pelo analisador sintático. É aqui que a validação de tipos, o gerenciamento de escopo e a geração de código são realizados.
 
