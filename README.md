@@ -32,19 +32,19 @@ A especificação formal da gramática base, uma análise detalhada das melhoria
 
 O projeto é modularizado para separar as diferentes responsabilidades do compilador. Abaixo está uma visão geral dos principais arquivos e seus papéis:
 
-| Módulo                   | Descrição                                                                                              |
-| ------------------------ | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| `main.c`                 | Ponto de entrada do programa. Orquestra a inicialização dos analisadores e o processamento do arquivo. |
-| `acoes_semanticas.(h     | c)`                                                                                                    | Contém rotinas semânticas acionadas pelo analisador sintático (validação de tipos, escopo, geração de código).     |
-| `analisador_lexico.(h    | c)`                                                                                                    | Lê o código-fonte caractere a caractere e agrupa tokens (identificadores, palavras-chave, operadores).             |
-| `analisador_sintatico.(h | c)`                                                                                                    | Implementa um parser preditivo LL(1) usando pilha e tabela de análise. Constrói a Árvore Sintática Abstrata (AST). |
-| `tabela_analise.(h       | c)`                                                                                                    | Define a tabela de parsing LL(1) (mapeia pares [Não-Terminal, Terminal] para produções da gramática).              |
-| `tabela_sdt_auxiliar.(h  | c)`                                                                                                    | Define regras de produção e ações semânticas (base da Tradução Dirigida por Sintaxe - SDT).                        |
-| `gerenciador_escopo.(h   | c)`                                                                                                    | Gerencia hierarquia de escopos (global, funções, blocos) e tabelas de símbolos associadas.                         |
-| `tabela_simbolos.(h      | c)`                                                                                                    | Implementa tabela de símbolos (usando tabela hash) para armazenar informações de identificadores.                  |
-| `no_ast.(h               | c)`                                                                                                    | Define a estrutura da Árvore Sintática Abstrata (AST).                                                             |
-| `erros.(h                | c)`                                                                                                    | Interface unificada para relatar erros léxicos, sintáticos e semânticos.                                           |
-| `pilha.(h                | c)`                                                                                                    | Implementação de estrutura de dados de pilha (utilizada pelo analisador sintático).                                |
+- main.c: Ponto de entrada do programa. Orquestra a inicialização dos analisadores e o processamento do arquivo de entrada.
+
+- `acoes_semanticas.(h|c)`: Módulo central que contém as rotinas semânticas acionadas pelo analisador sintático. É aqui que a validação de tipos, o gerenciamento de escopo e a geração de código são realizados.
+
+- `analisador_lexico.(h|c)`: Responsável por ler o código-fonte caractere a caractere e agrupá-los em uma sequência de tokens (ex: identificadores, palavras-chave, operadores).
+
+- `analisador_sintatico.(h|c)`: Implementa um parser preditivo LL(1). Utiliza uma pilha e uma tabela de análise para verificar se a sequência de tokens segue a estrutura gramatical da linguagem e para construir a Árvore Sintática Abstrata (AST).
+
+- `tabela_analise.(h|c)`: Define a tabela de parsing LL(1), que mapeia pares [Não-Terminal, Terminal] para as produções da gramática.
+
+- `tabela_sdt_auxiliar.(h|c)`: Define as regras de produção da gramática e as ações semânticas associadas a cada uma, formando a base da Tradução Dirigida por Sintaxe (SDT).
+
+- `gerenciador_escopo.(h|c)`: Gerencia a hierarquia de escopos (global, funções, blocos) e as tabelas de símbolos
 
 ---
 
