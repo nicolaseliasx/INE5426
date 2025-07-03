@@ -44,8 +44,8 @@ def aa(float first, float second, float third) {
     a2[1][2] = a1[0] + 7;
     b2[3][3] = 6.6;
     b2[3][3] = b1[1] + 6.6;
-    c1[6][1] = "Epa opa o";
-    c1[6][1] = c + " AAAAA";
+    c2[6][1] = "Epa opa o";
+    c2[6][1] = c + " AAAAA";
 
     if (a > 7) {
         if (a - 8 <= 0) {

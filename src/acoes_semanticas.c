@@ -353,34 +353,21 @@ void CODIGO_herdar_proximo_for(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 void CODIGO_atribuicao(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
     // ATRIBSTAT -> LVALUE = ATRIBSTAT'
-    // ATRIBSTAT.code = ATRSBSTAT'.code || LVALUE.lexema = ATRIBSTAT'.var
     NoAST* lvalue = no_pai->filhos[0];
     NoAST* atribstat_linha = no_pai->filhos[2];
-    char buffer[256];
-    char* assign_code;
 
-    // Splice code from lvalue and atribstat_linha
+    // O lvalue já vem resolvido pela ação CODIGO_avaliar_identificador
+    // A string de acesso já está em lvalue->sdt_mat.no->valor
+    const char* endereco_lhs = lvalue->sdt_mat.no->valor;
+
+    // Junta os códigos
     lista_codigo_adicionar_lista(no_pai->codigo, lvalue->codigo);
     lista_codigo_adicionar_lista(no_pai->codigo, atribstat_linha->codigo);
 
-    if (lvalue->sdt_mat.contador_vetor > 0)
-    {
-        // Assuming mathSDT.node->value holds the calculated array address
-        // This needs a proper way to get the resolved array address.
-        // For simplicity, directly using value for now.
-        snprintf(buffer, sizeof(buffer), "%s = %s",
-                 lvalue->sdt_mat.no->valor,  // This might need more resolution
-                 atribstat_linha->res_var_codigo.var);
-        assign_code = buffer;
-    }
-    else
-    {
-        snprintf(buffer, sizeof(buffer), "%s = %s",
-                 lvalue->filhos[0]->token->lexema,  // Direct identifier lexeme
-                 atribstat_linha->res_var_codigo.var);
-        assign_code = buffer;
-    }
-    adicionar_string(no_pai->codigo, assign_code);
+    // Gera a instrução final
+    char buffer[256];
+    snprintf(buffer, sizeof(buffer), "%s = %s", endereco_lhs, atribstat_linha->res_var_codigo.var);
+    adicionar_string(no_pai->codigo, buffer);
 }
 
 void CODIGO_definir_valor_expressao(NoAST* no_pai, GerenciadorEscopo* gerenciador)
@@ -751,18 +738,25 @@ int* AUXILIAR_obter_tamanhos_vetor(const char* tipo_str, int* num_elementos)
         return NULL;
     }
 
-    int temp_values[32];  // Buffer temporário
+    int temp_values[32];  // Buffer temporário para até 32 dimensões
     int count = 0;
     const char* ptr = tipo_str;
 
+    // A lógica correta é procurar por números dentro da string
     while (*ptr != '\0' && count < 32)
     {
-        if (*ptr >= '0' && *ptr <= '9')
+        // Pula caracteres não numéricos
+        if (!isdigit((unsigned char)*ptr))
         {
-            // Itera dígito por dígito, imitando o bug do C++
-            temp_values[count++] = *ptr - '0';
+            ptr++;
+            continue;
         }
-        ptr++;
+
+        // Encontrou um dígito, agora lê o número inteiro completo
+        char* end_ptr;
+        long val = strtol(ptr, &end_ptr, 10);
+        temp_values[count++] = (int)val;
+        ptr = end_ptr;  // Avança o ponteiro para depois do número lido
     }
 
     *num_elementos = count;
@@ -772,16 +766,109 @@ int* AUXILIAR_obter_tamanhos_vetor(const char* tipo_str, int* num_elementos)
     }
 
     int* values = (int*)malloc(sizeof(int) * count);
-    if (!values) return NULL;
+    if (!values)
+    {
+        *num_elementos = 0;
+        return NULL;
+    }
     memcpy(values, temp_values, sizeof(int) * count);
 
     return values;
 }
 
 // =================================================================
-// Implementações do namespace EXPA (Ações para expressões)
+// Implementações do namespace AEXP (Ações para expressões)
 // =================================================================
-void EXPA_lexema_para_valor(NoAST* no_pai, GerenciadorEscopo* gerenciador)
+
+// AÇÃO CENTRAL PARA RESOLVER LVALUES
+void AEXP_avaliar_identificador_lvalue(NoAST* no_pai, GerenciadorEscopo* gerenciador)
+{
+    // A regra é LVALUE -> IDENT ALLOCAUX
+    NoAST* lvalue_node = no_pai;  // O nó pai é o próprio LVALUE
+    NoAST* ident_node = lvalue_node->filhos[0];
+    NoAST* allocaux_node = lvalue_node->filhos[1];
+
+    // Verificar declaração
+    if (!gerenciador_simbolo_declarado(gerenciador, ident_node->token))
+    {
+        char msg_error[512];
+        snprintf(msg_error, sizeof(msg_error), "%s usado antes da declaracao na linha %d:%d",
+                 ident_node->token->lexema, ident_node->token->linha, ident_node->token->coluna);
+        LANCAR_ERRO_SEMANTICO(msg_error);
+    }
+    gerenciador_registrar_uso_simbolo(gerenciador, ident_node->token);
+
+    char* tipo_str = gerenciador_obter_tipo_simbolo(gerenciador, ident_node->token);
+    if (!tipo_str)
+    {
+        LANCAR_ERRO_SEMANTICO("Simbolo nao encontrado ou sem tipo definido.");
+        return;
+    }
+
+    // Propaga informações do allocaux para o lvalue
+    lvalue_node->sdt_mat.contador_vetor = allocaux_node->sdt_mat.contador_vetor;
+    lista_codigo_adicionar_lista(lvalue_node->codigo, allocaux_node->codigo);
+
+    if (lvalue_node->sdt_mat.contador_vetor > 0)  // É um acesso de array
+    {
+        int num_dimensoes_declaradas = 0;
+        int* dimensoes_maximas = AUXILIAR_obter_tamanhos_vetor(tipo_str, &num_dimensoes_declaradas);
+
+        if (lvalue_node->sdt_mat.contador_vetor != num_dimensoes_declaradas)
+        {
+            char msg_error[512];
+            snprintf(msg_error, sizeof(msg_error),
+                     "Numero incorreto de indices para o array '%s'. Esperado: %d, Fornecido: %d",
+                     ident_node->token->lexema, num_dimensoes_declaradas,
+                     lvalue_node->sdt_mat.contador_vetor);
+            LANCAR_ERRO_SEMANTICO(msg_error);
+        }
+
+        ListaString* variaveis_indices = allocaux_node->sdt_mat.vetor_array_var;
+        char* somador_temp = gerar_variavel_temporaria(resolvedor_global);
+        char buffer[256];
+
+        snprintf(buffer, sizeof(buffer), "%s = 0", somador_temp);
+        adicionar_string(lvalue_node->codigo, buffer);
+
+        for (int i = 0; i < variaveis_indices->tamanho; i++)
+        {
+            char* var_indice_atual = variaveis_indices->itens[i];
+            char* temp_mult = gerar_variavel_temporaria(resolvedor_global);
+            snprintf(buffer, sizeof(buffer), "%s = %s", temp_mult, var_indice_atual);
+            adicionar_string(lvalue_node->codigo, buffer);
+            for (int j = i + 1; j < num_dimensoes_declaradas; j++)
+            {
+                snprintf(buffer, sizeof(buffer), "%s = %s * %d", temp_mult, temp_mult,
+                         dimensoes_maximas[j]);
+                adicionar_string(lvalue_node->codigo, buffer);
+            }
+            snprintf(buffer, sizeof(buffer), "%s = %s + %s", somador_temp, somador_temp, temp_mult);
+            adicionar_string(lvalue_node->codigo, buffer);
+            free(temp_mult);
+        }
+
+        char acesso_final[256];
+        snprintf(acesso_final, sizeof(acesso_final), "%s[%s]", ident_node->token->lexema,
+                 somador_temp);
+
+        char* tipo_final = AUXILIAR_obter_tipo(tipo_str, lvalue_node->sdt_mat.contador_vetor);
+        lvalue_node->sdt_mat.no = criar_no_expressao_simples('n', tipo_final, acesso_final);
+
+        free(somador_temp);
+        free(dimensoes_maximas);
+        free(tipo_final);
+    }
+    else  // É uma variável escalar
+    {
+        lvalue_node->sdt_mat.no =
+            criar_no_expressao_simples('n', tipo_str, ident_node->token->lexema);
+    }
+
+    free(tipo_str);
+}
+
+void AEXP_lexema_para_valor(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
     // FACTOR -> int_constant | float_constant | string_constant
     // Factor.Node = new Node(value)
@@ -814,7 +901,7 @@ void EXPA_lexema_para_valor(NoAST* no_pai, GerenciadorEscopo* gerenciador)
     free(type_str);
 }
 
-void EXPA_definir_operacao(NoAST* no_pai, GerenciadorEscopo* gerenciador)
+void AEXP_definir_operacao(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
     NoAST* numexpr_aux_node = no_pai;
     NoAST* operation_node = no_pai->filhos[0];
@@ -830,111 +917,41 @@ void EXPA_definir_operacao(NoAST* no_pai, GerenciadorEscopo* gerenciador)
     copiar_res_var_codigo(&numexpr_aux_node->res_var_codigo, &numexpression_node->res_var_codigo);
 }
 
-void EXPA_ident_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador)
+void AEXP_ident_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
     // FACTOR -> LVALUE
     NoAST* factor_node = no_pai;
     NoAST* lvalue_node = factor_node->filhos[0];
 
-    // Filhos do LVALUE são IDENT e ALLOCAUX
-    NoAST* ident_node = lvalue_node->filhos[0];
-    NoAST* allocaux_node = lvalue_node->filhos[1];
+    // O lvalue já vem resolvido. Apenas propague a informação para o nó FACTOR.
 
-    // 1. VERIFICAR SE O SÍMBOLO FOI DECLARADO
-    if (!gerenciador_simbolo_declarado(gerenciador, ident_node->token))
-    {
-        char msg_error[512];
-        snprintf(msg_error, sizeof(msg_error), "%s usado antes da declaracao na linha %d:%d",
-                 ident_node->token->lexema, ident_node->token->linha, ident_node->token->coluna);
-        LANCAR_ERRO_SEMANTICO(msg_error);
-    }
-    gerenciador_registrar_uso_simbolo(gerenciador, ident_node->token);
+    // Propaga o nó da árvore de expressão
+    factor_node->sdt_mat.no = lvalue_node->sdt_mat.no;
+    lvalue_node->sdt_mat.no = NULL;  // Evita double free
 
-    // 2. OBTER TIPO DO SÍMBOLO
-    char* tipo_str = gerenciador_obter_tipo_simbolo(gerenciador, ident_node->token);
-    if (!tipo_str)
-    {
-        LANCAR_ERRO_SEMANTICO("Símbolo não encontrado ou sem tipo definido na expressão.");
-        return;
-    }
+    // Propaga o contador
+    factor_node->sdt_mat.contador_vetor = lvalue_node->sdt_mat.contador_vetor;
 
-    // DECLARAÇÕES NECESSÁRIAS
-    int num_elementos = 0;
-    int* dimensoes_maximas = AUXILIAR_obter_tamanhos_vetor(tipo_str, &num_elementos);
-    char* tipo_final = AUXILIAR_obter_tipo(tipo_str, factor_node->sdt_mat.contador_vetor);
-
-    factor_node->sdt_mat.contador_vetor = allocaux_node->sdt_mat.contador_vetor;
+    // Propaga o código
     lista_codigo_adicionar_lista(factor_node->codigo, lvalue_node->codigo);
 
+    // Se for um R-Value de array, precisamos carregar o valor em uma temp.
     if (factor_node->sdt_mat.contador_vetor > 0)
     {
-        ListaString* variaveis_indices = allocaux_node->sdt_mat.vetor_array_var;
-        char* somador_temp = gerar_variavel_temporaria(resolvedor_global);
+        char* resultado_leitura = gerar_variavel_temporaria(resolvedor_global);
         char buffer[256];
-
-        // Inicializar somador
-        snprintf(buffer, sizeof(buffer), "%s = 0", somador_temp);
+        snprintf(buffer, sizeof(buffer), "%s = %s", resultado_leitura,
+                 factor_node->sdt_mat.no->valor);
         adicionar_string(factor_node->codigo, buffer);
-
-        int contador = 0;
-        for (int i = 0; i < variaveis_indices->tamanho; i++)
-        {
-            char* var_indice = variaveis_indices->itens[i];
-            char* temp_atual = gerar_variavel_temporaria(resolvedor_global);
-
-            // Calcular índice atual
-            snprintf(buffer, sizeof(buffer), "%s = %s", temp_atual, var_indice);
-            adicionar_string(factor_node->codigo, buffer);
-
-            // Multiplicar pelas dimensões anteriores
-            if (contador > 0)
-            {
-                for (int j = 0; j < contador; j++)
-                {
-                    if (j < num_elementos)
-                    {
-                        snprintf(buffer, sizeof(buffer), "%s = %s * %d", temp_atual, temp_atual,
-                                 dimensoes_maximas[j]);
-                        adicionar_string(factor_node->codigo, buffer);
-                    }
-                }
-            }
-
-            // Acumular no somador
-            snprintf(buffer, sizeof(buffer), "%s = %s + %s", somador_temp, somador_temp,
-                     temp_atual);
-            adicionar_string(factor_node->codigo, buffer);
-
-            free(temp_atual);
-            contador++;
-        }
-
-        // Gerar acesso ao array
-        char acesso_final[256];
-        snprintf(acesso_final, sizeof(acesso_final), "%s[%s]", ident_node->token->lexema,
-                 somador_temp);
-
-        factor_node->sdt_mat.no = criar_no_expressao_simples('n', tipo_final, acesso_final);
-        if (factor_node->res_var_codigo.var) free(factor_node->res_var_codigo.var);
-        factor_node->res_var_codigo.var = strdup(acesso_final);
-
-        free(somador_temp);
+        factor_node->res_var_codigo.var = resultado_leitura;
     }
-    else
+    else  // Se for escalar, a variável já é o próprio nome/valor.
     {
-        // Lógica para variável simples
-        factor_node->sdt_mat.no =
-            criar_no_expressao_simples('n', tipo_str, ident_node->token->lexema);
-        if (factor_node->res_var_codigo.var) free(factor_node->res_var_codigo.var);
-        factor_node->res_var_codigo.var = strdup(ident_node->token->lexema);
+        factor_node->res_var_codigo.var = strdup(factor_node->sdt_mat.no->valor);
     }
-
-    free(tipo_str);
-    free(tipo_final);
-    free(dimensoes_maximas);
 }
 
-void EXPA_valor_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador)
+void AEXP_valor_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
     // UNARYEXPR -> FACTOR
     NoAST* unaryexpr_node = no_pai;
@@ -946,7 +963,7 @@ void EXPA_valor_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador)
     lista_codigo_adicionar_lista(unaryexpr_node->codigo, factor_node->codigo);
 }
 
-void EXPA_valor_segundo_filho_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador)
+void AEXP_valor_segundo_filho_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
     // UNARYEXPR -> PLUS/MINUS FACTOR
     NoAST* unaryexpr_node = no_pai;
@@ -967,7 +984,7 @@ void EXPA_valor_segundo_filho_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenc
     free(var_operando);
 }
 
-void EXPA_gerar_no(NoAST* no_pai, GerenciadorEscopo* gerenciador)
+void AEXP_gerar_no(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
     // EX: NUMEXPRESSION -> TERM NUMEXPRESSIONAUX
     NoAST* numexpr_node = no_pai;
@@ -1034,7 +1051,7 @@ void EXPA_gerar_no(NoAST* no_pai, GerenciadorEscopo* gerenciador)
     numexpr_node->res_var_codigo.var = resultado_esquerda;
 }
 
-void EXPA_definir_operacao2(NoAST* no_pai, GerenciadorEscopo* gerenciador)
+void AEXP_definir_operacao2(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
     NoAST* unaryexpr_aux_node = no_pai;
     NoAST* op_node = no_pai->filhos[0];
@@ -1050,7 +1067,7 @@ void EXPA_definir_operacao2(NoAST* no_pai, GerenciadorEscopo* gerenciador)
     copiar_res_var_codigo(&unaryexpr_aux_node->res_var_codigo, &term_node->res_var_codigo);
 }
 
-void EXPA_termo(NoAST* no_pai, GerenciadorEscopo* gerenciador)
+void AEXP_termo(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
     NoAST* term_node = no_pai;  // O nó TERM que está sendo processado
     NoAST* unary_node = term_node->filhos[0];
@@ -1098,7 +1115,7 @@ void EXPA_termo(NoAST* no_pai, GerenciadorEscopo* gerenciador)
     term_node->res_var_codigo.var = var_resultado_esq;
 }
 
-void EXPA_imprimir_expressao0_h(NoAST* no_pai, GerenciadorEscopo* gerenciador)
+void AEXP_imprimir_expressao0_h(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
     // EXPRESSION -> NUMEXPRESSION EXPRESSION'
     NoAST* numexpression_node = no_pai->filhos[0];
@@ -1109,7 +1126,7 @@ void EXPA_imprimir_expressao0_h(NoAST* no_pai, GerenciadorEscopo* gerenciador)
     }
 }
 
-void EXPA_imprimir_expressao0(NoAST* no_pai, GerenciadorEscopo* gerenciador)
+void AEXP_imprimir_expressao0(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
     // EXPRESSION -> NUMEXPRESSION EXPRESSION'
     NoAST* expression_node = no_pai;
@@ -1128,7 +1145,7 @@ void EXPA_imprimir_expressao0(NoAST* no_pai, GerenciadorEscopo* gerenciador)
     imprimir_arvore(numexpression_node->sdt_mat.no);
 }
 
-void EXPA_passar_numero(NoAST* no_pai, GerenciadorEscopo* gerenciador)
+void AEXP_passar_numero(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
     // FACTOR -> OPEN_PARENTHESIS NUMEXPRESSION CLOSE_PARENTHESIS
     NoAST* factor_node = no_pai;
@@ -1143,83 +1160,45 @@ void EXPA_passar_numero(NoAST* no_pai, GerenciadorEscopo* gerenciador)
     numexpression_node->sdt_mat.no = NULL;
 }
 
-void EXPA_imprimir_expressao1(NoAST* no_pai, GerenciadorEscopo* gerenciador)
+void AEXP_imprimir_expressao1(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
     // EXPRESSION' -> RELOP NUMEXPRESSION
     NoAST* numexpression_node = no_pai->filhos[1];
     imprimir_arvore(numexpression_node->sdt_mat.no);
 }
 
-void EXPA_imprimir_expressao2(NoAST* no_pai, GerenciadorEscopo* gerenciador)
+void AEXP_imprimir_expressao2(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
     // ALLOCEXPRESSION' -> TYPE OPEN_BRACKET NUMEXPRESSION CLOSE_BRACKET ALLOCAUX
     NoAST* numexpression_node = no_pai->filhos[2];
     imprimir_arvore(numexpression_node->sdt_mat.no);
 }
 
-void EXPA_calculo_indice(NoAST* no_pai, GerenciadorEscopo* gerenciador)
+void AEXP_coletar_indice(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
-    // ALLOCAUX -> [ NUMEXPRESSION ] ALLOCAUX1
+    // A regra é: ALLOCAUX -> [ NUMEXPRESSION ] ALLOCAUX'
     NoAST* numexpression = no_pai->filhos[1];
-    NoAST* allocaux1 = no_pai->filhos[3];
+    NoAST* allocaux_filho = no_pai->filhos[3];
 
-    // 1. Obter as dimensões do array a partir do tipo
-    char* tipo_simbolo = gerenciador_obter_tipo_simbolo(gerenciador, no_pai->token);
-    int num_dimensoes = 0;
-    int* dimensoes = AUXILIAR_obter_tamanhos_vetor(tipo_simbolo, &num_dimensoes);
+    // 1. Herda o código dos filhos
+    lista_codigo_adicionar_lista(no_pai->codigo, numexpression->codigo);
+    lista_codigo_adicionar_lista(no_pai->codigo, allocaux_filho->codigo);
 
-    // 2. Inicializar variável para o índice calculado
-    char* indice_calculado = gerar_variavel_temporaria(resolvedor_global);
-    char buffer[256];
-    snprintf(buffer, sizeof(buffer), "%s = 0", indice_calculado);
-    adicionar_string(no_pai->codigo, buffer);
-
-    // 3. Gerar código para cálculo do índice linearizado
-    char* temp_mult = gerar_variavel_temporaria(resolvedor_global);
-    for (int i = 0; i < num_dimensoes; i++)
+    // 2. Coleta a variável do índice da expressão (ex: '1', '2', ou uma variável como '$t0')
+    if (numexpression->res_var_codigo.var)
     {
-        // Calcular produto das dimensões anteriores
-        if (i > 0)
-        {
-            snprintf(buffer, sizeof(buffer), "%s = %d", temp_mult, dimensoes[i - 1]);
-            adicionar_string(no_pai->codigo, buffer);
-
-            for (int j = i - 2; j >= 0; j--)
-            {
-                snprintf(buffer, sizeof(buffer), "%s = %s * %d", temp_mult, temp_mult,
-                         dimensoes[j]);
-                adicionar_string(no_pai->codigo, buffer);
-            }
-
-            // Multiplicar índice atual pelo produto das dimensões
-            snprintf(buffer, sizeof(buffer), "%s = %s * %s", temp_mult,
-                     numexpression->res_var_codigo.var, temp_mult);
-            adicionar_string(no_pai->codigo, buffer);
-
-            // Adicionar ao índice calculado
-            snprintf(buffer, sizeof(buffer), "%s = %s + %s", indice_calculado, indice_calculado,
-                     temp_mult);
-            adicionar_string(no_pai->codigo, buffer);
-        }
-        else
-        {
-            // Primeira dimensão
-            snprintf(buffer, sizeof(buffer), "%s = %s", indice_calculado,
-                     numexpression->res_var_codigo.var);
-            adicionar_string(no_pai->codigo, buffer);
-        }
+        adicionar_string(no_pai->sdt_mat.vetor_array_var, numexpression->res_var_codigo.var);
     }
 
-    // 4. Armazenar o índice calculado
-    no_pai->res_var_codigo.var = strdup(indice_calculado);
-    no_pai->sdt_mat.contador_vetor = num_dimensoes;
+    // 3. Junta a lista de índices do filho (para dimensões aninhadas)
+    lista_codigo_adicionar_lista(no_pai->sdt_mat.vetor_array_var,
+                                 allocaux_filho->sdt_mat.vetor_array_var);
 
-    // 5. Liberar memória
-    free(dimensoes);
-    free(tipo_simbolo);
+    // 4. Incrementa o contador de dimensões
+    no_pai->sdt_mat.contador_vetor = 1 + allocaux_filho->sdt_mat.contador_vetor;
 }
 
-void EXPA_inicializar_contador_vetor(NoAST* no_pai, GerenciadorEscopo* gerenciador)
+void AEXP_inicializar_contador_vetor(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
     no_pai->sdt_mat.contador_vetor = 0;
     no_pai->res_var_codigo.var = strdup("0");  // Índice padrão para variáveis escalares

@@ -74,20 +74,23 @@ char* AUXILIAR_obter_tipo(const char* tipo, int contador_vetor);
 int* AUXILIAR_obter_tamanhos_vetor(const char* tipo, int* num_elementos);
 
 // --- Ações para Expressões ---
-void EXPA_passar_numero(NoAST* no_pai, GerenciadorEscopo* gerenciador);
-void EXPA_imprimir_expressao0_h(NoAST* no_pai, GerenciadorEscopo* gerenciador);
-void EXPA_imprimir_expressao0(NoAST* no_pai, GerenciadorEscopo* gerenciador);
-void EXPA_imprimir_expressao1(NoAST* no_pai, GerenciadorEscopo* gerenciador);
-void EXPA_imprimir_expressao2(NoAST* no_pai, GerenciadorEscopo* gerenciador);
-void EXPA_lexema_para_valor(NoAST* no_pai, GerenciadorEscopo* gerenciador);
-void EXPA_definir_operacao(NoAST* no_pai, GerenciadorEscopo* gerenciador);
-void EXPA_ident_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador);
-void EXPA_valor_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador);
-void EXPA_valor_segundo_filho_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador);
-void EXPA_gerar_no(NoAST* no_pai, GerenciadorEscopo* gerenciador);
-void EXPA_definir_operacao2(NoAST* no_pai, GerenciadorEscopo* gerenciador);
-void EXPA_termo(NoAST* no_pai, GerenciadorEscopo* gerenciador);
-void EXPA_inicializar_contador_vetor(NoAST* no_pai, GerenciadorEscopo* gerenciador);
-void EXPA_calculo_indice(NoAST* no_pai, GerenciadorEscopo* gerenciador);
+void AEXP_avaliar_identificador_lvalue(NoAST* no_pai, GerenciadorEscopo* gerenciador);
+void AEXP_passar_numero(NoAST* no_pai, GerenciadorEscopo* gerenciador);
+void AEXP_imprimir_expressao0_h(NoAST* no_pai, GerenciadorEscopo* gerenciador);
+void AEXP_imprimir_expressao0(NoAST* no_pai, GerenciadorEscopo* gerenciador);
+void AEXP_imprimir_expressao1(NoAST* no_pai, GerenciadorEscopo* gerenciador);
+void AEXP_imprimir_expressao2(NoAST* no_pai, GerenciadorEscopo* gerenciador);
+void AEXP_lexema_para_valor(NoAST* no_pai, GerenciadorEscopo* gerenciador);
+void AEXP_definir_operacao(NoAST* no_pai, GerenciadorEscopo* gerenciador);
+void AEXP_ident_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador);
+void AEXP_valor_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador);
+void AEXP_valor_segundo_filho_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador);
+void AEXP_gerar_no(NoAST* no_pai, GerenciadorEscopo* gerenciador);
+void AEXP_definir_operacao2(NoAST* no_pai, GerenciadorEscopo* gerenciador);
+void AEXP_termo(NoAST* no_pai, GerenciadorEscopo* gerenciador);
+void AEXP_inicializar_contador_vetor(NoAST* no_pai, GerenciadorEscopo* gerenciador);
+void AEXP_coletar_indice(NoAST* no_pai, GerenciadorEscopo* gerenciador);
+
+// --- Ações para LValue ---
 
 #endif  // ACOES_SEMANTICAS_H
