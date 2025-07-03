@@ -226,7 +226,6 @@ int main(int argc, char* argv[])
     printf("Processamento concluído com sucesso!\n");
     printf("Todas as expressões foram validadas\n");
     printf("Todas as declarações de variáveis estão corretas\n");
-    printf("Todas as instruções 'break' são válidas\n");
     printf("\n************************************************************\n\n");
 
     printf("Tabelas de Símbolos Geradas:\n\n");
@@ -255,8 +254,6 @@ int main(int argc, char* argv[])
 
     fclose(file_ptr);
     DEBUG_PRINT("[DEBUG] Arquivo fechado.\n");
-
-    printf("\nExecução finalizada com sucesso!\n");
 
     return 0;
 }

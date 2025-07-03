@@ -93,10 +93,16 @@ void CODIGO_lidar_break(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 void CODIGO_lidar_leitura(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
     // READSTAT -> read LVALUE
-    // READSTAT.code = read LVALUE.var [1]
     NoAST* lvalue = no_pai->filhos[1];
+
+    // O nó lvalue já foi resolvido pela sua ação semântica.
+    // Precisamos pegar o código gerado por ela e usar o endereço final.
+    lista_codigo_adicionar_lista(no_pai->codigo, lvalue->codigo);
+
+    const char* endereco = lvalue->sdt_mat.no->valor;
+
     char buffer[256];
-    snprintf(buffer, sizeof(buffer), "read %s", lvalue->res_var_codigo.var);
+    snprintf(buffer, sizeof(buffer), "read %s", endereco);
     adicionar_string(no_pai->codigo, buffer);
 }
 

@@ -1,0 +1,191 @@
+/*******************************************************************************
+ *
+ * PROJETO DE COMPILADOR - ConvCC-2025-1
+ *
+ * ARQUIVO DE DOCUMENTAÇÃO FINAL DA GRAMÁTICA
+ *
+ * Grupo: Nicolas, Patricia, Gustavo
+ * Professor: Alvaro Junio Pereira Franco
+ * Disciplina: INE5426 - Construção de Compiladores
+ *
+ *******************************************************************************
+ *
+ * Este arquivo consolida a gramática base da linguagem, as modificações
+ * e melhorias implementadas e a gramática final LL(1) fatorada.
+ *
+ *******************************************************************************/
+
+
+//==============================================================================
+//
+//               SEÇÃO 1: GRAMÁTICA BASE (ConvCC-2025-1)
+//
+//==============================================================================
+
+PROGRAM          ->  [ STATEMENT FUNCLIST ]
+FUNCLIST         ->  FUNCDEF [ FUNCLIST ]
+FUNCDEF          ->  'def' ident PARAMLIST STATEMENT
+
+PARAMLIST        ->  [ ( 'int' | 'float' | 'string' ) ident [ PARAMLIST ] ]
+
+STATEMENT        ->  VARDECL | ATRIBSTAT | PRINTSTAT | READSTAT | RETURNSTAT | IFSTAT | FORSTAT | STATELIST | 'break' ';'
+
+VARDECL          ->  ( 'int' | 'float' | 'string' ) ident { '[' int_constant ']' }
+ATRIBSTAT        ->  LVALUE '=' ( EXPRESSION | ALLOCEXPRESSION | FUNCCALL )
+
+FUNCCALL         ->  ident '(' [ PARAMLISTCALL ] ')'
+PARAMLISTCALL    ->  ident [ ',' PARAMLISTCALL ]
+
+PRINTSTAT        ->  'print' EXPRESSION
+READSTAT         ->  'read' LVALUE
+RETURNSTAT       ->  'return' EXPRESSION
+
+IFSTAT           ->  'if' EXPRESSION STATEMENT [ 'else' STATEMENT ]
+FORSTAT          ->  'for' ATRIBSTAT EXPRESSION ATRIBSTAT STATEMENT
+STATELIST        ->  '{' STATEMENT { STATEMENT } '}'
+
+ALLOCEXPRESSION  ->  'new' ( 'int' | 'float' | 'string' ) '[' NUMEXPRESSION ']' { '[' NUMEXPRESSION ']' }
+
+EXPRESSION       ->  NUMEXPRESSION [ relop NUMEXPRESSION ]
+NUMEXPRESSION    ->  TERM { ( '+' | '-' ) TERM }
+TERM             ->  FACTOR { ( '*' | '/' | '%' ) FACTOR }
+FACTOR           ->  ident | int_constant | float_constant | string_constant | 'null' | LVALUE | '(' EXPRESSION ')'
+
+LVALUE           ->  ident { '[' EXPRESSION ']' }
+
+
+
+//==============================================================================
+//
+//            SEÇÃO 2: MODIFICAÇÕES E MELHORIAS IMPLEMENTADAS
+//
+//==============================================================================
+
+A gramática final implementada não apenas segue as especificações da linguagem base, mas também incorpora diversas melhorias para torná-la não-ambígua, implementável com um parser LL(1) e mais robusta.
+
+1. FATORAÇÃO COMPLETA PARA ANÁLISE LL(1) E REMOÇÃO DE AMBIGUIDADE
+
+A modificação mais importante e fundamental foi a refatoração de toda a gramática para eliminar recursões à esquerda e ambiguidades, um pré-requisito para o analisador sintático preditivo. A gramática do PDF usa notações como `( ... )*` (zero ou mais) e `[ ... ]` (opcional), que são típicas de EBNF. Essas notações escondem recursões à esquerda que são fatais para um analisador LL(1). A gramática implementada introduz novos não-terminais (ex: TERM', NUMEXPRESSION', STATELIST') para transformar essas recursões em recursões à direita, que podem ser tratadas pelo parser preditivo.
+
+2. INCLUSÃO DA PALAVRA-CHAVE `call` PARA CHAMADAS DE FUNÇÃO
+
+Para tornar a sintaxe de chamada de função explícita e mais clara, a palavra-chave `call` foi adicionada. Na gramática base, uma chamada de função `ident(...)` poderia ser sintaticamente ambígua com outras construções. A introdução da `call` torna a intenção do código inequívoca para o parser.
+
+3. USO OBRIGATÓRIO DE BLOCOS `{...}` EM ESTRUTURAS DE CONTROLE
+
+Esta é uma melhoria crucial para a robustez da linguagem, eliminando a ambiguidade do "dangling else". A gramática base permite `if ... STATEMENT`, o que leva ao problema clássico de não saber a qual `if` um `else` pertence em construções aninhadas. Ao forçar o uso de `{ STATELIST }`, a gramática implementada elimina essa ambiguidade e torna o código mais legível e seguro.
+
+4. FLEXIBILIZAÇÃO DA ESTRUTURA DO PROGRAMA
+
+A gramática implementada permite uma organização de código mais livre, como ter código executável após as declarações de funções. A gramática base sugere um programa que contém ou statements ou funções, mas não ambos de forma clara. A versão final permite que o programador declare todas as suas funções e, em seguida, tenha um bloco de código principal, um padrão muito mais comum.
+
+5. FLEXIBILIZAÇÃO DO COMANDO `return`
+
+A gramática base sugere `return EXPRESSION`, o que não permite retornos vazios (`return;`), comuns em procedimentos (funções void). A versão implementada permite tanto retornar um valor (`return some_variable;`) quanto um retorno vazio, alinhando-se melhor com linguagens como C e Java.
+
+
+
+//==============================================================================
+//
+//          SEÇÃO 3: GRAMÁTICA FINAL IMPLEMENTADA (LL(1) FATORADA)
+//
+//==============================================================================
+
+PROGRAM          ->  FUNCLIST PROGRAM'
+PROGRAM          ->  STATEMENT PROGRAM'
+PROGRAM          ->  ε
+
+PROGRAM'         ->  STATEMENT PROGRAM'
+PROGRAM'         ->  ε
+
+FUNCLIST         ->  FUNCDEF FUNCLIST'
+FUNCLIST'        ->  FUNCDEF FUNCLIST'
+FUNCLIST'        ->  ε
+
+FUNCDEF          ->  'def' ident '(' PARAMLIST ')' '{' STATELIST '}'
+
+PARAMLIST        ->  VARDECL PARAMLIST'
+PARAMLIST        ->  ε
+
+PARAMLIST'       ->  ',' PARAMLIST
+PARAMLIST'       ->  ε
+
+STATEMENT        ->  VARDECL ';'
+STATEMENT        ->  ATRIBSTAT ';'
+STATEMENT        ->  PRINTSTAT ';'
+STATEMENT        ->  READSTAT ';'
+STATEMENT        ->  RETURNSTAT ';'
+STATEMENT        ->  IFSTAT
+STATEMENT        ->  FORSTAT
+STATEMENT        ->  '{' STATELIST '}'
+STATEMENT        ->  'break' ';'
+STATEMENT        ->  ';'
+
+VARDECL          ->  'int' ident INDEX
+VARDECL          ->  'float' ident INDEX
+VARDECL          ->  'string' ident INDEX
+
+INDEX            ->  '[' int_constant ']' INDEX
+INDEX            ->  ε
+
+ATRIBSTAT        ->  LVALUE '=' ATRIBSTAT'
+ATRIBSTAT'       ->  EXPRESSION
+ATRIBSTAT'       ->  ALLOCEXPRESSION
+ATRIBSTAT'       ->  FUNCCALL
+
+FUNCCALL         ->  'call' '(' ident '(' PARAMLISTCALL ')' ')'
+
+PARAMLISTCALL    ->  LVALUE PARAMLISTCALL'
+PARAMLISTCALL    ->  ε
+
+PARAMLISTCALL'   ->  ',' PARAMLISTCALL
+PARAMLISTCALL'   ->  ε
+
+PRINTSTAT        ->  'print' EXPRESSION
+READSTAT         ->  'read' LVALUE
+
+RETURNSTAT       ->  'return' RETURNSTAT'
+RETURNSTAT'      ->  EXPRESSION
+RETURNSTAT'      ->  ε
+
+IFSTAT           ->  'if' '(' EXPRESSION ')' '{' STATELIST '}' IFSTAT'
+IFSTAT'          ->  'else' '{' STATELIST '}'
+IFSTAT'          ->  ε
+
+FORSTAT          ->  'for' '(' ATRIBSTAT ';' EXPRESSION ';' ATRIBSTAT ')' '{' STATELIST '}'
+
+STATELIST        ->  STATEMENT STATELIST'
+STATELIST'       ->  STATEMENT STATELIST'
+STATELIST'       ->  ε
+
+LVALUE           ->  ident ALLOCAUX
+ALLOCAUX         ->  '[' EXPRESSION ']' ALLOCAUX
+ALLOCAUX         ->  ε
+
+ALLOCEXPRESSION  ->  'new' VARDECL
+
+EXPRESSION       ->  NUMEXPRESSION EXPRESSION'
+EXPRESSION'      ->  relop NUMEXPRESSION
+EXPRESSION'      ->  ε
+
+NUMEXPRESSION    ->  TERM NUMEXPRESSION'
+NUMEXPRESSION'   ->  '+' TERM NUMEXPRESSION'
+NUMEXPRESSION'   ->  '-' TERM NUMEXPRESSION'
+NUMEXPRESSION'   ->  ε
+
+TERM             ->  UNARYEXPR TERM'
+TERM'            ->  '*' UNARYEXPR TERM'
+TERM'            ->  '/' UNARYEXPR TERM'
+TERM'            ->  '%' UNARYEXPR TERM'
+TERM'            ->  ε
+
+UNARYEXPR        ->  '+' FACTOR
+UNARYEXPR        ->  '-' FACTOR
+UNARYEXPR        ->  FACTOR
+
+FACTOR           ->  LVALUE
+FACTOR           ->  int_constant
+FACTOR           ->  float_constant
+FACTOR           ->  string_constant
+FACTOR           ->  'null'
+FACTOR           ->  '(' EXPRESSION ')'
