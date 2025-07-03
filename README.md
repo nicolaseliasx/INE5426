@@ -59,21 +59,25 @@ Para compilar e executar este projeto, você precisará de:
 
 ## Como Executar
 
-### 1. Limpar builds anteriores (opcional, mas recomendado):
-
-```bash
-make clean
-```
+### 1. Compila o projeto com make
 
 ```bash
 make
 ```
+
+### 2. Executa o projeto da seguinte forma:
 
 ```bash
 ./compilador ~/ufsc/compiladores/main/src/tests/teste_2_break.txt
 ```
 
 Nota: Substitua o caminho pelo seu arquivo de teste específico.
+
+### Limpar builds anteriores (opcional, mas recomendado):
+
+```bash
+make clean
+```
 
 ## Saída Esperada
 
