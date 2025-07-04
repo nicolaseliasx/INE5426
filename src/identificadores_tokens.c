@@ -196,6 +196,7 @@ static const char* estados_finais_ident[] = {"final_consumido", "final_retrocede
 static const char* estados_mortos_ident[] = {"morto"};
 static const char* estados_retrocesso_ident[] = {"final_retrocede"};
 
+// FSM para identificadores
 static MaquinaEstados maquina_ident = {
     .transicoes = transicoes_ident,
     .num_transicoes = sizeof(transicoes_ident) / sizeof(TransicaoEstado),
@@ -238,6 +239,7 @@ static const char* estados_finais_float[] = {"final_consumido", "final_retrocede
 static const char* estados_mortos_float[] = {"morto"};
 static const char* estados_retrocesso_float[] = {"final_retrocede"};
 
+// FSM para números de ponto flutuante (NPF)
 static MaquinaEstados maquina_float = {
     .transicoes = transicoes_float,
     .num_transicoes = sizeof(transicoes_float) / sizeof(TransicaoEstado),
@@ -255,13 +257,17 @@ static TransicaoEstado transicoes_mathop[] = {{"0", estado_mathop_0}};
 static const char* estados_finais_mathop[] = {"final"};
 static const char* estados_mortos_mathop[] = {"morto"};
 
-static MaquinaEstados maquina_mathop = {transicoes_mathop,
-                                        sizeof(transicoes_mathop) / sizeof(TransicaoEstado),
-                                        "0",
-                                        estados_finais_mathop,
-                                        sizeof(estados_finais_mathop) / sizeof(const char*),
-                                        estados_mortos_mathop,
-                                        sizeof(estados_mortos_mathop) / sizeof(const char*)};
+// FSM para operadores matemáticos (MATHOP)
+static MaquinaEstados maquina_mathop = {
+    .transicoes = transicoes_mathop,
+    .num_transicoes = sizeof(transicoes_mathop) / sizeof(TransicaoEstado),
+    .estado_inicial = "0",
+    .estados_finais = estados_finais_mathop,
+    .num_estados_finais = sizeof(estados_finais_mathop) / sizeof(const char*),
+    .estados_mortos = estados_mortos_mathop,
+    .num_estados_mortos = sizeof(estados_mortos_mathop) / sizeof(const char*),
+    .estados_retrocesso = NULL,
+    .num_estados_retrocesso = 0};
 
 // FSM para caracteres únicos (ONECHAR)
 static TransicaoEstado transicoes_onechar[] = {{"0", estado_onechar_0}};
@@ -269,13 +275,17 @@ static TransicaoEstado transicoes_onechar[] = {{"0", estado_onechar_0}};
 static const char* estados_finais_onechar[] = {"final"};
 static const char* estados_mortos_onechar[] = {"morto"};
 
-static MaquinaEstados maquina_onechar = {transicoes_onechar,
-                                         sizeof(transicoes_onechar) / sizeof(TransicaoEstado),
-                                         "0",
-                                         estados_finais_onechar,
-                                         sizeof(estados_finais_onechar) / sizeof(const char*),
-                                         estados_mortos_onechar,
-                                         sizeof(estados_mortos_onechar) / sizeof(const char*)};
+// FSM para caracteres únicos (ONECHAR)
+static MaquinaEstados maquina_onechar = {
+    .transicoes = transicoes_onechar,
+    .num_transicoes = sizeof(transicoes_onechar) / sizeof(TransicaoEstado),
+    .estado_inicial = "0",
+    .estados_finais = estados_finais_onechar,
+    .num_estados_finais = sizeof(estados_finais_onechar) / sizeof(const char*),
+    .estados_mortos = estados_mortos_onechar,
+    .num_estados_mortos = sizeof(estados_mortos_onechar) / sizeof(const char*),
+    .estados_retrocesso = NULL,
+    .num_estados_retrocesso = 0};
 
 // FSM para constantes de string (STRC)
 static TransicaoEstado transicoes_strc[] = {{"0", estado_strc_0}, {"1", estado_strc_1}};
@@ -283,13 +293,17 @@ static TransicaoEstado transicoes_strc[] = {{"0", estado_strc_0}, {"1", estado_s
 static const char* estados_finais_strc[] = {"final"};
 static const char* estados_mortos_strc[] = {"morto"};
 
-static MaquinaEstados maquina_strc = {transicoes_strc,
-                                      sizeof(transicoes_strc) / sizeof(TransicaoEstado),
-                                      "0",
-                                      estados_finais_strc,
-                                      sizeof(estados_finais_strc) / sizeof(const char*),
-                                      estados_mortos_strc,
-                                      sizeof(estados_mortos_strc) / sizeof(const char*)};
+// FSM para constantes de string (STRC)
+static MaquinaEstados maquina_strc = {
+    .transicoes = transicoes_strc,
+    .num_transicoes = sizeof(transicoes_strc) / sizeof(TransicaoEstado),
+    .estado_inicial = "0",
+    .estados_finais = estados_finais_strc,
+    .num_estados_finais = sizeof(estados_finais_strc) / sizeof(const char*),
+    .estados_mortos = estados_mortos_strc,
+    .num_estados_mortos = sizeof(estados_mortos_strc) / sizeof(const char*),
+    .estados_retrocesso = NULL,
+    .num_estados_retrocesso = 0};
 
 // FSM para operadores relacionais (RELOP)
 static TransicaoEstado transicoes_relop[] = {
@@ -300,15 +314,17 @@ static const char* estados_mortos_relop[] = {"morto"};
 
 static const char* estados_retrocesso_relop[] = {"final_1"};
 
-static MaquinaEstados maquina_relop = {transicoes_relop,
-                                       sizeof(transicoes_relop) / sizeof(TransicaoEstado),
-                                       "0",
-                                       estados_finais_relop,
-                                       sizeof(estados_finais_relop) / sizeof(const char*),
-                                       estados_mortos_relop,
-                                       sizeof(estados_mortos_relop) / sizeof(const char*),
-                                       estados_retrocesso_relop,
-                                       sizeof(estados_retrocesso_relop) / sizeof(const char*)};
+// FSM para operadores relacionais (RELOP)
+static MaquinaEstados maquina_relop = {
+    .transicoes = transicoes_relop,
+    .num_transicoes = sizeof(transicoes_relop) / sizeof(TransicaoEstado),
+    .estado_inicial = "0",
+    .estados_finais = estados_finais_relop,
+    .num_estados_finais = sizeof(estados_finais_relop) / sizeof(const char*),
+    .estados_mortos = estados_mortos_relop,
+    .num_estados_mortos = sizeof(estados_mortos_relop) / sizeof(const char*),
+    .estados_retrocesso = estados_retrocesso_relop,
+    .num_estados_retrocesso = sizeof(estados_retrocesso_relop) / sizeof(const char*)};
 
 // =================================================================
 // Inicialização dos identificadores de token

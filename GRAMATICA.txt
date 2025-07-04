@@ -61,131 +61,163 @@ LVALUE           ->  ident { '[' EXPRESSION ']' }
 //
 //==============================================================================
 
-A gramática final implementada não apenas segue as especificações da linguagem base, mas também incorpora diversas melhorias para torná-la não-ambígua, implementável com um parser LL(1) e mais robusta.
+A gramática final implementada não apenas segue as especificações da linguagem base (ConvCC-2025-1), mas também incorpora diversas melhorias para torná-la não-ambígua, implementável com um parser LL(1) e mais robusta e poderosa para o programador. As principais modificações são detalhadas a seguir:
 
 1. FATORAÇÃO COMPLETA PARA ANÁLISE LL(1) E REMOÇÃO DE AMBIGUIDADE
 
-A modificação mais importante e fundamental foi a refatoração de toda a gramática para eliminar recursões à esquerda e ambiguidades, um pré-requisito para o analisador sintático preditivo. A gramática do PDF usa notações como `( ... )*` (zero ou mais) e `[ ... ]` (opcional), que são típicas de EBNF. Essas notações escondem recursões à esquerda que são fatais para um analisador LL(1). A gramática implementada introduz novos não-terminais (ex: TERM', NUMEXPRESSION', STATELIST') para transformar essas recursões em recursões à direita, que podem ser tratadas pelo parser preditivo.
+A modificação mais fundamental foi a refatoração de toda a gramática para eliminar recursões à esquerda e ambiguidades, um pré-requisito para o analisador sintático preditivo. A gramática do PDF usa notações como `( ... )*` (zero ou mais) e `[ ... ]` (opcional), que são típicas de EBNF. Essas notações escondem recursões à esquerda que são fatais para um analisador LL(1). A gramática implementada introduz novos não-terminais (ex: `NUMEXPRESSIONAUX`, `UNARYEXPRAUX`, `STATELIST'`) para transformar essas recursões em recursões à direita, que podem ser tratadas com sucesso pelo parser preditivo.
 
-2. INCLUSÃO DA PALAVRA-CHAVE `call` PARA CHAMADAS DE FUNÇÃO
 
-Para tornar a sintaxe de chamada de função explícita e mais clara, a palavra-chave `call` foi adicionada. Na gramática base, uma chamada de função `ident(...)` poderia ser sintaticamente ambígua com outras construções. A introdução da `call` torna a intenção do código inequívoca para o parser.
+2. SINTAXE INEQUÍVOCA PARA CHAMADAS DE FUNÇÃO
+
+Para resolver a ambiguidade entre um acesso a vetor e uma chamada de função, a sintaxe foi alterada de duas formas:
+
+   a) **Inclusão da palavra-chave `call`:** Torna a intenção de chamar uma função explícita e imediatamente reconhecível pelo parser.
+   b) **Uso de parênteses externos:** A sintaxe final `call(ident(...))` encapsula toda a chamada.
+
+   - **Gramática Base:** `ident(...)`
+   - **Gramática Final:** `call(ident(...))`
+
+   Essa mudança elimina qualquer possibilidade de conflito sintático, como em `minha_var(indice)`, que poderia ser uma chamada de função ou um acesso a vetor em outras linguagens.
 
 3. USO OBRIGATÓRIO DE BLOCOS `{...}` EM ESTRUTURAS DE CONTROLE
 
-Esta é uma melhoria crucial para a robustez da linguagem, eliminando a ambiguidade do "dangling else". A gramática base permite `if ... STATEMENT`, o que leva ao problema clássico de não saber a qual `if` um `else` pertence em construções aninhadas. Ao forçar o uso de `{ STATELIST }`, a gramática implementada elimina essa ambiguidade e torna o código mais legível e seguro.
+Esta é uma melhoria crucial para a robustez da linguagem, eliminando a famosa ambiguidade do "dangling else". 
 
-4. FLEXIBILIZAÇÃO DA ESTRUTURA DO PROGRAMA
+   - **Gramática Base:** `if EXPRESSION STATEMENT [ else STATEMENT ]`
+   - **Gramática Final:** `if (...) { STATELIST } [ else { STATELIST } ]`
 
-A gramática implementada permite uma organização de código mais livre, como ter código executável após as declarações de funções. A gramática base sugere um programa que contém ou statements ou funções, mas não ambos de forma clara. A versão final permite que o programador declare todas as suas funções e, em seguida, tenha um bloco de código principal, um padrão muito mais comum.
+   A gramática base permite construções como `if (c1) if (c2) s1; else s2;`, onde não fica claro a qual `if` o `else` pertence. Ao forçar o uso de blocos `{ STATELIST }` para os corpos de `if`, `else` e `for`, a gramática implementada elimina essa ambiguidade, tornando o código mais legível e seguro.
 
-5. FLEXIBILIZAÇÃO DO COMANDO `return`
+4. SINTAXE ESTRUTURADA PARA `if` e `for`
 
-A gramática base sugere `return EXPRESSION`, o que não permite retornos vazios (`return;`), comuns em procedimentos (funções void). A versão implementada permite tanto retornar um valor (`return some_variable;`) quanto um retorno vazio, alinhando-se melhor com linguagens como C e Java.
+Para alinhar a linguagem com a sintaxe familiar de C e Java, foi adicionada a obrigatoriedade do uso de parênteses `()` ao redor das seções de controle.
 
+   - **Gramática Base:** `for ATRIBSTAT EXPRESSION ATRIBSTAT ...`
+   - **Gramática Final:** `for (ATRIBSTAT; EXPRESSION; ATRIBSTAT) ...`
+
+   Essa mudança não altera a semântica, mas melhora drasticamente a legibilidade e a organização do código, tornando as três partes do `for` (inicialização, condição, incremento) claramente delimitadas.
+
+
+5. FLEXIBILIZAÇÃO DA ESTRUTURA DO PROGRAMA
+
+A gramática implementada permite uma organização de código mais livre, como ter código executável após as declarações de funções, ou até mesmo um programa sem nenhuma função. A gramática base era restritiva, sugerindo um programa que continha ou `STATEMENT` ou `FUNCLIST`. A versão final permite que o programador declare todas as suas funções e, em seguida, tenha um bloco de código principal, um padrão muito mais comum e prático.
+
+6. FLEXIBILIZAÇÃO DE PARÂMETROS E RETORNOS
+
+   a) **Retorno Vazio:** A gramática base sugere `return EXPRESSION`, o que não permite retornos vazios (`return;`), comuns em procedimentos (funções `void`). A versão implementada permite tanto retornar um valor quanto um retorno vazio, alinhando-se melhor com linguagens como C e Java.
+
+   b) **Passagem de `LVALUE` como Parâmetro:** A gramática base só permitia `ident` como parâmetro em uma chamada de função. A versão final foi aprimorada para aceitar um `LVALUE` completo. Isso torna a linguagem muito mais poderosa, permitindo passar não apenas variáveis simples, mas também elementos de vetores como parâmetros.
+      - **Exemplo Possível Agora:** `minha_funcao(meu_vetor[i+1]);`
+
+7. GENERALIZAÇÃO DO ÍNDICE DE VETORES
+
+A gramática base definia o acesso a um vetor como `LVALUE -> ident([NUMEXPRESSION])`. Isso era restritivo, pois o índice só poderia ser uma expressão numérica simples, sem operadores relacionais. A implementação final generalizou essa regra para aceitar uma `EXPRESSION` completa como índice.
+
+   - **Gramática Base:** `ident [NUMEXPRESSION]`
+   - **Gramática Final:** `ident [EXPRESSION]`
+
+   Isso permite construções mais complexas e úteis, como `meu_vetor[i > 5]`, cujo resultado (0 ou 1) pode ser usado como um índice válido.
 
 
 //==============================================================================
 //
-//          SEÇÃO 3: GRAMÁTICA FINAL IMPLEMENTADA (LL(1) FATORADA)
+//        SEÇÃO 3: GRAMÁTICA FINAL IMPLEMENTADA (LL(1) FATORADA)
 //
 //==============================================================================
 
-PROGRAM          ->  FUNCLIST PROGRAM'
-PROGRAM          ->  STATEMENT PROGRAM'
-PROGRAM          ->  ε
+PROGRAM         -> FUNCLIST PROGRAM'
+PROGRAM         -> STATEMENT PROGRAM'
+PROGRAM         -> ε
 
-PROGRAM'         ->  STATEMENT PROGRAM'
-PROGRAM'         ->  ε
+PROGRAM'        -> PROGRAM 
+PROGRAM'        -> ε
 
-FUNCLIST         ->  FUNCDEF FUNCLIST'
-FUNCLIST'        ->  FUNCDEF FUNCLIST'
-FUNCLIST'        ->  ε
+FUNCLIST        -> FUNCDEF FUNCLIST'
+FUNCLIST'       -> FUNCLIST
+FUNCLIST'       -> ε
 
-FUNCDEF          ->  'def' ident '(' PARAMLIST ')' '{' STATELIST '}'
+FUNCDEF         -> 'def' ident '(' PARAMLIST ')' '{' STATELIST '}'
 
-PARAMLIST        ->  VARDECL PARAMLIST'
-PARAMLIST        ->  ε
+PARAMLIST       -> VARDECL PARAMLIST'
+PARAMLIST       -> ε
 
-PARAMLIST'       ->  ',' PARAMLIST
-PARAMLIST'       ->  ε
+PARAMLIST'      -> ',' PARAMLIST
+PARAMLIST'      -> ε
 
-STATEMENT        ->  VARDECL ';'
-STATEMENT        ->  ATRIBSTAT ';'
-STATEMENT        ->  PRINTSTAT ';'
-STATEMENT        ->  READSTAT ';'
-STATEMENT        ->  RETURNSTAT ';'
-STATEMENT        ->  IFSTAT
-STATEMENT        ->  FORSTAT
-STATEMENT        ->  '{' STATELIST '}'
-STATEMENT        ->  'break' ';'
-STATEMENT        ->  ';'
+STATEMENT       -> VARDECL ';'
+STATEMENT       -> ATRIBSTAT ';'
+STATEMENT       -> PRINTSTAT ';'
+STATEMENT       -> READSTAT ';'
+STATEMENT       -> RETURNSTAT ';'
+STATEMENT       -> IFSTAT
+STATEMENT       -> FORSTAT
+STATEMENT       -> '{' STATELIST '}'  // Um bloco também é um STATEMENT
+STATEMENT       -> 'break' ';'
+STATEMENT       -> ';'
 
-VARDECL          ->  'int' ident INDEX
-VARDECL          ->  'float' ident INDEX
-VARDECL          ->  'string' ident INDEX
+VARDECL         -> ('int' | 'float' | 'string') ident INDEX
+INDEX           -> '[' int_constant ']' INDEX
+INDEX           -> ε
 
-INDEX            ->  '[' int_constant ']' INDEX
-INDEX            ->  ε
+ATRIBSTAT       -> LVALUE '=' ATRIBSTAT'
+ATRIBSTAT'      -> EXPRESSION
+ATRIBSTAT'      -> ALLOCEXPRESSION
+ATRIBSTAT'      -> FUNCCALL
 
-ATRIBSTAT        ->  LVALUE '=' ATRIBSTAT'
-ATRIBSTAT'       ->  EXPRESSION
-ATRIBSTAT'       ->  ALLOCEXPRESSION
-ATRIBSTAT'       ->  FUNCCALL
+FUNCCALL        -> 'call' '(' ident '(' PARAMLISTCALL ')' ')'
 
-FUNCCALL         ->  'call' '(' ident '(' PARAMLISTCALL ')' ')'
+PARAMLISTCALL   -> LVALUE PARAMLISTCALL' 
+PARAMLISTCALL   -> ε
 
-PARAMLISTCALL    ->  LVALUE PARAMLISTCALL'
-PARAMLISTCALL    ->  ε
+PARAMLISTCALL'  -> ',' PARAMLISTCALL
+PARAMLISTCALL'  -> ε
 
-PARAMLISTCALL'   ->  ',' PARAMLISTCALL
-PARAMLISTCALL'   ->  ε
+PRINTSTAT       -> 'print' EXPRESSION
+READSTAT        -> 'read' LVALUE
 
-PRINTSTAT        ->  'print' EXPRESSION
-READSTAT         ->  'read' LVALUE
+RETURNSTAT      -> 'return' RETURNSTAT'
+RETURNSTAT'     -> EXPRESSION
+RETURNSTAT'     -> ε
 
-RETURNSTAT       ->  'return' RETURNSTAT'
-RETURNSTAT'      ->  EXPRESSION
-RETURNSTAT'      ->  ε
+IFSTAT          -> 'if' '(' EXPRESSION ')' '{' STATELIST '}' IFSTAT' 
+IFSTAT'         -> 'else' '{' STATELIST '}'
+IFSTAT'         -> ε
 
-IFSTAT           ->  'if' '(' EXPRESSION ')' '{' STATELIST '}' IFSTAT'
-IFSTAT'          ->  'else' '{' STATELIST '}'
-IFSTAT'          ->  ε
+FORSTAT         -> 'for' '(' ATRIBSTAT ';' EXPRESSION ';' ATRIBSTAT ')' '{' STATELIST '}'
 
-FORSTAT          ->  'for' '(' ATRIBSTAT ';' EXPRESSION ';' ATRIBSTAT ')' '{' STATELIST '}'
+STATELIST       -> STATEMENT STATELIST'
+STATELIST'      -> STATELIST // Simplificação para reusar a regra STATELIST
+STATELIST'      -> ε
 
-STATELIST        ->  STATEMENT STATELIST'
-STATELIST'       ->  STATEMENT STATELIST'
-STATELIST'       ->  ε
+LVALUE          -> ident ALLOCAUX
+ALLOCAUX        -> '[' EXPRESSION ']' ALLOCAUX
+ALLOCAUX        -> ε
 
-LVALUE           ->  ident ALLOCAUX
-ALLOCAUX         ->  '[' EXPRESSION ']' ALLOCAUX
-ALLOCAUX         ->  ε
+ALLOCEXPRESSION -> 'new' VARDECL '[' NUMEXPRESSION ']' ALLOCAUX 
 
-ALLOCEXPRESSION  ->  'new' VARDECL
+EXPRESSION      -> NUMEXPRESSION EXPRESSION'
+EXPRESSION'     -> relop NUMEXPRESSION
+EXPRESSION'     -> ε
 
-EXPRESSION       ->  NUMEXPRESSION EXPRESSION'
-EXPRESSION'      ->  relop NUMEXPRESSION
-EXPRESSION'      ->  ε
+NUMEXPRESSION   -> TERM NUMEXPRESSIONAUX
+NUMEXPRESSIONAUX-> '+' TERM NUMEXPRESSIONAUX
+NUMEXPRESSIONAUX-> '-' TERM NUMEXPRESSIONAUX
+NUMEXPRESSIONAUX-> ε
 
-NUMEXPRESSION    ->  TERM NUMEXPRESSION'
-NUMEXPRESSION'   ->  '+' TERM NUMEXPRESSION'
-NUMEXPRESSION'   ->  '-' TERM NUMEXPRESSION'
-NUMEXPRESSION'   ->  ε
+TERM            -> UNARYEXPR UNARYEXPRAUX
+UNARYEXPRAUX    -> '*' UNARYEXPR UNARYEXPRAUX
+UNARYEXPRAUX    -> '/' UNARYEXPR UNARYEXPRAUX
+UNARYEXPRAUX    -> '%' UNARYEXPR UNARYEXPRAUX
+UNARYEXPRAUX    -> ε
 
-TERM             ->  UNARYEXPR TERM'
-TERM'            ->  '*' UNARYEXPR TERM'
-TERM'            ->  '/' UNARYEXPR TERM'
-TERM'            ->  '%' UNARYEXPR TERM'
-TERM'            ->  ε
+UNARYEXPR       -> '+' FACTOR
+UNARYEXPR       -> '-' FACTOR
+UNARYEXPR       -> FACTOR
 
-UNARYEXPR        ->  '+' FACTOR
-UNARYEXPR        ->  '-' FACTOR
-UNARYEXPR        ->  FACTOR
-
-FACTOR           ->  LVALUE
-FACTOR           ->  int_constant
-FACTOR           ->  float_constant
-FACTOR           ->  string_constant
-FACTOR           ->  'null'
-FACTOR           ->  '(' EXPRESSION ')'
+FACTOR          -> LVALUE
+FACTOR          -> int_constant
+FACTOR          -> float_constant
+FACTOR          -> string_constant
+FACTOR          -> 'null'
+FACTOR          -> '(' EXPRESSION ')'

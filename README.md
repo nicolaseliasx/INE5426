@@ -6,9 +6,9 @@ Este repositório contém o código-fonte de um compilador completo desenvolvido
 
 ## Grupo
 
-- Nicolas
-- Patricia
-- Gustavo
+- Nicolas Elias
+- Patricia Bardini
+- Gustavo Fukushima
 
 ## Professor
 
@@ -45,6 +45,8 @@ O projeto é modularizado para separar as diferentes responsabilidades do compil
 - `tabela_sdt_auxiliar.(h|c)`: Define as regras de produção da gramática e as ações semânticas associadas a cada uma, formando a base da Tradução Dirigida por Sintaxe (SDT).
 
 - `gerenciador_escopo.(h|c)`: Gerencia a hierarquia de escopos (global, funções, blocos) e as tabelas de símbolos
+
+- `debug.h`: Gerencia exibicao de saidas de debug.
 
 ---
 

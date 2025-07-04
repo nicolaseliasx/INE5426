@@ -15,10 +15,8 @@
 #include "tabela_simbolos.h"
 #include "token.h"
 
-// Cria uma instância única do resolvedor para este arquivo.
 static ResolvedorExpressao* resolvedor_global = NULL;
 
-// Função para inicializar o resolvedor (chame no início do seu programa)
 void inicializar_resolvedor_global()
 {
     if (resolvedor_global == NULL)
@@ -48,7 +46,7 @@ static char* garantir_primeiro_operando_em_var(NoAST* node, ListaString* codigo)
     return nova_var;
 }
 
-// Obtém o valor de um operando à direita, que pode ser um literal ou variável.
+// Obtém o valor de um operando a direita, que pode ser um literal ou variavel.
 static char* obter_valor_rhs(NoAST* node)
 {
     if (node->res_var_codigo.var && strlen(node->res_var_codigo.var) > 0)
@@ -64,21 +62,55 @@ static char* obter_valor_rhs(NoAST* node)
 
 void CODIGO_relop_action(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
-    // EXPRESSION' -> relop NUMEXPRESSION
-    // EXPRESSION'.code = NUMEXPRESSION.code ||
-    // EXPRESSION'.var = EXPRESSION'.var relop NUMEXPRESSION.var
-    // NUMEXPRESSION.var [0] EXPRESSION' -> relop NUMEXPRESSION [0]
-    NoAST* numexpression = no_pai->filhos[1];
+    // REGRA: EXPRESSION' -> relop NUMEXPRESSION
+    // 'no_pai' aqui é o nó para EXPRESSION'
     NoAST* relop = no_pai->filhos[0];
+    NoAST* numexpression = no_pai->filhos[1];
 
-    // Splice numexpression->codigo into no_pai->codigo
+    // 1. O nome do operando da esquerda (ex: "a") foi herdado e está em
+    // 'no_pai->res_var_codigo.var'
+    char* var_lhs = no_pai->res_var_codigo.var;
+
+    // 2. Processa o código do operando da direita e obtém seu nome (ex: "4" ou "$temp")
     lista_codigo_adicionar_lista(no_pai->codigo, numexpression->codigo);
+    char* var_rhs = obter_valor_rhs(numexpression);  // Usa a função auxiliar que você já tem
 
-    // Add the relational operation line
+    // 3. Cria uma NOVA variável temporária para o resultado
+    char* var_resultado = gerar_variavel_temporaria(resolvedor_global);
+
+    // 4. Gera o código de comparação NÃO-DESTRUTIVO
     char buffer[256];
-    snprintf(buffer, sizeof(buffer), "%s = %s %s %s", no_pai->res_var_codigo.var,
-             no_pai->res_var_codigo.var, relop->token->lexema, numexpression->res_var_codigo.var);
+    snprintf(buffer, sizeof(buffer), "%s = %s %s %s",
+             var_resultado,         // Armazena o resultado na nova temporária (ex: $1)
+             var_lhs,               // Usa o operando da esquerda (ex: a)
+             relop->token->lexema,  // O operador (ex: <)
+             var_rhs);              // Usa o operando da direita (ex: 4)
     adicionar_string(no_pai->codigo, buffer);
+
+    // 5. Sintetiza o resultado: atualiza a variável do nó atual ('no_pai')
+    // para que o pai dele (EXPRESSION) possa usar o resultado correto.
+    free(no_pai->res_var_codigo.var);            // Libera o valor herdado ("a")
+    no_pai->res_var_codigo.var = var_resultado;  // Atribui o nome da nova temporária ("$1")
+
+    // Libera a memória que não será mais usada
+    free(var_rhs);
+}
+
+void CODIGO_lidar_atribuicao_funcao(NoAST* no_pai, GerenciadorEscopo* gerenciador)
+{
+    // 'no_pai' aqui é o nó para a regra ATRIB'
+    NoAST* funccall_node = no_pai->filhos[0];
+
+    // Parte 1: Define a variável de resultado como "$rv"
+    if (no_pai->res_var_codigo.var)
+    {
+        free(no_pai->res_var_codigo.var);
+    }
+    no_pai->res_var_codigo.var = strdup("$rv");
+
+    // Parte 2: [A CORREÇÃO CRÍTICA] Copia o código do filho para o pai.
+    // Isso traz as instruções "call fn", "Lxx:", etc., para o lugar certo.
+    lista_codigo_adicionar_lista(no_pai->codigo, funccall_node->codigo);
 }
 
 void CODIGO_lidar_break(NoAST* no_pai, GerenciadorEscopo* gerenciador)
@@ -127,12 +159,6 @@ void CODIGO_obter_variavel_lvalue(NoAST* no_pai, GerenciadorEscopo* gerenciador)
     no_pai->res_var_codigo.var = strdup(ident->token->lexema);
 }
 
-void CODIGO_obter_valor_retorno(NoAST* no_pai, GerenciadorEscopo* gerenciador)
-{
-    // ATRIBSTAT' -> FUNCCALL
-    no_pai->res_var_codigo.var = strdup("$rv");
-}
-
 void CODIGO_lidar_retorno(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
     if (no_pai->filhos[1] && no_pai->filhos[1]->codigo)
@@ -161,31 +187,42 @@ void CODIGO_lidar_retorno2(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_obter_parametros(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
-    // PARAMLISTCALL' -> , PARAMLISTCALL
-    // PARAMLISTCALL'.cnt = PARAMLISTCALL.cnt [0]
-    NoAST* paramlist = no_pai->filhos[1];
-    no_pai->res_var_codigo.contador_param = paramlist->res_var_codigo.contador_param;
+    // REGRA: PARAMLISTCALL' -> , PARAMLISTCALL
+    // Ação: Passa para cima tanto o contador quanto o CÓDIGO do filho.
+    NoAST* paramlist_filho = no_pai->filhos[1];
+
+    // 1. Copia o contador de parâmetros do filho para o pai.
+    no_pai->res_var_codigo.contador_param = paramlist_filho->res_var_codigo.contador_param;
+
+    // 2. Anexa a lista de código do filho (com seus 'param ...')
+    //    à lista de código do nó pai (PARAMLISTCALL').
+    lista_codigo_adicionar_lista(no_pai->codigo, paramlist_filho->codigo);
 }
 
 void CODIGO_chamada_paramlist(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
-    // PARAMLISTCALL -> ident PARAMLISTCALL'
-    // PARAMLISTCALL.cnt = 1 + PARAMLISTCALL'.cnt [1]
-    // PARAMLISTCALL.code = param ident || PARAMLISTCALL'.code [0]
-    NoAST* ident = no_pai->filhos[0];
-    NoAST* paramlist = no_pai->filhos[1];
+    // REGRA: PARAMLISTCALL -> LVALUE PARAMLISTCALL'
+    NoAST* lvalue_node = no_pai->filhos[0];
+    NoAST* paramlist_linha = no_pai->filhos[1];
 
-    no_pai->res_var_codigo.contador_param = 1 + paramlist->res_var_codigo.contador_param;
+    // Concatena o código gerado pelo LVALUE (importante para cálculo de índice de array)
+    lista_codigo_adicionar_lista(no_pai->codigo, lvalue_node->codigo);
+
+    // Incrementa o contador de parâmetros
+    no_pai->res_var_codigo.contador_param = 1 + paramlist_linha->res_var_codigo.contador_param;
 
     char buffer[256];
-    snprintf(buffer, sizeof(buffer), "param %s", ident->token->lexema);
+    // Usa o resultado já processado pelo LVALUE.
+    // Isso funciona tanto para "var" quanto para "vetor[$t1]".
+    snprintf(buffer, sizeof(buffer), "param %s", lvalue_node->sdt_mat.no->valor);
     adicionar_string(no_pai->codigo, buffer);
-    lista_codigo_adicionar_lista(no_pai->codigo, paramlist->codigo);
+
+    // Anexa a lista de código com os parâmetros subsequentes
+    lista_codigo_adicionar_lista(no_pai->codigo, paramlist_linha->codigo);
 }
 
 void CODIGO_chamada_funcao(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
-    // FUNCCALL -> call ( ident ( PARAMLISTCALL ) )
     NoAST* ident = no_pai->filhos[2];
     NoAST* paramlistcall = no_pai->filhos[4];
 
@@ -193,7 +230,7 @@ void CODIGO_chamada_funcao(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
     lista_codigo_adicionar_lista(no_pai->codigo, paramlistcall->codigo);
 
-    char buffer[256];  // Declarado uma única vez
+    char buffer[256];
 
     // 1. Guardar endereço de retorno
     snprintf(buffer, sizeof(buffer), "$r = %s", no_pai->res_var_codigo.ret);
@@ -206,10 +243,6 @@ void CODIGO_chamada_funcao(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
     // 3. Rótulo de retorno
     snprintf(buffer, sizeof(buffer), "%s:", no_pai->res_var_codigo.ret);
-    adicionar_string(no_pai->codigo, buffer);
-
-    // 4. Atribuir valor de retorno
-    snprintf(buffer, sizeof(buffer), "%s = $rv", no_pai->res_var_codigo.var);
     adicionar_string(no_pai->codigo, buffer);
 }
 
@@ -290,26 +323,70 @@ void CODIGO_acao_else_s(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_acao_if_s(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
-    // IFSTAT -> if ( EXPRESSION ) { STATEMENT } IFSTAT'
-    // ALL_PRODS.nxt = IFSTAT.next
-    // IFSTAT.code = if not EXPRESS.val goto IFSTAT'.begin ||
-    //               STATEMENT.code || goto STATEMENT.nxt
-    //               IFSTAT'.code
+    // REGRA: IFSTAT -> if ( EXPRESSION ) { STATEMENT } IFSTAT'
     NoAST* expressao = no_pai->filhos[2];
     NoAST* statement = no_pai->filhos[5];
     NoAST* ifstat_linha = no_pai->filhos[7];
 
+    // 1. Anexa o código gerado para avaliar a expressão (ex: x = a + b)
     lista_codigo_adicionar_lista(no_pai->codigo, expressao->codigo);
 
-    char buffer[256];
-    snprintf(buffer, sizeof(buffer), "if False %s goto %s", expressao->res_var_codigo.var,
-             ifstat_linha->res_var_codigo.inicio);
-    adicionar_string(no_pai->codigo, buffer);
+    // A variável que guarda o resultado da condição (pode ser "x" ou "$t1")
+    char* var_condicao = expressao->res_var_codigo.var;
 
+    // Ponteiro para a variável que terá o resultado booleano final (0 ou 1)
+    char* var_booleana_final;
+
+    // --- [INÍCIO DA NOVA LÓGICA DE CORREÇÃO] ---
+
+    // 2. Detecta se a expressão é uma comparação ou um valor numérico.
+    //    Acessamos o nó EXPRESSION' (filho 1 do nó 'expressao')
+    NoAST* expression_linha_node = expressao->filhos[1];
+
+    // Se o nó EXPRESSION' não tem filhos, a regra usada foi '-> ε' (epsilon).
+    // Isso significa que não houve um 'relop' (>, <, ==, etc.).
+    bool precisa_comparacao_explicita = (expression_linha_node->quantidade_filhos == 0);
+
+    if (precisa_comparacao_explicita)
+    {
+        // CASO: if(x) ou if(a + b) ou if(5)
+        // O resultado da condição é um número, não um booleano.
+        // Precisamos gerar a comparação explícita: var != 0
+
+        // Gera uma nova variável temporária para guardar o resultado booleano.
+        var_booleana_final = gerar_variavel_temporaria(resolvedor_global);
+
+        char buffer_comp[256];
+        // Gera a instrução de código intermediário: $temp = x != 0
+        snprintf(buffer_comp, sizeof(buffer_comp), "%s = %s != 0", var_booleana_final,
+                 var_condicao);
+        adicionar_string(no_pai->codigo, buffer_comp);
+    }
+    else
+    {
+        // CASO: if(x > 5) ou if(a == b)
+        // O resultado já é um booleano (0 ou 1) gerado pela ação `CODIGO_relop_action`.
+        // Podemos usá-lo diretamente.
+        var_booleana_final = strdup(var_condicao);
+    }
+
+    // --- [FIM DA NOVA LÓGICA DE CORREÇÃO] ---
+
+    // 3. Gera o desvio condicional usando a variável que garantidamente contém um booleano.
+    char buffer_if[256];
+    snprintf(buffer_if, sizeof(buffer_if), "if False %s goto %s",
+             var_booleana_final,                    // Usa a variável booleana
+             ifstat_linha->res_var_codigo.inicio);  // Rótulo para o bloco else ou para depois do if
+    adicionar_string(no_pai->codigo, buffer_if);
+
+    // Libera a memória da string que foi duplicada ou gerada.
+    free(var_booleana_final);
+
+    // 4. Anexa o resto do código (corpo do if, goto para o final, corpo do else)
     lista_codigo_adicionar_lista(no_pai->codigo, statement->codigo);
 
-    snprintf(buffer, sizeof(buffer), "goto %s", statement->proximo);
-    adicionar_string(no_pai->codigo, buffer);
+    snprintf(buffer_if, sizeof(buffer_if), "goto %s", statement->proximo);
+    adicionar_string(no_pai->codigo, buffer_if);
 
     lista_codigo_adicionar_lista(no_pai->codigo, ifstat_linha->codigo);
 }
@@ -356,6 +433,82 @@ void CODIGO_herdar_proximo_for(NoAST* no_pai, GerenciadorEscopo* gerenciador)
     statement->para_proximo = strdup(no_pai->proximo);  // Inherit for_nxt from father
 }
 
+void CODIGO_for_setup_h(NoAST* no_pai, GerenciadorEscopo* gerenciador)
+{
+    // O 'no_pai' aqui é o FORSTAT.
+    // O corpo do laço (STATEMENT) é o último filho adicionado até agora.
+    if (no_pai->quantidade_filhos == 0) return;
+
+    NoAST* statement_node = no_pai->filhos[no_pai->quantidade_filhos - 1];
+
+    // 1. Gera um novo rótulo para o passo de incremento. Ex: "L58"
+    char* rotulo_incremento = no_ast_gerar_novo_rotulo(no_pai);
+
+    // 2. Define o atributo 'proximo' do corpo do laço para apontar para este rótulo.
+    //    Agora, qualquer 'goto' no final do corpo saberá para onde ir.
+    if (statement_node->proximo) free(statement_node->proximo);
+    statement_node->proximo = strdup(rotulo_incremento);
+
+    // 3. Armazena este rótulo no próprio nó FORSTAT para que a ação final possa usá-lo.
+    //    Usaremos o campo 'ret' de 'res_var_codigo' como um "bolso" temporário.
+    if (no_pai->res_var_codigo.ret) free(no_pai->res_var_codigo.ret);
+    no_pai->res_var_codigo.ret = rotulo_incremento;
+}
+
+void CODIGO_acao_for_s(NoAST* no_pai, GerenciadorEscopo* gerenciador)
+{
+    // FORSTAT -> for ( ATRIBSTAT1 ; EXPRESSION ; ATRIBSTAT2 ) STATEMENT
+    NoAST* atribstat1 = no_pai->filhos[2];
+    NoAST* expressao = no_pai->filhos[4];
+    NoAST* atribstat2 = no_pai->filhos[6];
+    NoAST* statement = no_pai->filhos[8];
+
+    // Gera o rótulo para o início do laço (teste da condição)
+    char* rotulo_inicio_laco = no_ast_gerar_novo_rotulo(no_pai);
+
+    // Pega o rótulo do incremento que foi salvo pela ação de setup
+    char* rotulo_incremento = no_pai->res_var_codigo.ret;
+
+    char buffer[256];
+
+    // --- Montagem do Código Final ---
+
+    // 1. Código da inicialização (executa uma vez)
+    lista_codigo_adicionar_lista(no_pai->codigo, atribstat1->codigo);
+
+    // 2. Rótulo do início do laço
+    snprintf(buffer, sizeof(buffer), "%s:", rotulo_inicio_laco);
+    adicionar_string(no_pai->codigo, buffer);
+
+    // 3. Código da expressão de condição
+    lista_codigo_adicionar_lista(no_pai->codigo, expressao->codigo);
+
+    // 4. Salto condicional para FORA do laço se a condição for falsa
+    //    O 'no_pai->proximo' aqui é o rótulo de saída do laço, herdado corretamente.
+    snprintf(buffer, sizeof(buffer), "if False %s goto %s", expressao->res_var_codigo.var,
+             no_pai->proximo);
+    adicionar_string(no_pai->codigo, buffer);
+
+    // 5. Código do corpo do laço
+    lista_codigo_adicionar_lista(no_pai->codigo, statement->codigo);
+
+    // 6. Rótulo do passo de incremento (o 'goto' do final do corpo aponta para cá)
+    snprintf(buffer, sizeof(buffer), "%s:", rotulo_incremento);
+    adicionar_string(no_pai->codigo, buffer);
+
+    // 7. Código do incremento
+    lista_codigo_adicionar_lista(no_pai->codigo, atribstat2->codigo);
+
+    // 8. Salto incondicional de volta para o início do laço (para re-avaliar a condição)
+    snprintf(buffer, sizeof(buffer), "goto %s", rotulo_inicio_laco);
+    adicionar_string(no_pai->codigo, buffer);
+
+    // Libera a memória que não será mais usada
+    free(rotulo_inicio_laco);
+    // O 'rotulo_incremento' foi movido de res_var_codigo.ret para o código, então não precisa de
+    // free aqui.
+}
+
 void CODIGO_atribuicao(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
     // ATRIBSTAT -> LVALUE = ATRIBSTAT'
@@ -393,7 +546,7 @@ void CODIGO_definir_valor_expressao(NoAST* no_pai, GerenciadorEscopo* gerenciado
 void CODIGO_obter_codigo_filhos(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
     // Generic action to splice code from all children to the father
-    for (size_t i = 0; i < no_pai->quantidade_filhos; i++)
+    for (size_t i = 0; i < (size_t)no_pai->quantidade_filhos; i++)
     {
         lista_codigo_adicionar_lista(no_pai->codigo, no_pai->filhos[i]->codigo);
     }
@@ -672,19 +825,23 @@ void DECLARAR_VERIFICAR_acao1(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void DECLARAR_VERIFICAR_acao2(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
-    // PARAMLISTCALL -> ident PARAMLISTCALL'
-    // LVALUE -> ident ALLOCAUX
-    // is_declared(ident.val_lex)
-    NoAST* ident = no_pai->filhos[0];  // Assuming ident is always the first child
-    if (!gerenciador_simbolo_declarado(gerenciador, ident->token))
+    // A regra agora é PARAMLISTCALL -> LVALUE ...
+    // O 'no_pai' da ação é o nó PARAMLISTCALL.
+    // O nó LVALUE é seu primeiro filho.
+    NoAST* lvalue_node = no_pai->filhos[0];
+
+    // O nó IDENT é o primeiro filho do LVALUE.
+    NoAST* ident_node = lvalue_node->filhos[0];
+
+    if (!gerenciador_simbolo_declarado(gerenciador, ident_node->token))
     {
         char msg_error[512];
         snprintf(msg_error, sizeof(msg_error), "%s usado antes da declaracao na linha %d:%d",
-                 ident->token->lexema, ident->token->linha, ident->token->coluna);
+                 ident_node->token->lexema, ident_node->token->linha, ident_node->token->coluna);
         LANCAR_ERRO_SEMANTICO(msg_error);
     }
 
-    gerenciador_registrar_uso_simbolo(gerenciador, ident->token);
+    gerenciador_registrar_uso_simbolo(gerenciador, ident_node->token);
 }
 
 // =================================================================
@@ -817,6 +974,9 @@ void AEXP_avaliar_identificador_lvalue(NoAST* no_pai, GerenciadorEscopo* gerenci
 
     if (lvalue_node->sdt_mat.contador_vetor > 0)  // É um acesso de array
     {
+        // A lógica a seguir calcula o deslocamento (offset) para um array
+        // multidimensional. Ela implementa corretamente o padrão "row-major order"
+        // (ordem principal por linha), que é o padrão em C/C++.
         int num_dimensoes_declaradas = 0;
         int* dimensoes_maximas = AUXILIAR_obter_tamanhos_vetor(tipo_str, &num_dimensoes_declaradas);
 
@@ -837,6 +997,7 @@ void AEXP_avaliar_identificador_lvalue(NoAST* no_pai, GerenciadorEscopo* gerenci
         snprintf(buffer, sizeof(buffer), "%s = 0", somador_temp);
         adicionar_string(lvalue_node->codigo, buffer);
 
+        // O loop que efetivamente calcula o offset
         for (int i = 0; i < variaveis_indices->tamanho; i++)
         {
             char* var_indice_atual = variaveis_indices->itens[i];
@@ -992,69 +1153,72 @@ void AEXP_valor_segundo_filho_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenc
 
 void AEXP_gerar_no(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
-    // EX: NUMEXPRESSION -> TERM NUMEXPRESSIONAUX
+    // REGRA: NUMEXPRESSION -> TERM NUMEXPRESSIONAUX
     NoAST* numexpr_node = no_pai;
-    NoAST* term_node = numexpr_node->filhos[0];
-    NoAST* aux_node = numexpr_node->filhos[1];
+    NoAST* term_node = numexpr_node->filhos[0];  // Primeiro operando (pode ser 3*a)
+    NoAST* aux_node = numexpr_node->filhos[1];   // Resto da cadeia (+ 12 - 3 % 10)
 
-    // Lista para armazenar as operações intermediárias
-    ListaString* codigo_operacoes = criar_lista_string();
-
-    // Processa o primeiro operando (TERM)
+    // Processa o código do primeiro operando. Seu resultado estará em term_node->res_var_codigo.var
     lista_codigo_adicionar_lista(numexpr_node->codigo, term_node->codigo);
 
-    // Garante que o primeiro operando está em uma variável
-    char* resultado_esquerda = garantir_primeiro_operando_em_var(term_node, numexpr_node->codigo);
-    NoExpressao* no_resultado_esquerda = term_node->sdt_mat.no;
-    term_node->sdt_mat.no = NULL;  // Transfere posse
-
-    // Itera pela cadeia de operações (+, -)
-    while (aux_node && aux_node->quantidade_filhos > 0)
+    // Se não há operadores de + ou -, o trabalho acaba aqui.
+    if (aux_node->quantidade_filhos == 0)
     {
-        NoAST* op_node = aux_node->filhos[0];
-        NoAST* proximo_term_node = aux_node->filhos[1];
+        copiar_res_var_codigo(&numexpr_node->res_var_codigo, &term_node->res_var_codigo);
+        numexpr_node->sdt_mat.no = term_node->sdt_mat.no;
+        term_node->sdt_mat.no = NULL;
+        return;
+    }
 
-        // Processa o próximo operando
+    // Se há operadores, vamos processar a cadeia.
+    // A variável 'var_resultado_esq' irá acumular o resultado.
+    char* var_resultado_esq = strdup(term_node->res_var_codigo.var);
+    NoExpressao* no_resultado_esq = term_node->sdt_mat.no;
+    term_node->sdt_mat.no = NULL;
+
+    // Loop para processar a cadeia de '+' e '-'
+    while (aux_node != NULL && aux_node->quantidade_filhos > 0)
+    {
+        NoAST* op_node = aux_node->filhos[0];            // O operador '+' ou '-'
+        NoAST* proximo_term_node = aux_node->filhos[1];  // O próximo operando (ex: '12')
+
+        // Processa o código do operando da direita.
         lista_codigo_adicionar_lista(numexpr_node->codigo, proximo_term_node->codigo);
+        char* var_operando_dir = strdup(proximo_term_node->res_var_codigo.var);
 
-        // Obtém o valor do operando direito
-        char* operando_direita = obter_valor_rhs(proximo_term_node);
+        // Cria uma nova temporária para o resultado
+        char* var_novo_resultado = gerar_variavel_temporaria(resolvedor_global);
 
-        // Gera nova variável temporária para o resultado
-        char* resultado_temp = gerar_variavel_temporaria(resolvedor_global);
-
-        // Gera código da operação
+        // Gera a instrução: temp = acumulado op direita
         char buffer[256];
-        snprintf(buffer, sizeof(buffer), "%s = %s %s %s", resultado_temp, resultado_esquerda,
-                 op_node->token->lexema, operando_direita);
-        adicionar_string(codigo_operacoes, buffer);
+        snprintf(buffer, sizeof(buffer), "%s = %s %s %s", var_novo_resultado, var_resultado_esq,
+                 op_node->token->lexema, var_operando_dir);
+        adicionar_string(numexpr_node->codigo, buffer);
 
-        // Cria nó de expressão para a operação
-        no_resultado_esquerda = criar_no_expressao_binario(
-            op_node->token->lexema[0], "N", no_resultado_esquerda, proximo_term_node->sdt_mat.no);
-
-        // Limpa nó do operando direito
+        // Atualiza a árvore e o resultado acumulado para a próxima iteração
+        no_resultado_esq = criar_no_expressao_binario(
+            op_node->token->lexema[0], "N", no_resultado_esq, proximo_term_node->sdt_mat.no);
         proximo_term_node->sdt_mat.no = NULL;
 
-        // Atualiza variáveis para próxima operação
-        free(resultado_esquerda);
-        resultado_esquerda = resultado_temp;
-        free(operando_direita);
+        free(var_resultado_esq);
+        free(var_operando_dir);
+        var_resultado_esq = var_novo_resultado;
 
-        // Avança para o próximo nó auxiliar
+        // Avança para o próximo NUMEXPRESSIONAUX na cadeia
         aux_node = aux_node->filhos[2];
     }
 
-    // Adiciona todas as operações ao código principal
-    lista_codigo_adicionar_lista(numexpr_node->codigo, codigo_operacoes);
-    liberar_lista_string(codigo_operacoes);
+    // Atribui o resultado final ao nó principal
+    numexpr_node->sdt_mat.no = no_resultado_esq;
 
-    // Atualiza o nó de expressão final
-    numexpr_node->sdt_mat.no = no_resultado_esquerda;
-
-    // Atualiza a variável de resultado
-    if (numexpr_node->res_var_codigo.var) free(numexpr_node->res_var_codigo.var);
-    numexpr_node->res_var_codigo.var = resultado_esquerda;
+    // A linha problemática foi REMOVIDA.
+    // Apenas precisamos garantir que a variável de resultado final seja atribuída corretamente.
+    if (numexpr_node->res_var_codigo.var)
+    {
+        free(numexpr_node->res_var_codigo.var);
+    }
+    numexpr_node->res_var_codigo.var =
+        var_resultado_esq;  // var_resultado_esq já contém o resultado final.
 }
 
 void AEXP_definir_operacao2(NoAST* no_pai, GerenciadorEscopo* gerenciador)
@@ -1121,34 +1285,61 @@ void AEXP_termo(NoAST* no_pai, GerenciadorEscopo* gerenciador)
     term_node->res_var_codigo.var = var_resultado_esq;
 }
 
-void AEXP_imprimir_expressao0_h(NoAST* no_pai, GerenciadorEscopo* gerenciador)
-{
-    // EXPRESSION -> NUMEXPRESSION EXPRESSION'
-    NoAST* numexpression_node = no_pai->filhos[0];
-    NoAST* expression_linha_node = no_pai->filhos[1];
-    if (numexpression_node->res_var_codigo.var)
-    {
-        expression_linha_node->res_var_codigo.var = strdup(numexpression_node->res_var_codigo.var);
-    }
-}
-
 void AEXP_imprimir_expressao0(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
-    // EXPRESSION -> NUMEXPRESSION EXPRESSION'
+    // REGRA: EXPRESSION -> NUMEXPRESSION EXPRESSION'
     NoAST* expression_node = no_pai;
     NoAST* numexpression_node = no_pai->filhos[0];
     NoAST* expression_linha_node = no_pai->filhos[1];
 
-    if (numexpression_node->res_var_codigo.var)
-    {
-        if (expression_node->res_var_codigo.var) free(expression_node->res_var_codigo.var);
-        expression_node->res_var_codigo.var = strdup(numexpression_node->res_var_codigo.var);
-    }
-
+    // A. Junta os códigos gerados pelos filhos na ordem correta
     lista_codigo_adicionar_lista(expression_node->codigo, numexpression_node->codigo);
     lista_codigo_adicionar_lista(expression_node->codigo, expression_linha_node->codigo);
 
+    // B. Pega o resultado final, que foi SINTETIZADO por EXPRESSION', e o define
+    // como o resultado final de EXPRESSION.
+    if (expression_linha_node->res_var_codigo.var)
+    {
+        if (expression_node->res_var_codigo.var)
+        {
+            free(expression_node->res_var_codigo.var);
+        }
+        // O resultado final (ex: "$1") é propagado para o nó pai.
+        expression_node->res_var_codigo.var = strdup(expression_linha_node->res_var_codigo.var);
+    }
+    else
+    {
+        // Caso não haja operação relacional (ex: x = 5;), o resultado
+        // é simplesmente o do numexpression.
+        if (expression_node->res_var_codigo.var)
+        {
+            free(expression_node->res_var_codigo.var);
+        }
+        expression_node->res_var_codigo.var = strdup(numexpression_node->res_var_codigo.var);
+    }
+
+    // Mantém a depuração
     imprimir_arvore(numexpression_node->sdt_mat.no);
+}
+
+void AEXP_imprimir_expressao0_h(NoAST* no_pai, GerenciadorEscopo* gerenciador)
+{
+    // 'no_pai' aqui é o nó da regra inteira (EXPRESSION)
+    NoAST* numexpression_node = no_pai->filhos[0];     // O filho da esquerda (NUMEXPRESSION)
+    NoAST* expression_linha_node = no_pai->filhos[1];  // O filho da direita (EXPRESSION')
+
+    if (numexpression_node->res_var_codigo.var)
+    {
+        // Libera a memória do ponteiro antigo, se houver, para evitar vazamento de memória.
+        if (expression_linha_node->res_var_codigo.var)
+        {
+            free(expression_linha_node->res_var_codigo.var);
+        }
+
+        // Copia a variável de resultado do nó da esquerda para o nó da direita.
+        // Ex: Passa o nome "a" para o nó que vai processar a operação "< 4".
+        expression_linha_node->res_var_codigo.var = strdup(numexpression_node->res_var_codigo.var);
+    }
 }
 
 void AEXP_passar_numero(NoAST* no_pai, GerenciadorEscopo* gerenciador)
