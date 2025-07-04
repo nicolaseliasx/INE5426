@@ -72,7 +72,7 @@ void DECLARAR_VERIFICAR_acao2(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 void BREAK_acao1(NoAST* no_pai, GerenciadorEscopo* gerenciador);
 
 // --- Funções Auxiliares ---
-char* AUXILIAR_obter_tipo(const char* tipo, int contador_vetor);
+char* AUXILIAR_obter_tipo(const char* tipo);
 int* AUXILIAR_obter_tamanhos_vetor(const char* tipo, int* num_elementos);
 
 // --- Ações para Expressões ---

@@ -62,6 +62,7 @@ static char* obter_valor_rhs(NoAST* node)
 
 void CODIGO_relop_action(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // REGRA: EXPRESSION' -> relop NUMEXPRESSION
     // 'no_pai' aqui é o nó para EXPRESSION'
     NoAST* relop = no_pai->filhos[0];
@@ -98,6 +99,7 @@ void CODIGO_relop_action(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_lidar_atribuicao_funcao(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // 'no_pai' aqui é o nó para a regra ATRIB'
     NoAST* funccall_node = no_pai->filhos[0];
 
@@ -115,6 +117,7 @@ void CODIGO_lidar_atribuicao_funcao(NoAST* no_pai, GerenciadorEscopo* gerenciado
 
 void CODIGO_lidar_break(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // STATEMENT -> break ;
     // STATEMENT.code = goto STATEMENT.for_nxt [0]
     char buffer[256];
@@ -124,6 +127,7 @@ void CODIGO_lidar_break(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_lidar_leitura(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // READSTAT -> read LVALUE
     NoAST* lvalue = no_pai->filhos[1];
 
@@ -140,6 +144,7 @@ void CODIGO_lidar_leitura(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_lidar_impressao(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // PRINTSTAT -> print EXPRESSION
     // PRINTSTAT.code = EXPRESSION.code || print EXPRESSION.var [0]
     NoAST* expressao = no_pai->filhos[1];
@@ -153,6 +158,7 @@ void CODIGO_lidar_impressao(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_obter_variavel_lvalue(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // LVALUE -> ident ALLOCAUX
     // LVALUE.var = ident.lexema [0]
     NoAST* ident = no_pai->filhos[0];
@@ -161,6 +167,7 @@ void CODIGO_obter_variavel_lvalue(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_lidar_retorno(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     if (no_pai->filhos[1] && no_pai->filhos[1]->codigo)
     {
         lista_codigo_adicionar_lista(no_pai->codigo, no_pai->filhos[1]->codigo);
@@ -176,6 +183,7 @@ void CODIGO_lidar_retorno(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_lidar_retorno2(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // RETURNSTAT' -> EXPRESSION
     if (no_pai->filhos[0]->res_var_codigo.var)
     {
@@ -187,6 +195,7 @@ void CODIGO_lidar_retorno2(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_obter_parametros(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // REGRA: PARAMLISTCALL' -> , PARAMLISTCALL
     // Ação: Passa para cima tanto o contador quanto o CÓDIGO do filho.
     NoAST* paramlist_filho = no_pai->filhos[1];
@@ -201,6 +210,7 @@ void CODIGO_obter_parametros(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_chamada_paramlist(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // REGRA: PARAMLISTCALL -> LVALUE PARAMLISTCALL'
     NoAST* lvalue_node = no_pai->filhos[0];
     NoAST* paramlist_linha = no_pai->filhos[1];
@@ -223,6 +233,7 @@ void CODIGO_chamada_paramlist(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_chamada_funcao(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     NoAST* ident = no_pai->filhos[2];
     NoAST* paramlistcall = no_pai->filhos[4];
 
@@ -248,6 +259,7 @@ void CODIGO_chamada_funcao(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_ir_para_principal(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // PROGRAM -> FUNCLIST PROGRAM'
     // PROGRAM.code -> goto MAIN || FUNCLIST.code || MAIN: || PROGRAM'.code [1]
     NoAST* funclist = no_pai->filhos[0];
@@ -261,6 +273,7 @@ void CODIGO_ir_para_principal(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_funcdef_h(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // FUNCDEF -> def ident ( PARAMLIST ) { STATELIST }
     // begin = newlabel
     // STATELIST.nxt = 'return'
@@ -273,6 +286,7 @@ void CODIGO_funcdef_h(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_funcdef_s(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // FUNCDEF -> def ident ( PARAMLIST ) { STATELIST }
     // FUNCDEF.cod = begin: || STATELIST.code || goto STATELIST.nxt
     NoAST* statelist = no_pai->filhos[6];
@@ -289,6 +303,7 @@ void CODIGO_funcdef_s(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_acao_else_vazio(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // IFSTAT' -> '' (epsilon)
     // IFSTAT'.begin = IFSTAT'.nxt
     no_pai->res_var_codigo.inicio = strdup(no_pai->proximo);
@@ -296,6 +311,7 @@ void CODIGO_acao_else_vazio(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_acao_else_h(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // IFSTAT' -> else { STATEMENT }
     // begin = newlabel()
     // STATEMENT.nxt = IFSTAT'.nxt
@@ -307,6 +323,7 @@ void CODIGO_acao_else_h(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_acao_else_s(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // IFSTAT' -> else { STATEMENT }
     // IFSTAT'.code = begin: || statement.code || goto STATEMENT.nxt
     NoAST* statement = no_pai->filhos[2];
@@ -323,6 +340,7 @@ void CODIGO_acao_else_s(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_acao_if_s(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // REGRA: IFSTAT -> if ( EXPRESSION ) { STATEMENT } IFSTAT'
     NoAST* expressao = no_pai->filhos[2];
     NoAST* statement = no_pai->filhos[5];
@@ -393,6 +411,7 @@ void CODIGO_acao_if_s(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_acao_for(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // FORSTAT -> for ( ATRIBSTAT1 ; EXPRESSION ; ATRIBSTAT2 ) STATEMENT
     // ALL_PRODS.nxt = FORSTAT.next
     // begin = newlabel()
@@ -428,6 +447,7 @@ void CODIGO_acao_for(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_herdar_proximo_for(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // FORSTAT -> for ( ATRIBSTAT1 ; EXPRESSION ; ATRIBSTAT2 ) STATEMENT
     NoAST* statement = no_pai->filhos[8];
     statement->para_proximo = strdup(no_pai->proximo);  // Inherit for_nxt from father
@@ -435,6 +455,7 @@ void CODIGO_herdar_proximo_for(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_for_setup_h(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // O 'no_pai' aqui é o FORSTAT.
     // O corpo do laço (STATEMENT) é o último filho adicionado até agora.
     if (no_pai->quantidade_filhos == 0) return;
@@ -457,6 +478,7 @@ void CODIGO_for_setup_h(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_acao_for_s(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // FORSTAT -> for ( ATRIBSTAT1 ; EXPRESSION ; ATRIBSTAT2 ) STATEMENT
     NoAST* atribstat1 = no_pai->filhos[2];
     NoAST* expressao = no_pai->filhos[4];
@@ -511,6 +533,7 @@ void CODIGO_acao_for_s(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_atribuicao(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // ATRIBSTAT -> LVALUE = ATRIBSTAT'
     NoAST* lvalue = no_pai->filhos[0];
     NoAST* atribstat_linha = no_pai->filhos[2];
@@ -531,6 +554,7 @@ void CODIGO_atribuicao(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_definir_valor_expressao(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     NoAST* expressao = no_pai->filhos[0];
     no_pai->res_var_codigo.var = strdup(expressao->res_var_codigo.var);
 
@@ -545,6 +569,7 @@ void CODIGO_definir_valor_expressao(NoAST* no_pai, GerenciadorEscopo* gerenciado
 
 void CODIGO_obter_codigo_filhos(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // Generic action to splice code from all children to the father
     for (size_t i = 0; i < (size_t)no_pai->quantidade_filhos; i++)
     {
@@ -554,6 +579,7 @@ void CODIGO_obter_codigo_filhos(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_combinar_codigo_para_lista(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     if (no_pai->quantidade_filhos != 2) return;
 
     NoAST* statement = no_pai->filhos[0];
@@ -582,8 +608,9 @@ void CODIGO_combinar_codigo_para_lista(NoAST* no_pai, GerenciadorEscopo* gerenci
 
 void CODIGO_herdar_proximo(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // Generic action to inherit 'nxt' and 'for_nxt' attributes to children
-    for (size_t i = 0; i < no_pai->quantidade_filhos; i++)
+    for (size_t i = 0; i < (size_t)no_pai->quantidade_filhos; i++)
     {
         if (no_pai->filhos[i])
         {  // Check for non-NULL child
@@ -601,6 +628,7 @@ void CODIGO_herdar_proximo(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_definir_proximo_filho(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     if (no_pai->quantidade_filhos > 0)
     {
         NoAST* statement = no_pai->filhos[0];
@@ -618,11 +646,13 @@ void CODIGO_definir_proximo_filho(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_definir_rotulo_final(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     no_pai->proximo = strdup("END");
 }
 
 void CODIGO_gerar_codigo_final(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     char buffer[256];
     snprintf(buffer, sizeof(buffer), "%s:", no_pai->proximo);
     adicionar_string(no_pai->codigo, buffer);
@@ -630,6 +660,7 @@ void CODIGO_gerar_codigo_final(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void CODIGO_imprimir_codigo(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // Print each line of code
     // Assuming lista_codigo_imprimir_tudo exists
     // Otherwise, iterate through no_pai->codigo and print each string
@@ -642,6 +673,7 @@ void CODIGO_imprimir_codigo(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void ESCOPO_acao1(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)no_pai;
     // PROGRAM  ->  STATEMENT
     // PROGRAM  ->  FUNCLIST PROGRAM'
     // PROGRAM  ->  ''
@@ -651,6 +683,7 @@ void ESCOPO_acao1(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void ESCOPO_acao2(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)no_pai;
     // FUNCDEF  ->  def ident ( PARAMLIST ) { STATELIST }
     // STATEMENT  ->  { STATELIST }
     // IFSTAT  -> if ( EXPRESSION ) { STATEMENT } IFSTAT'
@@ -675,24 +708,28 @@ void ESCOPO_acao3(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void ESCOPO_acao4(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)no_pai;
     // FUNCDEF  ->  def ident ( PARAMLIST ) { STATELIST }
     gerenciador_abrir_escopo(gerenciador, "function");
 }
 
 void ESCOPO_acao5(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)no_pai;
     // IFSTAT  -> if ( EXPRESSION ) { STATEMENT } IFSTAT'
     gerenciador_abrir_escopo(gerenciador, "if");
 }
 
 void ESCOPO_acao6(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)no_pai;
     // IFSTAT' -> else { STATEMENT }
     gerenciador_abrir_escopo(gerenciador, "else");
 }
 
 void ESCOPO_acao7(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)no_pai;
     // FORSTAT  ->  for ( ATRIBSTAT ; EXPRESSION ; ATRIBSTAT ) STATEMENT
     gerenciador_abrir_escopo(gerenciador, "for");
 }
@@ -735,6 +772,7 @@ void DEC_acao4(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void DEC_acao5(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // INDEX -> [int_constant] INDEX1
     // INDEX1.initial_type = INDEX.initial_type
     NoAST* index = no_pai;
@@ -744,6 +782,7 @@ void DEC_acao5(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void DEC_acao6(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     NoAST* index = no_pai;
     NoAST* index1 = no_pai->filhos[3];
     NoAST* int_const = no_pai->filhos[1];
@@ -755,6 +794,7 @@ void DEC_acao6(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void DEC_acao7(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // INDEX-> '' (epsilon)
     // INDEX.type = INDEX.initial_type
     NoAST* index = no_pai;
@@ -763,6 +803,7 @@ void DEC_acao7(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void DEC_acao8(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // VARDECL -> int ident INDEX
     // INDEX.initial_type = "int"
     NoAST* index = no_pai->filhos[2];
@@ -771,6 +812,7 @@ void DEC_acao8(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void DEC_acao9(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // VARDECL -> float ident INDEX
     // INDEX.initial_type = "float"
     NoAST* index = no_pai->filhos[2];
@@ -779,6 +821,7 @@ void DEC_acao9(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void DEC_acao10(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // VARDECL -> string ident INDEX
     // INDEX.initial_type = "string"
     NoAST* index = no_pai->filhos[2];
@@ -865,7 +908,7 @@ void BREAK_acao1(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 // Implementações do namespace AUXILIAR (Funções auxiliares)
 // =================================================================
 
-char* AUXILIAR_obter_tipo(const char* tipo_str, int contador_vetor)
+char* AUXILIAR_obter_tipo(const char* tipo_str)
 {
     const char* f = tipo_str;
     const char* ultimo_tipo_encontrado = NULL;
@@ -1019,7 +1062,7 @@ void AEXP_avaliar_identificador_lvalue(NoAST* no_pai, GerenciadorEscopo* gerenci
         snprintf(acesso_final, sizeof(acesso_final), "%s[%s]", ident_node->token->lexema,
                  somador_temp);
 
-        char* tipo_final = AUXILIAR_obter_tipo(tipo_str, lvalue_node->sdt_mat.contador_vetor);
+        char* tipo_final = AUXILIAR_obter_tipo(tipo_str);
         lvalue_node->sdt_mat.no = criar_no_expressao_simples('n', tipo_final, acesso_final);
 
         free(somador_temp);
@@ -1037,6 +1080,7 @@ void AEXP_avaliar_identificador_lvalue(NoAST* no_pai, GerenciadorEscopo* gerenci
 
 void AEXP_lexema_para_valor(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // FACTOR -> int_constant | float_constant | string_constant
     // Factor.Node = new Node(value)
     NoAST* factor_node = no_pai;
@@ -1070,6 +1114,7 @@ void AEXP_lexema_para_valor(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void AEXP_definir_operacao(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     NoAST* numexpr_aux_node = no_pai;
     NoAST* operation_node = no_pai->filhos[0];
     NoAST* numexpression_node = no_pai->filhos[1];
@@ -1086,6 +1131,7 @@ void AEXP_definir_operacao(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void AEXP_ident_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // FACTOR -> LVALUE
     NoAST* factor_node = no_pai;
     NoAST* lvalue_node = factor_node->filhos[0];
@@ -1120,6 +1166,7 @@ void AEXP_ident_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void AEXP_valor_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // UNARYEXPR -> FACTOR
     NoAST* unaryexpr_node = no_pai;
     NoAST* factor_node = no_pai->filhos[0];
@@ -1132,6 +1179,7 @@ void AEXP_valor_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void AEXP_valor_segundo_filho_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // UNARYEXPR -> PLUS/MINUS FACTOR
     NoAST* unaryexpr_node = no_pai;
     NoAST* symbol_node = no_pai->filhos[0];  // PLUS or MINUS
@@ -1153,6 +1201,7 @@ void AEXP_valor_segundo_filho_para_cima(NoAST* no_pai, GerenciadorEscopo* gerenc
 
 void AEXP_gerar_no(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // REGRA: NUMEXPRESSION -> TERM NUMEXPRESSIONAUX
     NoAST* numexpr_node = no_pai;
     NoAST* term_node = numexpr_node->filhos[0];  // Primeiro operando (pode ser 3*a)
@@ -1223,6 +1272,7 @@ void AEXP_gerar_no(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void AEXP_definir_operacao2(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     NoAST* unaryexpr_aux_node = no_pai;
     NoAST* op_node = no_pai->filhos[0];
     NoAST* term_node = no_pai->filhos[1];
@@ -1239,6 +1289,7 @@ void AEXP_definir_operacao2(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void AEXP_termo(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     NoAST* term_node = no_pai;  // O nó TERM que está sendo processado
     NoAST* unary_node = term_node->filhos[0];
     NoAST* aux_node = term_node->filhos[1];
@@ -1287,6 +1338,7 @@ void AEXP_termo(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void AEXP_imprimir_expressao0(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // REGRA: EXPRESSION -> NUMEXPRESSION EXPRESSION'
     NoAST* expression_node = no_pai;
     NoAST* numexpression_node = no_pai->filhos[0];
@@ -1324,6 +1376,7 @@ void AEXP_imprimir_expressao0(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void AEXP_imprimir_expressao0_h(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // 'no_pai' aqui é o nó da regra inteira (EXPRESSION)
     NoAST* numexpression_node = no_pai->filhos[0];     // O filho da esquerda (NUMEXPRESSION)
     NoAST* expression_linha_node = no_pai->filhos[1];  // O filho da direita (EXPRESSION')
@@ -1344,6 +1397,7 @@ void AEXP_imprimir_expressao0_h(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void AEXP_passar_numero(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // FACTOR -> OPEN_PARENTHESIS NUMEXPRESSION CLOSE_PARENTHESIS
     NoAST* factor_node = no_pai;
     NoAST* numexpression_node = no_pai->filhos[1];
@@ -1359,6 +1413,7 @@ void AEXP_passar_numero(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void AEXP_imprimir_expressao1(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // EXPRESSION' -> RELOP NUMEXPRESSION
     NoAST* numexpression_node = no_pai->filhos[1];
     imprimir_arvore(numexpression_node->sdt_mat.no);
@@ -1366,6 +1421,7 @@ void AEXP_imprimir_expressao1(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void AEXP_imprimir_expressao2(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // ALLOCEXPRESSION' -> TYPE OPEN_BRACKET NUMEXPRESSION CLOSE_BRACKET ALLOCAUX
     NoAST* numexpression_node = no_pai->filhos[2];
     imprimir_arvore(numexpression_node->sdt_mat.no);
@@ -1373,6 +1429,7 @@ void AEXP_imprimir_expressao2(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void AEXP_coletar_indice(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     // A regra é: ALLOCAUX -> [ NUMEXPRESSION ] ALLOCAUX'
     NoAST* numexpression = no_pai->filhos[1];
     NoAST* allocaux_filho = no_pai->filhos[3];
@@ -1397,6 +1454,7 @@ void AEXP_coletar_indice(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 
 void AEXP_inicializar_contador_vetor(NoAST* no_pai, GerenciadorEscopo* gerenciador)
 {
+    (void)gerenciador;
     no_pai->sdt_mat.contador_vetor = 0;
     no_pai->res_var_codigo.var = strdup("0");  // Índice padrão para variáveis escalares
 }
